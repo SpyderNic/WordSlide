@@ -1,0 +1,123 @@
+# Word Slide — Decisions Log
+
+Decisions made by the designer. They take precedence over [design-context.md](design-context.md).
+Anything not recorded here or in an agreed example map is **not decided**: ask, don't assume.
+
+## How we work
+
+| Topic | Decision |
+|---|---|
+| Requirements | Defined story by story in **Example Mapping** sessions. Each story has its own file, `docs/example-maps/story-NN-<name>.md`, colour-coded 🟦 rules, 🟩 examples, 🟥 questions. |
+| Acceptance | **BDD**: Claude drafts Gherkin `.feature` files (Given/When/Then) from each map. The designer approves them before implementation starts. A story is done when its scenarios pass. |
+| Plan discipline | Build exactly what was agreed. Anything unclear or unspecified goes back to the designer as a question with options. Nothing gets added quietly. |
+| Tests | Most scenarios run against pure TypeScript game logic, kept separate from Phaser. Playwright browser tests cover screens, controls and the main path through the game. |
+| Source control | One git repository per game: [SpyderNic/WordSlide](https://github.com/SpyderNic/WordSlide). |
+| Stack | Phaser 3 + Vite + TypeScript, published on CrazyGames as HTML5 (Vite `base: './'`). |
+
+## Game decisions (2026-10-29)
+
+### D1. Name
+The game is called **Word Slide**.
+
+### D2. Orientation: landscape
+The designer preferred portrait but asked for landscape unless evidence favoured portrait, and none was found. CrazyGames requires desktop play in landscape, its key iframe sizes (mobile included) are 16:9, and the supported mobile orientation is set on the submission form, with the site prompting players to rotate.
+
+### D3. Pool layout: both, behind a debug switch
+Support both layouts: all 26 letters, or only the letters in the puzzle. A debug switch selects between them. The designer decides after trying both.
+
+### D4. Winning rule
+The level is won when the highlighted column spells the final word, by **any** arrangement of the rows, not only the designed one.
+
+### D5. Phase-one layout (fixed, not random)
+- Rows are ordered by **ascending word length**, ties broken **alphabetically** (length and sort order as in D12 and D21).
+  Example: ZEBRA, LEMUR, KANGAROO → LEMUR, ZEBRA, KANGAROO.
+- Each row is **centred**, by its cells, on the screen's vertical centre line:
+  - odd length: the middle tile's centre sits on the line (ZEBRA: the middle of B);
+  - even length: the line falls between the two middle tiles (KANGAROO: between G and A).
+
+```
+        L  E |M| U  R
+        Z  E |B| R  A
+     K  A  N  G | A  R  O  O
+```
+
+### D6. Phase-two reveal
+- The highlighted column and the vertical-drag handles are **hidden** during phase one and appear only in phase two.
+- Entering phase two plays a "ceremony": the words rearrange from centred to left-aligned and the column appears.
+- "Left-aligned" means each word's first cell is in the column, and the column is centred on the screen (D19).
+- The ceremony's details are deferred to its own mapping session.
+
+### D7. Already-solved start = instant win (for now)
+If the layout at the start of phase two already spells the final word, the player wins immediately. This covers:
+- the fixed starting layout happening to spell the final word;
+- same-length words locked in a different order than the level defines.
+
+It's accepted as an easy out for the few affected levels and may be revisited. How the instant win looks is for the win story's mapping session.
+
+### D8. Which row a word can lock in
+**Rule:** a filled row locks if its word is one of the level's not-yet-locked answers, has the row's length, and matches every revealed (hinted) letter in that row.
+
+| Answers | Revealed letters in the row | Word typed | Result |
+|---|---|---|---|
+| ZEBRA, LEMUR | none | ZEBRA in the row designed for LEMUR | Locks |
+| TREE, TART | first letter T | TREE or TART | Either locks |
+| TREE, PALM | first letter T | PALM | Doesn't fit. Only TREE can lock there |
+| TREE, TART | A (TART's second letter) | TREE | Doesn't fit. Only TART can lock there |
+
+### D9. Word found outside its hinted row
+When a word locks in a row other than the one its hinted letters reserved for it:
+- the word locks where the player built it, with the player's own letters;
+- **all** hinted letters in the row that reserved it go back to the pool.
+
+Example: answers TART and TREE, with R revealed in row 1 (`_ _ R _`, where only TART fits). The player builds TART in row 2 → TART locks in row 2. The revealed R leaves row 1 for the pool. Row 1 is now empty and the pool holds T, R, E, E: exactly TREE.
+
+Rejected alternatives: moving the hinted letter into the accepted word; sending the player's own letter back to the pool.
+
+### D10. Already-found word
+Typing an answer that is already locked into another same-length row (TREE locked, TREE typed again) shows **"already found"** feedback. The locked TREE row highlights briefly and the typed letters go back to the pool. Visual details are for the check-and-lock story.
+
+## Game decisions (2026-10-30)
+
+From the mapping of [story 1](example-maps/story-01-level-data-and-validator.md).
+
+### D11. Level authoring
+Claude drafts the levels and the designer approves them.
+
+### D12. Level size
+A level has 3–5 rows, and answers have a length of 2–8. Length counts letters and digits, not special characters: ICE CREAM has a length of 8 and needs 9 cells on screen. How hard levels get will be defined later, with a sawtooth escalation per category in mind.
+
+### D13. There is no grid width
+The "grid" is just all the cells of the horizontal words in phase one. In phase two, a word slides only within the column's reach, from its first letter to its last: with L in the column, LEMUR can slide 4 cells left and no further.
+
+### D14. Letters can only be dropped in empty cells
+Dropping on a filled cell isn't allowed.
+
+### D15. No written solution arrangement
+Levels don't include a solution arrangement. The validator works one out and proves it exists. This replaces the design document's request for an explicit arrangement.
+
+### D16. No repeated answers
+A level can't contain the same answer twice.
+
+### D17. Already-solved levels get a warning
+The validator warns about a level whose starting layout already spells the final word, but allows it (see D7).
+
+### D18. Special characters in answers
+Answers may contain special characters: anything that isn't a letter (accented letters included) or digit (0–9), such as spaces, hyphens, apostrophes and other punctuation. They can be anywhere in an answer. They're always revealed, never appear in the pool, and never go back to it. This is an exception to D9: the hinted letters leave the row, but its special characters stay.
+
+A revealed special character ties a row to the answers that have one at that position (D8). It doesn't complete the word.
+
+### D19. Column position
+The column is centred on the screen. Phase two starts with every word's first cell in the column.
+
+### D20. Words may go off screen in phase two
+Only phase one needs all of a word's cells on screen.
+
+### D21. Digits and sort order
+Digits behave like letters: they're in the pool, are dragged the same way and count towards length. Alphabetical order, in the pool and between words, is: special characters, then letters, then 0 to 9. T-REX sorts before TREE, and TREE sorts before TRE1.
+
+Accented letters are letters. They come right after their base letter: E, É, F. É and E are different letters: É has its own pool tile, and an E can't stand in for it.
+
+Fine detail: standard character-code order among special characters, and among accented versions of the same letter.
+
+### D22. Final word characters
+The final word contains letters and digits only, never special characters.
