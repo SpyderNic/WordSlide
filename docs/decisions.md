@@ -196,3 +196,11 @@ Levels come in a fixed order, and winning one unlocks the next. The player's lev
 
 ### D43. Level 1 is a strict tutorial
 Level 1 walks the player through placing letters, reordering a row and sliding a word, with fixed text and an animated hand. The player can only do the current step, and Recall All doesn't appear. The text sits above the rows and below the theme. Level 2 highlights the theme once, with a short tip. The full rules are in [story 12](example-maps/story-12-first-level-onboarding.md).
+
+### D44. Level generator
+An offline tool suggests levels from a theme's word list, written by Claude and reviewed by the designer. It starts from a final word in the same theme, and every suggestion passes the validator and is reviewed in a Markdown file. Rows, word lengths, revealed letters and whether reordering is needed are settings. No letters are revealed by default for now, and any random letters are fixed when a level is generated. Within a theme, every word is unique across the curated levels, so a word can appear in different themes.
+
+The game keeps full support for revealed letters (D8, D9), so they can come back.
+
+### D45. Handles depend on the reordering tutorial
+Handles only appear in phase two once the reordering tutorial has been shown, and without them rows can't be moved by any input. Today that's level 1, so this changes nothing yet. It lets reordering be introduced later, as long as earlier levels don't need it, and the validator rejects any that do.

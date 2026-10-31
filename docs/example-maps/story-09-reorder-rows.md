@@ -8,7 +8,7 @@
 
 All examples use the answers ZEBRA, LEMUR and KANGAROO, unless they say otherwise. Phase two has started, and the rows are LEMUR, ZEBRA, KANGAROO.
 
-The handles' position is story 7 (R15), sliding words is story 8, and checking for a win is story 10.
+The handles' position is story 7 (R15), sliding words is story 8, and checking for a win is story 10. Rows can only be moved once the reordering tutorial has been shown (D45), which today is level 1.
 
 ---
 

@@ -173,9 +173,15 @@ Feature: First-level tutorial
       When level 2 opens
       Then every normal action is allowed
 
-    Scenario: Placing a letter ends the tip
+    Scenario: Placing a letter doesn't end the tip
       Given the tip is showing
       When the player places a letter
+      Then the theme is still highlighted
+      And the tip is still showing
+
+    Scenario: Finding the first word ends the tip
+      Given the tip is showing
+      When the player's first word locks
       Then the theme is no longer highlighted
       And the tip is gone
 

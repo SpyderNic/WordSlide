@@ -72,7 +72,7 @@ Feature: Switch to phase two
       Then the column has a down-arrow notch at the top
       And it has an up-arrow notch at the bottom
 
-  Rule: Handles appear last, at the left edge of the screen
+  Rule: Handles appear last, at the left edge of the screen, once the tutorial has been shown
 
     Scenario: One handle per row
       When the ceremony ends

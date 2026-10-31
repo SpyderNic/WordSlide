@@ -47,9 +47,9 @@ It wasn't visible in phase one.
 
 **Confirmed:** ☑
 
-### 🟦 R5. A handle appears for each row (D6)
+### 🟦 R5. A handle appears for each row, once the reordering tutorial has been shown (D6, D45)
 
-Using them is story 9.
+Using them is story 9. In level 1, the tutorial's step 3 shows them.
 
 - 🟩 Three rows get three handles
 

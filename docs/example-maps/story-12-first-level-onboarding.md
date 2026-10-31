@@ -114,13 +114,14 @@ This is a requirement on story 15. It needs two steps of filling, and a final wo
 
 ### 🟦 R12. Level 2 highlights the theme once, with a short tip
 
-*From Q6.* The theme is highlighted, and the tip says "All words in a level relate to a theme." It sits where the tutorial text goes (Q4). It doesn't restrict anything, and it disappears when the player places their first letter.
+*From Q6.* The theme is highlighted, and the tip says "All words in a level relate to a theme." It sits where the tutorial text goes (Q4). It doesn't restrict anything, and it disappears when the player finds their first word, meaning when a word first locks in level 2.
 
 - 🟩 When level 2 opens, the theme is highlighted and the tip shows
-- 🟩 Placing a letter ends both
+- 🟩 Placing letters doesn't end them
+- 🟩 Locking the first word ends both
 - 🟩 Level 3 has neither
 
-**Confirmed:** ☑ It disappears when they find their first word
+**Confirmed:** ☑
 
 ---
 
