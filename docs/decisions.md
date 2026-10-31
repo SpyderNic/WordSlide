@@ -88,7 +88,7 @@ From the mapping of [story 1](example-maps/story-01-level-data-and-validator.md)
 Claude drafts the levels and the designer approves them.
 
 ### D12. Level size
-A level has 3–5 rows, and answers have a length of 2–8. Length counts letters and digits, not special characters: ICE CREAM has a length of 8 and needs 9 cells on screen. How hard levels get will be defined later, with a sawtooth escalation per category in mind.
+*Changed 2026-10-31.* A level has 2–5 rows, and answers have a length of 2–8. Length counts letters and digits, not special characters: ICE CREAM has a length of 8 and needs 9 cells on screen. Level 1 is the tutorial. Easy, medium and hard levels will later have their own limits on rows and word length, and extra letters in the pool, with a sawtooth escalation per category in mind.
 
 ### D13. There is no grid width
 The "grid" is just all the cells of the horizontal words in phase one. In phase two, a word slides only within the column's reach, from its first letter to its last, and only a letter can stop in the column: with L in the column, LEMUR can slide 4 cells left and no further.
@@ -193,3 +193,6 @@ The column is checked each time a word or row settles, and reads top to bottom. 
 
 ### D42. Levels and saving
 Levels come in a fixed order, and winning one unlocks the next. The player's level, points and progress within a level are saved on their device after every change that settles, behind the D32 interface. The game always opens where the player left off. The new point shows at the top of the screen when the popup appears. After the last level, the prototype's popup shows "All levels complete!" with no button. Development builds have a level picker and a progress reset.
+
+### D43. Level 1 is a strict tutorial
+Level 1 walks the player through placing letters, reordering a row and sliding a word, with fixed text and an animated hand. The player can only do the current step, and Recall All doesn't appear. The text sits above the rows and below the theme. Level 2 highlights the theme once, with a short tip. The full rules are in [story 12](example-maps/story-12-first-level-onboarding.md).

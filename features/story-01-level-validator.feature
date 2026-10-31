@@ -184,7 +184,7 @@ Feature: Level data and validator
         | KANGAROO  | between cells 4 and 5                      |
         | ICE CREAM | on the middle of cell 5                    |
 
-  Rule: A level has 3 to 5 rows, and each answer has a length of 2 to 8
+  Rule: A level has 2 to 5 rows, and each answer has a length of 2 to 8
 
     Scenario Outline: The number of rows is limited
       Given a level with <rows> rows
@@ -193,8 +193,8 @@ Feature: Level data and validator
 
       Examples:
         | rows | result                                    |
-        | 2    | is rejected because it has too few rows   |
-        | 3    | passes                                    |
+        | 1    | is rejected because it has too few rows   |
+        | 2    | passes                                    |
         | 5    | passes                                    |
         | 6    | is rejected because it has too many rows  |
 

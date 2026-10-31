@@ -38,7 +38,7 @@ It doesn't matter how the last letter arrived: dragging, swapping, tapping or ty
 
 ### 🟦 R3. Only the level's answers lock
 
-Bonus words are story 13. Until then, a real word that isn't an answer counts as wrong. Forgiving accent mix-ups is a [later idea](../later-ideas.md), not part of the prototype.
+Bonus words aren't in the prototype, so a real word that isn't an answer counts as wrong. Forgiving accent mix-ups is a [later idea](../later-ideas.md), not part of the prototype.
 
 - 🟩 ZEBRA, LEMUR and KANGAROO lock, but LEMON in the top row doesn't
 - 🟩 With the answer CAFÉ, CAFE doesn't lock, because É and E are different letters (D21)

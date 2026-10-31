@@ -69,12 +69,12 @@ Rows are ordered by length, and centred by their cells.
 
 **Confirmed:** ☑
 
-### 🟦 R8. A level has 3–5 rows, and each answer has a length of 2–8
+### 🟦 R8. A level has 2–5 rows, and each answer has a length of 2–8
 
-Special characters don't count towards the length (Q9).
+Special characters don't count towards the length (Q9). The minimum was changed from 3 rows to 2 for the tutorial level (story 12). Limits per difficulty come later.
 
-- 🟩 **Passes:** 3 rows; 5 rows; OX (2); E.T. (2); CAT (3); KANGAROO (8); ICE CREAM (8); R2D2 (4)
-- 🟩 **Rejected:** 2 rows; 6 rows; X (1); CHAMELEON (9)
+- 🟩 **Passes:** 2 rows; 5 rows; OX (2); E.T. (2); CAT (3); KANGAROO (8); ICE CREAM (8); R2D2 (4)
+- 🟩 **Rejected:** 1 row; 6 rows; X (1); CHAMELEON (9)
 
 **Confirmed:** ☑
 
@@ -143,7 +143,7 @@ This also applies to levels with no other revealed letters.
 
 ### 🟥 Q2. What are the size limits?
 
-**Answer:** 3–5 rows, words of 2–8 letters (R8; the minimum was changed from 3 to 2). How hard levels get will be defined later, with a sawtooth escalation per category in mind.
+**Answer:** 2–5 rows, words of 2–8 letters (R8; both minimums were changed later). How hard levels get will be defined later, with a sawtooth escalation per category in mind.
 
 ### 🟥 Q3. How wide is the grid, and can words slide partly off it?
 
