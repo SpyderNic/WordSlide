@@ -67,7 +67,7 @@ Feature: Place a letter
       And cell 1 of ZEBRA's row holds a Z
       And the pool hasn't changed
 
-  Rule: A letter dropped on a fixed cell goes back where it came from
+  Rule: A letter dropped on a fixed cell goes to the pool
 
     Scenario: A pool letter goes back to the pool
       Given L revealed at position 1 of LEMUR
@@ -76,12 +76,12 @@ Feature: Place a letter
       Then the L is still in its cell
       And the pool shows A x3
 
-    Scenario: A placed letter goes back to its cell
+    Scenario: A placed letter goes to the pool
       Given a level containing the answer T-REX
       And a T placed in cell 1 of T-REX's row
       When the player drags the T onto the hyphen
-      Then the T is back in cell 1
-      And the pool hasn't changed
+      Then cell 1 of T-REX's row is empty
+      And the T count goes up by one
 
   Rule: A pool letter dropped away from any cell goes back to the pool
 
@@ -118,43 +118,43 @@ Feature: Place a letter
       When the player picks up a tile by its corner
       Then the tile moves so that its centre is under the pointer
 
-    Scenario: The cell overlapping the tile the most is highlighted
-      When the player drags a tile mostly over cell 2 of ZEBRA's row, and slightly over cell 3
+    Scenario: The cell under the tile's centre is highlighted
+      When the player drags a tile with its centre over cell 2 of ZEBRA's row, and touching cell 3
       Then cell 2 is highlighted
       And cell 3 isn't highlighted
 
     Scenario: The letter lands in the highlighted cell
-      Given a tile mostly over cell 2 of ZEBRA's row, and slightly over cell 3
+      Given a tile with its centre over cell 2 of ZEBRA's row, and touching cell 3
       When the player releases it
       Then the letter lands in cell 2
 
-    Scenario: The highlight follows the tile
+    Scenario: The highlight follows the tile's centre
       Given cell 2 of ZEBRA's row is highlighted
-      When the tile moves until cell 3 overlaps it the most
+      When the tile's centre moves over cell 3
       Then cell 3 is highlighted
       And cell 2 isn't highlighted
 
     Scenario: A placed letter can be highlighted
       Given a Z placed in cell 1 of LEMUR's row
-      When the player drags a tile mostly over that cell
+      When the player drags a tile with its centre over that cell
       Then that cell is highlighted
 
-    Scenario: A tile touching no cell highlights nothing
+    Scenario: A tile away from every cell highlights nothing
       When the player drags a tile over the theme
       Then no cell is highlighted
 
-    Scenario: A fixed cell wins but doesn't highlight
-      Given L revealed at position 1 of LEMUR
-      When the player drags a tile mostly over the L, and slightly over cell 2
+    Scenario: A tile in a gap highlights nothing, even if it touches cells
+      Given the pool shows A x3
+      When the player drags an A with its centre in the gap between two rows, and touching cells in both
       Then no cell is highlighted
+      When the player releases it
+      Then the pool shows A x3
+      And no cell has changed
 
-    Scenario: A tie between rows goes to the upper cell
-      When the player drags a tile that overlaps cells in two rows exactly equally
-      Then the upper cell is highlighted
-
-    Scenario: A tie within a row goes to the left cell
-      When the player drags a tile that overlaps two cells in one row exactly equally
-      Then the left cell is highlighted
+    Scenario: A fixed cell doesn't highlight
+      Given L revealed at position 1 of LEMUR
+      When the player drags a tile with its centre over the L, and touching cell 2
+      Then no cell is highlighted
 
   Rule: Mouse and touch work the same way, one drag at a time
 

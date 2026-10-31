@@ -66,12 +66,12 @@ The player doesn't choose a row first.
 
 **Confirmed:** ☑
 
-### 🟦 R8. Dropping a letter on a fixed cell sends it back where it came from
+### 🟦 R8. Dropping a letter on a fixed cell sends it to the pool
 
-*From Q1.*
+*From Q1. Changed on 2026-10-31: a placed letter used to go back to its cell.*
 
 - 🟩 With L revealed in LEMUR, dropping an A from the pool on the L leaves the L in place, and A x2 returns to A x3
-- 🟩 Dropping a placed letter on the hyphen in T-REX puts it back in the cell it came from, and the pool doesn't change
+- 🟩 Dropping a placed T on the hyphen in T-REX empties the T's cell, and the T count goes up by one
 
 **Confirmed:** ☑
 
@@ -120,16 +120,16 @@ From story 2's R10.
 
 **Confirmed:** ☑
 
-### 🟦 R15. During a drag, the cell that overlaps the tile the most is highlighted, and that's where the letter lands
+### 🟦 R15. During a drag, the cell under the tile's centre is highlighted, and that's where the letter lands
 
-*From Q3, Q4 and Q7.*
+*From Q3, Q4 and Q7. Changed on 2026-10-31 by story 4's Q5, which replaced "the cell overlapping the tile the most".*
 
-Any overlap counts, so there's no separate distance limit. The highlight shows where the letter will land, so a generous range can't surprise the player. Empty cells and placed letters highlight, because a drop on either works. If two cells overlap exactly as much, the upper one wins, then the left one.
+The tile's centre is the pointer (R14), so this means the tile mostly covers the cell. Empty cells and placed letters highlight, because a drop on either works.
 
-- 🟩 A tile mostly over ZEBRA's cell 2 and slightly over cell 3 highlights cell 2, and lands there
-- 🟩 A tile moving across the row boundary switches the highlight when another cell overlaps it more
-- 🟩 A tile touching no cell highlights nothing, and R9 applies
-- 🟩 A tile mostly over a revealed letter highlights nothing, even if it slightly touches an empty cell. Dropping it there sends the letter back where it came from (R8).
+- 🟩 A tile with its centre over ZEBRA's cell 2, and slightly touching cell 3, highlights cell 2, and lands there
+- 🟩 A tile moving across a cell boundary switches the highlight when its centre crosses
+- 🟩 A tile with its centre in a gap between rows highlights nothing, even if it touches cells, and R9 applies
+- 🟩 A tile with its centre over a revealed letter highlights nothing, even if it touches an empty cell. Dropping it there sends the letter to the pool (R8).
 
 **Confirmed:** ☑
 
@@ -147,7 +147,7 @@ Any overlap counts, so there's no separate distance limit. The highlight shows w
 
 ### 🟥 Q1. Where does a letter go when it's dropped on a filled cell?
 
-**Answer:** It depends on the cell. On a placed letter, the new letter replaces it, and the old one goes back to the pool (R7). On a revealed or locked letter, the dropped letter goes back where it came from (R8).
+**Answer:** It depends on the cell. On a placed letter, the new letter replaces it, and the old one goes back to the pool (R7). On a revealed or locked letter, the dropped letter goes to the pool (R8).
 
 ### 🟥 Q2. Can a placed letter be dragged directly to another cell?
 
@@ -155,7 +155,7 @@ Any overlap counts, so there's no separate distance limit. The highlight shows w
 
 ### 🟥 Q3. How close to a cell does a letter have to be dropped?
 
-**Answer:** The tile's centre stays on the pointer (R14). The highlighted cell is the one the tile overlaps the most, which is the designer's suggestion, with Claude's thoughts in R15.
+**Answer:** The tile's centre stays on the pointer (R14). The highlighted cell is the one under the tile's centre (R15).
 
 ### 🟥 Q4. Does the target cell highlight during a drag?
 
@@ -169,9 +169,9 @@ Any overlap counts, so there's no separate distance limit. The highlight shows w
 
 **Answer:** Yes, simple placeholder sounds, starting with placing a letter. They're story 18, so this story's scenarios stay silent.
 
-### 🟥 Q7. What if the cell overlapping the tile the most is a fixed cell?
+### 🟥 Q7. What if the cell under the tile is a fixed cell?
 
-**Answer:** It still wins. Nothing highlights, and dropping sends the letter back where it came from (R15).
+**Answer:** It still wins. Nothing highlights, and dropping sends the letter to the pool (R15).
 
 ### 🟥 Q8. What happens when a placed letter is dropped on another placed letter?
 
