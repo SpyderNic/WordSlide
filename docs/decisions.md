@@ -161,3 +161,6 @@ A placed letter can be dragged directly to another empty cell, and the pool does
 
 ### D34. Placeholder sound
 The prototype has simple placeholder sounds, starting with placing a letter. They're their own story.
+
+### D35. Pool as a keyboard
+A second way to place letters, alongside dragging. Tapping a row selects it, then tapping a pool letter or pressing its key sends the letter to that row's first empty cell. No row is selected when a level opens, and the first input selects the top row. When an input fills a row, the selection moves to the next row with an empty cell, wrapping to the top. Backspace and the Up and Down arrows also work. The full rules are in [story 17](example-maps/story-17-pool-as-a-keyboard.md).
