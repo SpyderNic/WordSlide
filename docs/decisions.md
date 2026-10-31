@@ -187,3 +187,6 @@ On a keyboard, Up and Down select a row and wrap around. Left and Right slide it
 
 ### D40. Reordering rows
 A row's handle shows three short horizontal lines and is at least as large as a tile. Dragging it moves the row up or down, slightly raised, and the other rows slide out of the way in about 0.1 seconds. On release, the row snaps to the nearest slot with the same tween as a word (D39). Past the top or bottom, it stretches and springs back. Words keep their sideways position. On a keyboard, Shift+Up and Shift+Down move the selected row one slot and don't wrap around.
+
+### D41. Winning a level
+The column is checked each time a word or row settles, and reads top to bottom. When the word is found, its letters pulse and turn gold one after another, top to bottom, like a Mexican wave. The other tiles and the handles fade away as the top letter turns gold. About 1.5 seconds later, a popup in the centre of the screen shows "Level complete", the golden word and a "Play Level X" button, which Enter or Space also presses. The gold word and column fade as the popup appears.

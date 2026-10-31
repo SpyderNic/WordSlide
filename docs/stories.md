@@ -15,14 +15,14 @@ Each story gets an Example Mapping session before any implementation.
 | 7 | **Switch to phase two**: the ceremony (D6) | [Approved](example-maps/story-07-switch-to-phase-two.md) with its [scenarios](../features/story-07-switch-to-phase-two.feature); not implemented | None |
 | 8 | **Slide a word horizontally** with snapping (D13) | [Approved](example-maps/story-08-slide-a-word.md) with its [scenarios](../features/story-08-slide-a-word.feature); not implemented | None |
 | 9 | **Reorder rows** with the handle | [Approved](example-maps/story-09-reorder-rows.md) with its [scenarios](../features/story-09-reorder-rows.feature); not implemented | None |
-| 10 | **Win check and celebration** (D4, D7) | Not mapped | What the win and the instant win look like. |
-| 11 | **Unlock the next level and save progress**, including 1 point per level completed (D23) | Not mapped | |
+| 10 | **Win check and celebration** (D4, D7) | [Approved](example-maps/story-10-win-check-and-celebration.md) with its [scenarios](../features/story-10-win-check-and-celebration.feature); not implemented | None |
+| 11 | **Unlock the next level and save progress**, including 1 point per level completed (D23) | Not mapped | What does the popup's button show after the last level? |
 | 12 | **First-level onboarding** (CrazyGames requires that the first minute makes it clear what to do) | Not mapped | |
 | 13 | **Bonus words**: valid words the puzzle doesn't expect, found horizontally and vertically within the letter set and cell constraints | Not mapped | Needs a dictionary shipped with the game, which the game otherwise doesn't need. Which word list? What does the player get for one? How does it fit with "only intended answers lock" (D8)? |
 | 14 | **Level generator**: an offline tool, not shipped with the game, that suggests answers and a final word from a theme's word list. Every suggestion goes through the validator and needs the designer's approval (D11) | Not mapped | |
 | 15 | **Draft the first levels**: the levels for the first playable version | Not mapped | How many levels? Which themes? |
 | 16 | **Visual style**: the game's real look, replacing the placeholder (D27) | Not mapped | How does a tapped letter travel from the pool to its cell (story 17, R10)? How do letters travel back to the pool, for Recall All and hinted letters (story 6, R10)? |
-| 18 | **Placeholder sounds** (D34), starting with placing a letter | Not mapped | Which actions get a sound? A word locking needs one (story 6, R14). |
+| 18 | **Placeholder sounds** (D34), starting with placing a letter | Not mapped | Which actions get a sound? A word locking needs one (story 6, R14), and so does winning (story 10, R13). |
 
 ## Out of scope for the first playable version
 
