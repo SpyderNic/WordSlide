@@ -190,3 +190,6 @@ A row's handle shows three short horizontal lines and is at least as large as a 
 
 ### D41. Winning a level
 The column is checked each time a word or row settles, and reads top to bottom. When the word is found, its letters pulse and turn gold one after another, top to bottom, like a Mexican wave. The other tiles and the handles fade away as the top letter turns gold. About 1.5 seconds later, a popup in the centre of the screen shows "Level complete", the golden word and a "Play Level X" button, which Enter or Space also presses. The gold word and column fade as the popup appears.
+
+### D42. Levels and saving
+Levels come in a fixed order, and winning one unlocks the next. The player's level, points and progress within a level are saved on their device after every change that settles, behind the D32 interface. The game always opens where the player left off. The new point shows at the top of the screen when the popup appears. After the last level, the prototype's popup shows "All levels complete!" with no button. Development builds have a level picker and a progress reset.
