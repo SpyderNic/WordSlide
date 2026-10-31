@@ -69,12 +69,16 @@ When a word locks in a row other than the one its hinted letters reserved for it
 - the word locks where the player built it, with the player's own letters;
 - **all** hinted letters in the row that reserved it go back to the pool.
 
+In general: after each lock, if none of the answers still unlocked fits a row's revealed letters, all its hinted letters go to the pool, and its placed letters stay.
+
 Example: answers TART and TREE, with R revealed in row 1 (`_ _ R _`, where only TART fits). The player builds TART in row 2 → TART locks in row 2. The revealed R leaves row 1 for the pool. Row 1 is now empty and the pool holds T, R, E, E: exactly TREE.
 
 Rejected alternatives: moving the hinted letter into the accepted word; sending the player's own letter back to the pool.
 
 ### D10. Already-found word
-Typing an answer that is already locked into another same-length row (TREE locked, TREE typed again) shows **"already found"** feedback. The locked TREE row highlights briefly and the typed letters go back to the pool. Visual details are for the check-and-lock story.
+*Changed 2026-10-31.* Spelling an answer that's already locked in another row shows **"already found"** feedback, and the letters stay in place. The locked row highlights briefly, and "Already found" appears on a background in the centre of the screen, gently rises and fades out.
+
+This needs answers that share all their letters, such as TEAM and MEAT, because a pool only has enough letters for each answer once.
 
 ## Game decisions (2026-10-30)
 
@@ -169,3 +173,6 @@ A second way to place letters, alongside dragging. Tapping a row selects it, the
 
 ### D36. Recall All
 Recall All sends every placed letter back to the pool at once, with no confirmation. It's an icon of two arrows pointing down, beside the pool on its right. It's grey with nothing to recall. It has no keyboard shortcut in the prototype.
+
+### D37. Checking a word
+A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour, with a sound effect.
