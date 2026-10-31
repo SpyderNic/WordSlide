@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import { createBdd } from 'playwright-bdd';
 import type { LevelLayout, Rect } from '../../../src/game/layout';
 import { levelWithRows, makeLevel } from '../../support/levels';
-import { test, type Scenario } from './fixtures';
+import { test, type GameView, type Scenario } from './fixtures';
 import { current, open } from './story-02.steps';
 
 const { Given, When, Then } = createBdd(test);
@@ -382,6 +382,13 @@ Then('nothing else is picked up', async ({ page }) => {
 
 Then('the first drag carries on', async ({ page, scenario }) => {
   const to = { x: scenario.touchPoint!.x + 30, y: scenario.touchPoint!.y + 30 };
+  if ((await current(page)).phaseTwo) {
+    await touch(page, scenario, 'touchMove', [{ x: scenario.touchPoint!.x - 10, y: scenario.touchPoint!.y + 5 }, scenario.secondFinger!]);
+    const row = (view: GameView) => view.phaseTwo!.rows.find((candidate) => candidate.word === 'LEMUR')!;
+    const before = scenario.twoBefore!.rows.find((candidate) => candidate.word === 'LEMUR')!;
+    await expect.poll(async () => Math.hypot(row(await current(page)).x - before.x, row(await current(page)).y - before.y)).toBeGreaterThan(0);
+    return;
+  }
   await touch(page, scenario, 'touchMove', [to, scenario.secondFinger!]);
   await expectTileAt(page, to);
 });
@@ -541,15 +548,10 @@ Then('the L takes the locked colour', async ({ page }) => {
 
 // Tapping and dragging stay separate
 
-Given("ZEBRA's row is selected", async ({ scenario }) => {
-  scenario.setup.push(async (page) => {
-    const layout = (await current(page)).layout;
-    const point = cellPoint(layout, 'ZEBRA', 1);
-    await page.mouse.click(point.x, point.y);
-  });
-});
-
 When('the player presses and releases a pool tile without moving it', async ({ page, scenario }) => {
+  await layoutNow(page, scenario);
+  const zebra = cellPoint((await current(page)).layout, 'ZEBRA', 1);
+  await page.mouse.click(zebra.x, zebra.y);
   const point = centreOf(poolTile(await layoutNow(page, scenario), 'K'));
   await page.mouse.click(point.x, point.y);
 });
@@ -571,10 +573,7 @@ When('the player presses and releases the Z without moving it', async ({ page, s
   const layout = await layoutNow(page, scenario);
   const point = cellPoint(layout, 'LEMUR', 1);
   await page.mouse.click(point.x, point.y);
-});
-
-Then("LEMUR's row is selected", async ({ page }) => {
-  expect((await current(page)).markedRow).toBe(0);
+  scenario.acted = true;
 });
 
 Then('the Z stays where it is', async ({ page }) => {

@@ -1,6 +1,6 @@
 # Story 8: Slide a word horizontally
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-08-slide-a-word.feature](../../features/story-08-slide-a-word.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-08-slide-a-word.feature](../../features/story-08-slide-a-word.feature). Built on 2026-10-31.
 
 *As a player, I want to slide a solved word left and right, so that I can bring the letter I need into the column.*
 

@@ -4,6 +4,7 @@
 # KANGAROO, phase two has started, every word's first letter is in the column,
 # and the rows are LEMUR, ZEBRA, KANGAROO.
 
+@browser
 Feature: Reorder rows
   As a player
   I want to drag rows up and down
@@ -91,6 +92,7 @@ Feature: Reorder rows
       When phase two starts
       Then each handle shows three short horizontal lines
 
+    @touch
     Scenario: A finger can grab a handle on the smallest screen
       Given a screen of 800×450
       When a finger presses a handle
@@ -104,16 +106,22 @@ Feature: Reorder rows
       Then its row moves
 
       Examples:
+        | input |
+        | mouse |
+
+      @touch
+      Examples:
         | input  |
-        | mouse  |
         | finger |
 
+    @touch
     Scenario: A second finger on a word is ignored
       Given the player is dragging a handle with one finger
       When a second finger presses a word
       Then that word doesn't move
       And the first drag carries on
 
+    @touch
     Scenario: A second finger on a handle is ignored
       Given the player is sliding a word with one finger
       When a second finger presses a handle

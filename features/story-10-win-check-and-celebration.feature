@@ -3,6 +3,7 @@
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, the final word is ELK, and phase two has started.
 
+@browser
 Feature: Win check and celebration
   As a player
   I want the game to notice when I've spelled the final word and celebrate it

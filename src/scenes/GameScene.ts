@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { Board, type BoardEvent } from '../game/board';
+import { PhaseTwo } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Level } from '../game/level';
 import { testLevels } from '../levels/testLevels';
 import { currentStyle } from '../style';
+import { PhaseTwoView } from './PhaseTwoView';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
@@ -48,6 +50,10 @@ export class GameScene extends Phaser.Scene {
   private feedback: BoardEvent[] = [];
   private countPositions: { x: number; y: number }[] = [];
   private foundText: Phaser.GameObjects.Container | null = null;
+  private poolObjects: Phaser.GameObjects.GameObject[] = [];
+  private phaseTwo: PhaseTwoView | null = null;
+  private ceremonyLog: { poolFading: boolean; ceremonyStartedAfterLock: boolean; startedAt: number; endedAt: number; handlesAt: number } | null = null;
+  private lastLockAt = 0;
 
   constructor() {
     super('GameScene');
@@ -63,7 +69,8 @@ export class GameScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => this.onPointerUp(pointer));
     this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, (pointer: Phaser.Input.Pointer) => this.onPointerUp(pointer));
     this.input.addPointer(1);
-    this.input.keyboard?.on(Phaser.Input.Keyboard.Events.ANY_KEY_DOWN, (event: KeyboardEvent) => this.onKey(event));
+    // Straight from the browser: the engine's keyboard queue mishandles keys that land in one frame.
+    window.addEventListener('keydown', (event) => this.onKey(event));
 
     if (import.meta.env.DEV) {
       Object.assign(window, {
@@ -75,6 +82,10 @@ export class GameScene extends Phaser.Scene {
             this.board.pickUpFromPool(character);
             this.applied(this.board.dropOnCell(row, cell));
           },
+          solve: () => this.solveForTests(),
+          skipCeremony: () => this.phaseTwo?.skipCeremony(),
+          arrange: (order: string[], cells: Record<string, number>) => this.phaseTwo?.arrange(order, cells),
+          select: (row: number) => this.phaseTwo?.select(row),
         },
         wordSlideReady: true,
       });
@@ -95,10 +106,17 @@ export class GameScene extends Phaser.Scene {
       canRecall: board.hasPlacedLetters(),
       recallArrows: 2,
       foundText: this.foundText ? { y: this.foundText.y, alpha: this.foundText.alpha } : null,
+      levelNumber: this.levelNumber,
+      phaseTwo: this.phaseTwo?.testView() ?? null,
+      ceremony: this.ceremonyLog,
+      poolVisible: this.poolObjects.length > 0,
     };
   }
 
   private show(level: Level, levelNumber: number, points: number) {
+    this.phaseTwo?.destroy();
+    this.phaseTwo = null;
+    this.ceremonyLog = null;
     this.level = level;
     this.board = new Board(level);
     this.levelNumber = levelNumber;
@@ -111,7 +129,20 @@ export class GameScene extends Phaser.Scene {
     this.board.cancelDrag();
     this.endDragVisuals();
     this.press = null;
+    if (this.phaseTwo) {
+      this.phaseTwo.skipCeremony();
+      this.phaseTwo.onResize();
+      this.fadePoolNow();
+    }
     this.redraw();
+  }
+
+  private fadePoolNow() {
+    this.poolObjects.forEach((object) => {
+      this.tweens.killTweensOf(object);
+      object.destroy();
+    });
+    this.poolObjects = [];
   }
 
   // Drawing
@@ -127,6 +158,9 @@ export class GameScene extends Phaser.Scene {
     this.layoutNow = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board);
 
     this.layoutNow.topItems.forEach((item) => this.drawTopItem(item));
+    if (this.phaseTwo) return;
+
+    this.fadePoolNow();
     this.drawSelection();
     this.layoutNow.rows.forEach((row, index) => row.cells.forEach((cell) => this.drawCell(cell, index, row.locked)));
     this.layoutNow.poolTiles.forEach((tile) => this.drawPoolTile(tile));
@@ -190,19 +224,26 @@ export class GameScene extends Phaser.Scene {
 
   private drawPoolTile({ character, count, x, y, width, height }: PoolTileView) {
     const colour = count === 0 ? colours.tileGrey : colours.tile;
-    this.keep(this.add.rectangle(x + width / 2, y + height / 2, width, height, colour));
-    this.drawText(character, x + width / 2, y + height * 0.45, height * 0.55, colours.text);
+    this.poolObjects.push(this.add.rectangle(x + width / 2, y + height / 2, width, height, colour));
+    this.poolObjects.push(this.drawPoolText(character, x + width / 2, y + height * 0.45, height * 0.55));
     const position = { x: x + width * 0.78, y: y + height * 0.82 };
     this.countPositions.push(position);
-    this.drawText(`x${count}`, position.x, position.y, height * 0.26, colours.text);
+    this.poolObjects.push(this.drawPoolText(`x${count}`, position.x, position.y, height * 0.26));
+  }
+
+  private drawPoolText(text: string, x: number, y: number, size: number) {
+    return this.add
+      .text(x, y, text, { fontFamily: currentStyle.font, fontSize: `${Math.round(size)}px`, color: hex(colours.text) })
+      .setOrigin(0.5);
   }
 
   private drawRecall() {
     const { recall } = this.layoutNow;
     const active = this.board.hasPlacedLetters();
     const { x, y } = centre(recall);
-    this.keep(this.add.rectangle(x, y, recall.width, recall.height, active ? colours.tile : colours.tileGrey));
-    const arrows = this.keep(this.add.graphics({ lineStyle: { width: 3, color: colours.text } }));
+    this.poolObjects.push(this.add.rectangle(x, y, recall.width, recall.height, active ? colours.tile : colours.tileGrey));
+    const arrows = this.add.graphics({ lineStyle: { width: 3, color: colours.text } });
+    this.poolObjects.push(arrows);
     const half = recall.width * 0.22;
     for (const top of [y - recall.height * 0.2, y + recall.height * 0.02]) {
       arrows.lineBetween(x - half, top, x, top + half * 0.8);
@@ -213,12 +254,20 @@ export class GameScene extends Phaser.Scene {
   // Input
 
   private onPointerDown(pointer: Phaser.Input.Pointer) {
+    if (this.phaseTwo) {
+      this.phaseTwo.onPointerDown(pointer);
+      return;
+    }
     if (this.press) return;
     const hit = hitTest(this.layoutNow, pointer.x, pointer.y);
     this.press = { pointerId: pointer.id, x: pointer.x, y: pointer.y, hit, dragging: false, dead: false };
   }
 
   private onPointerMove(pointer: Phaser.Input.Pointer) {
+    if (this.phaseTwo) {
+      this.phaseTwo.onPointerMove(pointer);
+      return;
+    }
     const press = this.press;
     if (!press || press.pointerId !== pointer.id || press.dead) return;
     if (!press.dragging) {
@@ -288,6 +337,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onPointerUp(pointer: Phaser.Input.Pointer) {
+    if (this.phaseTwo) {
+      this.phaseTwo.onPointerUp(pointer);
+      return;
+    }
     const press = this.press;
     if (!press || press.pointerId !== pointer.id) return;
     this.press = null;
@@ -319,6 +372,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onKey(event: KeyboardEvent) {
+    if (this.phaseTwo) {
+      this.phaseTwo.onKey(event);
+      return;
+    }
     if (event.key === 'Backspace' || event.key.startsWith('Arrow')) event.preventDefault();
     this.applied(this.board.key(event.key));
   }
@@ -332,7 +389,61 @@ export class GameScene extends Phaser.Scene {
       if (event.type === 'locked') this.pulse(event.row);
       if (event.type === 'wrong') this.shake(event.row);
       if (event.type === 'alreadyFound') this.showAlreadyFound(event.lockedRow);
+      if (event.type === 'phaseOneOver') this.time.delayedCall(timings.lockPulse, () => this.startCeremony());
+      if (event.type === 'locked') this.lastLockAt = this.time.now;
     }
+  }
+
+  // Phase two
+
+  private solveForTests() {
+    const answers = [...this.board.rows];
+    answers.forEach((row, index) => {
+      Array.from(row.word).forEach((character, cell) => {
+        if (this.board.rows[index].cells[cell].kind === 'empty') {
+          this.board.pickUpFromPool(character);
+          this.applied(this.board.dropOnCell(index, cell));
+        }
+      });
+    });
+  }
+
+  private startCeremony() {
+    if (this.phaseTwo) return;
+    const startedAt = this.time.now;
+    const from = this.layoutNow.rows.map((row) => ({ x: row.cells[0].x + row.cells[0].width / 2, y: row.cells[0].y + row.cells[0].height / 2 }));
+    const words = this.board.rows.map((row) => row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join(''));
+    const phase = new PhaseTwo(words, this.level.finalWord);
+    const view = new PhaseTwoView(
+      this,
+      phase,
+      this.level,
+      this.levelNumber + 1,
+      {
+        onWon: () => view.celebrate(),
+        onNextLevel: () => this.nextLevel(),
+      },
+      this.layoutNow,
+    );
+    this.phaseTwo = view;
+    this.ceremonyLog = { poolFading: true, ceremonyStartedAfterLock: startedAt >= this.lastLockAt, startedAt, endedAt: 0, handlesAt: 0 };
+
+    const pool = this.poolObjects;
+    this.poolObjects = [];
+    this.tweens.add({ targets: pool, alpha: 0, duration: timings.ceremony, onComplete: () => pool.forEach((object) => object.destroy()) });
+
+    this.redraw();
+    const finished = () => {
+      if (this.ceremonyLog) this.ceremonyLog.endedAt = this.ceremonyLog.handlesAt = this.time.now;
+      view.checkInstantWin();
+    };
+    view.setPendingFinish(finished);
+    view.playCeremony(from, finished);
+  }
+
+  private nextLevel() {
+    const next = this.levelNumber + 1;
+    this.show(testLevels[(next - 1) % testLevels.length], next, this.points);
   }
 
   private pulse(row: number) {

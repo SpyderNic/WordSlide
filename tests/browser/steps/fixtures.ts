@@ -1,6 +1,7 @@
 import type { CDPSession, Page } from '@playwright/test';
 import { test as base } from 'playwright-bdd';
 import type { LevelLayout } from '../../../src/game/layout';
+import type { PhaseTwoTestView } from '../../../src/scenes/PhaseTwoView';
 import type { Level } from '../../../src/game/level';
 import type { Style } from '../../../src/style/Style';
 import { DEFAULT_WORDS, makeLevel } from '../../support/levels';
@@ -17,6 +18,7 @@ export interface GameView {
   canRecall: boolean;
   recallArrows: number;
   foundText: { y: number; alpha: number } | null;
+  phaseTwo?: PhaseTwoTestView | null;
 }
 
 export interface Scenario {
@@ -33,6 +35,12 @@ export interface Scenario {
   touch?: CDPSession;
   touchPoint?: { x: number; y: number };
   secondFinger?: { x: number; y: number };
+  acted?: boolean;
+  twoBefore?: PhaseTwoTestView;
+  slideDistance?: number;
+  stretchWord?: string;
+  finalWordGiven?: boolean;
+  columnPlan?: Record<string, { order: string[]; cells: Record<string, number> }>;
 }
 
 export const test = base.extend<{ scenario: Scenario }>({

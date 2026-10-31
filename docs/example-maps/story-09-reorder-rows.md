@@ -1,6 +1,6 @@
 # Story 9: Reorder rows
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-09-reorder-rows.feature](../../features/story-09-reorder-rows.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-09-reorder-rows.feature](../../features/story-09-reorder-rows.feature). Built on 2026-10-31.
 
 *As a player, I want to drag rows up and down, so that the letters in the column come in the right order to spell the final word.*
 

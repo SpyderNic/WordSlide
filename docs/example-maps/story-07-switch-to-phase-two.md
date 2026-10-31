@@ -1,6 +1,6 @@
 # Story 7: Switch to phase two
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-07-switch-to-phase-two.feature](../../features/story-07-switch-to-phase-two.feature). Not implemented yet. Two scenarios need story 17, and the instant win needs story 10.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-07-switch-to-phase-two.feature](../../features/story-07-switch-to-phase-two.feature). Built on 2026-10-31.
 
 *As a player, I want a short ceremony when all the words are solved, so that I can see the puzzle change and know that a new challenge has begun.*
 

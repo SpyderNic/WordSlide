@@ -4,6 +4,7 @@
 # KANGAROO, phase two has started, every word's first letter is in the column,
 # and the rows are LEMUR, ZEBRA, KANGAROO.
 
+@browser
 Feature: Slide a word horizontally
   As a player
   I want to slide a solved word left and right
@@ -103,10 +104,15 @@ Feature: Slide a word horizontally
       Then LEMUR moves
 
       Examples:
+        | input |
+        | mouse |
+
+      @touch
+      Examples:
         | input  |
-        | mouse  |
         | finger |
 
+    @touch
     Scenario: A second finger is ignored
       Given the player is sliding LEMUR with one finger
       When a second finger presses ZEBRA
@@ -192,6 +198,11 @@ Feature: Slide a word horizontally
       Given LEMUR's row is selected with its E in the column
       When the player presses Right
       Then the L is in the column
+
+    Scenario: Keys pressed at the same moment both count
+      Given ZEBRA's row was selected before a drag
+      When the player quickly presses Up, then Down
+      Then ZEBRA's row is selected
 
     Scenario: Special characters are skipped
       Given a level containing the answer HOT DOG

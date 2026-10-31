@@ -3,6 +3,7 @@
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, and the rows are LEMUR, ZEBRA, KANGAROO.
 
+@browser
 Feature: Switch to phase two
   As a player
   I want a short ceremony when all the words are solved

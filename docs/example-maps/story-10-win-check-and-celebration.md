@@ -1,6 +1,6 @@
 # Story 10: Win check and celebration
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-10-win-check-and-celebration.feature](../../features/story-10-win-check-and-celebration.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-10-win-check-and-celebration.feature](../../features/story-10-win-check-and-celebration.feature). Built on 2026-10-31.
 
 *As a player, I want the game to notice when I've spelled the final word and celebrate it, so that solving the puzzle feels satisfying.*
 
