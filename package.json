@@ -1,0 +1,26 @@
+{
+  "name": "word-slide",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "npm run test:logic && npm run test:browser",
+    "test:logic": "node --import tsx node_modules/@cucumber/cucumber/bin/cucumber.js",
+    "test:browser": "bddgen && playwright test"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.6",
+    "playwright-bdd": "^9.2.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7"
+  }
+}

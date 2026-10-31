@@ -1,1 +1,7 @@
 docs/.obsidian/
+node_modules/
+dist/
+reports/
+test-results/
+playwright-report/
+.features-gen/
