@@ -14,3 +14,5 @@ Ideas the designer wants to remember for after the prototype. None of these are 
 - **Recurring themes.** The same theme can come back later, for example Animals as theme 1 and theme 8, perhaps called Animals II. From [story 15, Q7](example-maps/story-15-draft-the-first-levels.md).
 - **Level selector grouped by theme.** A main menu or level selector could group levels by theme. From [story 15, Q7](example-maps/story-15-draft-the-first-levels.md).
 - **Sound.** Placeholder sounds, then real ones: placing a letter, a word locking and winning at least. This was story 18, parked for the prototype.
+- **Full art style.** Once the game proves fun, the look could use a licensed asset pack, or an artist or AI image tool. From [story 16, Q4](example-maps/story-16-visual-style.md).
+- **Choosing styles.** Players could change the game's style, and maybe unlock styles with a currency. From [story 16, R2](example-maps/story-16-visual-style.md). The prototype has one style, but it's built so that this is easy to add.

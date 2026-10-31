@@ -1,6 +1,6 @@
 # Word Slide — Story Backlog (draft)
 
-Draft list of stories for the first playable version. The designer hasn't approved the list or its order yet.
+Stories for the first playable version. All are mapped and approved, and none are implemented yet.
 Each story gets an Example Mapping session before any implementation.
 
 | # | Story | Status | Questions already known for its mapping session |
@@ -20,7 +20,7 @@ Each story gets an Example Mapping session before any implementation.
 | 12 | **First-level tutorial**: a strict walkthrough of level 1 (CrazyGames requires that the first minute makes it clear what to do) | [Approved](example-maps/story-12-first-level-onboarding.md) with its [scenarios](../features/story-12-first-level-tutorial.feature); not implemented | None |
 | 14 | **Level generator**: an offline tool, not shipped with the game, that suggests answers and a final word from a theme's word list. Every suggestion goes through the validator and needs the designer's approval (D11) | [Approved](example-maps/story-14-level-generator.md) with its [scenarios](../features/story-14-level-generator.feature); not implemented | None |
 | 15 | **Draft the first levels**: the levels for the first playable version | [Approved](example-maps/story-15-draft-the-first-levels.md) with its [scenarios](../features/story-15-draft-the-first-levels.feature); not implemented. Needs stories 1 and 14 | None |
-| 16 | **Visual style**: the game's real look, replacing the placeholder (D27) | Not mapped | How does a tapped letter travel from the pool to its cell (story 17, R10)? How do letters travel back to the pool, for Recall All and hinted letters (story 6, R10)? |
+| 16 | **Visual style**: the game's real look, replacing the placeholder (D27) | [Approved](example-maps/story-16-visual-style.md) with its [scenarios](../features/story-16-visual-style.feature); not implemented | None |
 
 ## Out of scope for the first playable version
 

@@ -142,8 +142,8 @@ Revealed letters use a different tile colour from letters the player places.
 ### D26. Tile size
 Tiles are the same size in every level.
 
-### D27. Placeholder look
-The game uses a plain placeholder look for now. The real visual style is its own story.
+### D27. The prototype's look
+*Changed 2026-10-31.* The prototype has a clean, simple look: warm wood and brass, like a cryptex, drawn in code, with gold for the win and a rounded open-licence font. The full art style waits until the game proves fun, and will probably use an asset pack, or an artist or AI image tool. The game is built so that several styles can exist, though the prototype has one.
 
 ### D28. Layouts leave room for portrait
 Landscape stays the orientation for the CrazyGames launch (D2), but layouts must be able to support portrait later, for a possible Google Play release. Positions and sizes come from the screen size, not fixed coordinates.
