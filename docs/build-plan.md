@@ -19,3 +19,11 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 - Commit after each story, and push to `main`.
 - Changes from playing a milestone go through the map and scenarios first, then the code.
 - Milestones 2–5 use test levels made only of words already discussed, so the designer's playtest stays blind (D46).
+
+## Where we are
+
+Milestones 1 to 4 are done, and the designer has been told how to play milestone 4. **Next is milestone 5: stories 11, 16 and 12, in that order.** Wait for the designer to say so before starting it.
+
+Known placeholders for milestone 5: points stay at 0, progress isn't saved, and after the last test level "Play Level N" loops back to the first level's content (`nextLevel` in `src/scenes/GameScene.ts`). Story 11's last-level popup replaces that. The handles' link to the tutorial (D45) is only a `canReorder` setting in `src/game/phaseTwo.ts` for now.
+
+Mobile testing on a real device is parked until all milestones are done, at the designer's request.
