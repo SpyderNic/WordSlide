@@ -13,7 +13,9 @@ A themed word puzzle, built with Phaser 3, Vite and TypeScript, aiming at CrazyG
 ## How we work
 
 - Build exactly what's agreed. Anything unclear stops the work and goes to the designer as a question, with a few options and a recommendation. Don't fill gaps with defaults.
-- One story at a time: build until its scenarios pass, then report what passed and what couldn't be tested. Be honest about scenarios that check less than they read.
+- **Test first, always (BDD/TDD).** For each scenario, one at a time: write the test, run it and see it fail for the right reason, then write just enough code to make it pass. No production code without a failing test that asks for it. A test written after the code tends to check the implementation chosen, not the behaviour agreed.
+- A step that doesn't really check its scenario isn't a test. Don't leave empty steps, or steps that read a value the code just hard-coded. If something can't be tested automatically, say so.
+- One story at a time: when its scenarios pass, report what passed and what couldn't be tested. Be honest about scenarios that check less than they read.
 - Each milestone ends with the designer playing it. Stop there, and don't start the next until they say so.
 - A change that comes from playing goes through the map and scenarios first, then the code.
 - When the designer says they've "answered" a map, empty questions take the recommendation and unticked rules are approved. Still raise new questions their answers create, and your own additions. Read the whole map before marking it approved.
