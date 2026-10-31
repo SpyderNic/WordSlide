@@ -89,8 +89,8 @@ A level has 3–5 rows, and answers have a length of 2–8. Length counts letter
 ### D13. There is no grid width
 The "grid" is just all the cells of the horizontal words in phase one. In phase two, a word slides only within the column's reach, from its first letter to its last: with L in the column, LEMUR can slide 4 cells left and no further.
 
-### D14. Letters can only be dropped in empty cells
-Dropping on a filled cell isn't allowed.
+### D14. Where letters can be dropped
+*Changed 2026-10-31.* Letters can be dropped in empty cells and on placed letters. A pool letter replaces a placed letter, which goes back to the pool. A placed letter swaps with the other placed letter, so both stay on the board. Dropping on a fixed cell (a revealed letter, a special character or a locked word's letter) sends the letter back where it came from.
 
 ### D15. No written solution arrangement
 Levels don't include a solution arrangement. The validator works one out and proves it exists. This replaces the design document's request for an explicit arrangement.
@@ -155,3 +155,9 @@ The current goal is a working prototype, not a release. If the layout works and 
 
 ### D32. The game may become multi-platform
 The game might later release on web (CrazyGames, Poki, YouTube Playables), Android (Google Play) and PC (Steam). The architecture is Claude's responsibility: game code must never call a platform's SDK directly. Saving, ads, purchases, player identity and similar services go through one interface, with one implementation per platform, chosen at build time. The prototype only has a simple local implementation, and no platform SDK is added until a story asks for it.
+
+### D33. Placed letters can move
+A placed letter can be dragged directly to another empty cell, and the pool doesn't change. During a drag, the tile's centre stays on the pointer or finger. The cell overlapping the tile the most is highlighted and is where the letter lands. If that's a fixed cell, nothing highlights and the letter goes back where it came from.
+
+### D34. Placeholder sound
+The prototype has simple placeholder sounds, starting with placing a letter. They're their own story.
