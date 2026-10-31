@@ -10,7 +10,7 @@ Each story gets an Example Mapping session before any implementation.
 | 3 | **Place a letter** from the pool into a cell | [Approved](example-maps/story-03-place-a-letter.md) with its [scenarios](../features/story-03-place-a-letter.feature); not implemented | None |
 | 17 | **Pool as a keyboard** (queued right after story 3): tap a word to select it, then tap a pool letter to move it to that word's first available cell. On a physical keyboard, pressing a key acts the same as tapping that pool letter, if the letter exists and has a tile left. Drag and drop stays | [Approved](example-maps/story-17-pool-as-a-keyboard.md) with its [scenarios](../features/story-17-pool-as-a-keyboard.feature); not implemented. Build after story 6 | None |
 | 4 | **Return a single letter** to the pool | [Approved](example-maps/story-04-return-a-letter.md) with its [scenarios](../features/story-04-return-a-letter.feature); not implemented | None |
-| 5 | **Recall All** | Not mapped | |
+| 5 | **Recall All** | [Approved](example-maps/story-05-recall-all.md) with its [scenarios](../features/story-05-recall-all.feature); not implemented | None |
 | 6 | **Check and lock a word**, with gentle feedback when it's wrong (D8, D9, D10) | Not mapped | What does "gentle feedback" look like, and do the letters stay in place afterwards? Visuals for "already found" and for hinted letters going back to the pool. |
 | 7 | **Switch to phase two**: the ceremony (D6) | Not mapped | Every detail of the ceremony. The column's position is story 1's Q8. |
 | 8 | **Slide a word horizontally** with snapping (D13) | Not mapped | |

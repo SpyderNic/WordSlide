@@ -166,3 +166,6 @@ The prototype has simple placeholder sounds, starting with placing a letter. The
 
 ### D35. Pool as a keyboard
 A second way to place letters, alongside dragging. Tapping a row selects it, then tapping a pool letter or pressing its key sends the letter to that row's first empty cell. No row is selected when a level opens, and the first input selects the top row. When an input fills a row, the selection moves to the next row with an empty cell, wrapping to the top. Backspace and the Up and Down arrows also work. The full rules are in [story 17](example-maps/story-17-pool-as-a-keyboard.md).
+
+### D36. Recall All
+Recall All sends every placed letter back to the pool at once, with no confirmation. It's an icon of two arrows pointing down, beside the pool on its right. It's grey with nothing to recall. It has no keyboard shortcut in the prototype.
