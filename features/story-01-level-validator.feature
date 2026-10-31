@@ -248,6 +248,13 @@ Feature: Level data and validator
       Then the level passes
       And the validator warns that the level starts already solved
 
+    Scenario: The check reads each row's first letter, not its first cell
+      Given the answers 'TIS, LION and KOALA
+      And the final word TLK
+      When the validator checks the level
+      Then the level passes
+      And the validator warns that the level starts already solved
+
     Scenario: A level that doesn't start solved gets no warning
       Given the answers ZEBRA, LEMUR and KANGAROO
       And the final word ELK

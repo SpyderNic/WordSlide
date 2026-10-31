@@ -20,13 +20,14 @@ This story covers the change from phase one to phase two (D6). Sliding words is 
 
 **Confirmed:** ☑
 
-### 🟦 R2. Every word slides sideways until its first cell is in the column (D19)
+### 🟦 R2. Every word slides sideways until its first letter is in the column (D19)
 
 Rows start centred (D5), so each word moves a different distance to the right.
 
 - 🟩 LEMUR and ZEBRA move 2 cells right
 - 🟩 KANGAROO moves 3.5 cells right
 - 🟩 ICE CREAM moves 4 cells right
+- 🟩 'TIS moves 0.5 cells right, so that its T is in the column, not its apostrophe
 
 **Confirmed:** ☑
 
@@ -68,7 +69,7 @@ Using them is story 9.
 
 ### 🟦 R8. Phase-one input ends
 
-Placing letters, selecting rows and Recall All only exist in phase one, so typing does nothing in phase two.
+Placing letters, selecting rows by tapping and Recall All only exist in phase one, so letter keys do nothing in phase two. Arrow keys slide words (story 8).
 
 - 🟩 The Recall All button is gone after the ceremony (story 5, R6)
 - 🟩 No row is selected (story 17)

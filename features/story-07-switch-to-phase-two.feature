@@ -16,13 +16,13 @@ Feature: Switch to phase two
       Then its lock pulse plays
       And the ceremony starts after that
 
-  Rule: Every word's first cell ends up in the column
+  Rule: Every word's first letter ends up in the column
 
     Scenario Outline: Each word moves a different distance
       Given a level containing the answer <answer>
       When the ceremony plays
       Then <answer> moves <distance> cells to the right
-      And its first cell ends up in the column
+      And its first letter ends up in the column
 
       Examples:
         | answer    | distance |
@@ -30,6 +30,7 @@ Feature: Switch to phase two
         | ZEBRA     | 2        |
         | KANGAROO  | 3.5      |
         | ICE CREAM | 4        |
+        | 'TIS      | 0.5      |
 
     Scenario: A long word can run off the screen
       Given a small screen

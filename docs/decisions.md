@@ -44,7 +44,7 @@ The level is won when the highlighted column spells the final word, by **any** a
 ### D6. Phase-two reveal
 - The highlighted column and the vertical-drag handles are **hidden** during phase one and appear only in phase two.
 - Entering phase two plays a "ceremony": the words rearrange from centred to left-aligned and the column appears.
-- "Left-aligned" means each word's first cell is in the column, and the column is centred on the screen (D19).
+- "Left-aligned" means each word's first letter is in the column, and the column is centred on the screen (D19).
 - The ceremony's details are deferred to its own mapping session.
 
 ### D7. Already-solved start = instant win (for now)
@@ -91,7 +91,7 @@ Claude drafts the levels and the designer approves them.
 A level has 3–5 rows, and answers have a length of 2–8. Length counts letters and digits, not special characters: ICE CREAM has a length of 8 and needs 9 cells on screen. How hard levels get will be defined later, with a sawtooth escalation per category in mind.
 
 ### D13. There is no grid width
-The "grid" is just all the cells of the horizontal words in phase one. In phase two, a word slides only within the column's reach, from its first letter to its last: with L in the column, LEMUR can slide 4 cells left and no further.
+The "grid" is just all the cells of the horizontal words in phase one. In phase two, a word slides only within the column's reach, from its first letter to its last, and only a letter can stop in the column: with L in the column, LEMUR can slide 4 cells left and no further.
 
 ### D14. Where letters can be dropped
 *Changed 2026-10-31.* Letters can be dropped in empty cells and on placed letters. A pool letter replaces a placed letter, which goes back to the pool. A placed letter swaps with the other placed letter, so both stay on the board. Dropping on a fixed cell (a revealed letter, a special character or a locked word's letter) sends the letter to the pool.
@@ -111,7 +111,7 @@ Answers may contain special characters: anything that isn't a letter (accented l
 A revealed special character ties a row to the answers that have one at that position (D8). It doesn't complete the word.
 
 ### D19. Column position
-The column is centred on the screen. Phase two starts with every word's first cell in the column.
+The column is centred on the screen. Phase two starts with every word's first letter in the column.
 
 ### D20. Words may go off screen in phase two
 Only phase one needs all of a word's cells on screen.
@@ -179,3 +179,8 @@ A row is checked as soon as it's full, with no button. A wrong word's row shakes
 
 ### D38. The phase-two ceremony
 Details of D6. The ceremony starts after the last word's lock feedback, takes about 1 second and ignores input. The words slide, the rows move to the vertical centre of the space, and the pool and column fade together. The handles appear last. The column is a strip one cell wide and as tall as the rows, with a down-arrow notch at the top and an up-arrow notch at the bottom. The handles sit in a fixed line at the left edge of the screen. An instant win (D7) comes after the ceremony.
+
+### D39. Sliding words
+A word follows the pointer smoothly, then snaps to its nearest letter with a 0.1 second bounce-out tween. Past the end of its range it stretches slightly and springs back, and a fast flick glides before snapping. Letters in the column look ordinary until the right word is found.
+
+On a keyboard, Up and Down select a row and wrap around. Left and Right slide it one letter at a time and don't wrap. With no row selected, Left or Right selects the top row. A drag hides the selection until the next arrow.

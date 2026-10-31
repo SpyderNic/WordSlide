@@ -86,7 +86,7 @@ Special characters don't count towards the length (Q9).
 
 ### 🟦 R10. In phase two, every word always has one of its own cells in the column
 
-There is no grid width. A word slides only until its first or last cell is in the column. So any letter of any word can always reach the column, and R3 is all the validator needs: it has no separate reachability check. Words may go off screen while sliding.
+There is no grid width. A word slides only until its first or last letter is in the column. So any letter of any word can always reach the column, and R3 is all the validator needs: it has no separate reachability check. Words may go off screen while sliding.
 
 - 🟩 **LEMUR with L in the column:** it can slide up to 4 cells left (R in the column), and not right at all
 - 🟩 **LEMUR with M in the column:** it can slide 2 cells left or 2 cells right
@@ -124,9 +124,9 @@ This also applies to levels with no other revealed letters.
 
 **Confirmed:** ☑
 
-### 🟦 R14. Phase two starts with every word's first cell in the column, and the validator warns if that already spells the final word
+### 🟦 R14. Phase two starts with every word's first letter in the column, and the validator warns if that already spells the final word
 
-*From Q6 and Q8.* The column is centred on the screen. The check reads the first cell of each row, in D5's row order. The level is allowed (D7).
+*From Q6 and Q8.* The column is centred on the screen. The check reads the first letter of each row, in D5's row order. The level is allowed (D7).
 
 - 🟩 **ZEBRA, LEMUR, KANGAROO:** starts as L, Z, K. With final word ELK, there's no warning.
 - 🟩 **EMU, LION, KOALA with final word ELK:** starts as E, L, K. The validator warns.
@@ -167,7 +167,7 @@ This also applies to levels with no other revealed letters.
 
 ### 🟥 Q8. Where does the column sit when phase two starts?
 
-**Answer:** It's centred on the screen, and all words have their first cell in the column. Words may go off screen in phase two (R10, R14).
+**Answer:** It's centred on the screen, and all words have their first letter in the column. Words may go off screen in phase two (R10, R14).
 
 ### 🟥 Q9. Do spaces and hyphens count towards an answer's length?
 
