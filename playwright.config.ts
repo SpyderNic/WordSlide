@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
 const testDir = defineBddConfig({
-  features: 'tests/browser/*.feature',
+  features: ['tests/browser/*.feature', 'features/story-02-show-a-level.feature'],
   steps: 'tests/browser/steps/*.ts',
 });
 

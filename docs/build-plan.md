@@ -5,7 +5,7 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 | # | Milestone | Stories | Status |
 |---|---|---|---|
 | 1 | **Foundation**: project, tests, style file, save interface | None | Done |
-| 2 | **Levels and screen** | 1, 2 | Not started |
+| 2 | **Levels and screen** | 1, 2 | Done |
 | 3 | **Phase one** | 3, 4, 5, 6, 17 | Not started |
 | 4 | **Phase two** | 7, 8, 9, 10 | Not started |
 | 5 | **The whole game**, including the tutorial (FTUE) | 11, 16, 12 | Not started |

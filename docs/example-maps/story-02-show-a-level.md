@@ -1,6 +1,6 @@
 # Story 2: Show a level
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-02-show-a-level.feature](../../features/story-02-show-a-level.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-02-show-a-level.feature](../../features/story-02-show-a-level.feature). Built on 2026-10-31.
 
 *As a player, I want to see the level's theme, rows and available letters when it opens, so that I can start working out the words.*
 

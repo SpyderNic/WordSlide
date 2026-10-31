@@ -18,3 +18,6 @@ Feature: Foundation
 
   Scenario: The current style has the letter travel time
     Then the letter travel time is 150 milliseconds
+
+  Scenario: The test levels are valid
+    Then every test level passes the validator

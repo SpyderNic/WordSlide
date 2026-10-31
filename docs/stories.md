@@ -1,12 +1,12 @@
 # Word Slide — Story Backlog (draft)
 
-Stories for the first playable version. All are mapped and approved, and none are implemented yet.
+Stories for the first playable version. All are mapped and approved.
 Each story gets an Example Mapping session before any implementation.
 
 | # | Story | Status | Questions already known for its mapping session |
 |---|---|---|---|
-| 1 | **Level data and validator**: the format for a level (theme, rows, revealed letters, final word, solution arrangement), plus an automatic check that every level can be solved | [Approved](example-maps/story-01-level-data-and-validator.md) with its [scenarios](../features/story-01-level-validator.feature); not implemented | None |
-| 2 | **Show a level**: theme, empty rows (D5 layout), revealed letters, letter pool (D3) | [Approved](example-maps/story-02-show-a-level.md) with its [scenarios](../features/story-02-show-a-level.feature); not implemented | None |
+| 1 | **Level data and validator**: the format for a level (theme, rows, revealed letters, final word, solution arrangement), plus an automatic check that every level can be solved | [Approved](example-maps/story-01-level-data-and-validator.md) with its [scenarios](../features/story-01-level-validator.feature); built | None |
+| 2 | **Show a level**: theme, empty rows (D5 layout), revealed letters, letter pool (D3) | [Approved](example-maps/story-02-show-a-level.md) with its [scenarios](../features/story-02-show-a-level.feature); built | None |
 | 3 | **Place a letter** from the pool into a cell | [Approved](example-maps/story-03-place-a-letter.md) with its [scenarios](../features/story-03-place-a-letter.feature); not implemented | None |
 | 17 | **Pool as a keyboard** (queued right after story 3): tap a word to select it, then tap a pool letter to move it to that word's first available cell. On a physical keyboard, pressing a key acts the same as tapping that pool letter, if the letter exists and has a tile left. Drag and drop stays | [Approved](example-maps/story-17-pool-as-a-keyboard.md) with its [scenarios](../features/story-17-pool-as-a-keyboard.feature); not implemented. Build after story 6 | None |
 | 4 | **Return a single letter** to the pool | [Approved](example-maps/story-04-return-a-letter.md) with its [scenarios](../features/story-04-return-a-letter.feature); not implemented | None |
