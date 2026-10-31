@@ -14,7 +14,7 @@ Each story gets an Example Mapping session before any implementation.
 | 6 | **Check and lock a word**, with gentle feedback when it's wrong (D8, D9, D10) | [Approved](example-maps/story-06-check-and-lock-a-word.md) with its [scenarios](../features/story-06-check-and-lock-a-word.feature); not implemented | None |
 | 7 | **Switch to phase two**: the ceremony (D6) | [Approved](example-maps/story-07-switch-to-phase-two.md) with its [scenarios](../features/story-07-switch-to-phase-two.feature); not implemented | None |
 | 8 | **Slide a word horizontally** with snapping (D13) | [Approved](example-maps/story-08-slide-a-word.md) with its [scenarios](../features/story-08-slide-a-word.feature); not implemented | None |
-| 9 | **Reorder rows** with the handle | Not mapped | |
+| 9 | **Reorder rows** with the handle | [Approved](example-maps/story-09-reorder-rows.md) with its [scenarios](../features/story-09-reorder-rows.feature); not implemented | None |
 | 10 | **Win check and celebration** (D4, D7) | Not mapped | What the win and the instant win look like. |
 | 11 | **Unlock the next level and save progress**, including 1 point per level completed (D23) | Not mapped | |
 | 12 | **First-level onboarding** (CrazyGames requires that the first minute makes it clear what to do) | Not mapped | |

@@ -184,3 +184,6 @@ Details of D6. The ceremony starts after the last word's lock feedback, takes ab
 A word follows the pointer smoothly, then snaps to its nearest letter with a 0.1 second bounce-out tween. Past the end of its range it stretches slightly and springs back, and a fast flick glides before snapping. Letters in the column look ordinary until the right word is found.
 
 On a keyboard, Up and Down select a row and wrap around. Left and Right slide it one letter at a time and don't wrap. With no row selected, Left or Right selects the top row. A drag hides the selection until the next arrow.
+
+### D40. Reordering rows
+A row's handle shows three short horizontal lines and is at least as large as a tile. Dragging it moves the row up or down, slightly raised, and the other rows slide out of the way in about 0.1 seconds. On release, the row snaps to the nearest slot with the same tween as a word (D39). Past the top or bottom, it stretches and springs back. Words keep their sideways position. On a keyboard, Shift+Up and Shift+Down move the selected row one slot and don't wrap around.
