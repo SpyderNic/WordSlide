@@ -297,6 +297,34 @@ Then('the tiles are the same size in both', async ({ scenario }) => {
   expect(first).toBe(second);
 });
 
+Given('a level with 26 pool tiles', async ({ scenario }) => {
+  scenario.level = makeLevel(['ABCDEFGH', 'IJKLMNOP', 'QRSTUVWX', 'YZ']);
+});
+
+Then(/^the tiles are at least (\d+) pixels wide$/, async ({ scenario }, pixels: string) => {
+  expect(layoutOf(scenario).tileSize).toBeGreaterThanOrEqual(Number(pixels));
+});
+
+Then('the tiles are the normal size for this screen', async ({ scenario }) => {
+  expect(layoutOf(scenario).tileSize).toBe(layoutOf(scenario).usualTileSize);
+});
+
+Then('the tiles are smaller than the normal size for this screen', async ({ scenario }) => {
+  expect(layoutOf(scenario).tileSize).toBeLessThan(layoutOf(scenario).usualTileSize);
+});
+
+Then(/^the pool area has room for (\d+) rows of tiles$/, async ({ scenario }, rows: string) => {
+  expect(layoutOf(scenario).poolRows).toBe(Number(rows));
+});
+
+Then('the top of the screen fits with nothing overlapping', async ({ scenario }) => {
+  const layout = layoutOf(scenario);
+  const items = [...layout.topItems].sort((a, b) => a.x - b.x);
+  expect(items[0].x).toBeGreaterThanOrEqual(0);
+  expect(right(items[items.length - 1])).toBeLessThanOrEqual(layout.width);
+  items.slice(1).forEach((item, index) => expect(item.x).toBeGreaterThanOrEqual(right(items[index])));
+});
+
 Then("there's no highlighted column", async ({ scenario }) => {
   expect(layoutOf(scenario)).not.toHaveProperty('column');
 });

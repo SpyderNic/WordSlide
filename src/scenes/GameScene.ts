@@ -76,7 +76,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawTopItem(item: TopItem) {
-    const size = this.layoutNow.tileSize * 0.42;
+    const size = this.layoutNow.topTileSize * 0.42;
     const centreX = item.x + item.width / 2;
     const centreY = item.y + item.height / 2;
     if (item.isButton) {

@@ -147,10 +147,50 @@ Feature: Show a level
       Then the pool area is the same size in both
       And the rows are in the same place in both
 
-    Scenario: Tiles are the same size in every level
+    Scenario: Tiles are the same size in every level on a screen
       Given one level with 3 rows and one with 5
       When each level opens on the same screen
       Then the tiles are the same size in both
+
+    Scenario: Tiles use the width of a narrow screen
+      Given a screen of 494×880
+      When the level opens
+      Then the tiles are at least 40 pixels wide
+
+    Scenario: A long row fits a wide screen at normal size
+      Given a level containing the answer A B C D E F
+      And a screen of 800×450
+      When the level opens
+      Then the tiles are the normal size for this screen
+      And every cell and every pool tile is on screen
+
+    Scenario: A long row shrinks the tiles on a narrow screen
+      Given a level containing the answer A B C D E F
+      And a screen of 360×800
+      When the level opens
+      Then the tiles are smaller than the normal size for this screen
+      And every cell and every pool tile is on screen
+
+    Scenario Outline: The pool has as many rows as its screen needs
+      Given a screen of <size>
+      When the level opens
+      Then the pool area has room for <rows> rows of tiles
+
+      Examples:
+        | size    | rows |
+        | 800×450 | 2    |
+        | 450×800 | 3    |
+
+    Scenario: The largest pool fits a narrow screen
+      Given a level with 26 pool tiles
+      And a screen of 450×800
+      When the level opens
+      Then every cell and every pool tile is on screen
+
+    Scenario: The top of the screen fits a narrow screen
+      Given a screen of 450×800
+      When the level opens
+      Then the top of the screen fits with nothing overlapping
 
   Rule: The column and handles stay hidden
 

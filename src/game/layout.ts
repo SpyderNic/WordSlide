@@ -34,6 +34,10 @@ export interface LevelLayout {
   width: number;
   height: number;
   tileSize: number;
+  /** The size on this screen for a level with no long row. */
+  usualTileSize: number;
+  poolRows: number;
+  topTileSize: number;
   top: Rect;
   topItems: TopItem[];
   rows: RowView[];
@@ -42,13 +46,28 @@ export interface LevelLayout {
 }
 
 const GAP = 0.08;
-const CELLS_ACROSS = 16;
+const CELLS_ACROSS = 10;
+/** Six items across the top of the screen need this much width, in tiles. */
+const TOP_TILES_ACROSS = 16;
 /** The top of the screen, 5 rows and a two-row pool, with room between them. */
 const TILES_DOWN = 9.6;
+/** The most tiles a pool has to hold: more than this and it could outgrow its area. */
+const LARGEST_POOL = 26;
 
-/** The same for every level on a given screen (story 2, R12). */
-function tileSizeFor(width: number, height: number): number {
-  return Math.floor(Math.min(width / (CELLS_ACROSS * (1 + GAP)), height / TILES_DOWN));
+function widthFor(cells: number, tile: number): number {
+  return cells * tile * (1 + GAP) - tile * GAP;
+}
+
+/** The same for every level on a given screen, unless a long row won't fit (story 2, R12). */
+function tileSizeFor(width: number, height: number, longestRow: number): number {
+  const usual = Math.min(width / (CELLS_ACROSS * (1 + GAP)), height / TILES_DOWN);
+  const fits = width / (longestRow * (1 + GAP));
+  return Math.floor(Math.min(usual, fits));
+}
+
+function poolRowsFor(width: number, tile: number): number {
+  const across = Math.floor((width - tile) / (tile * (1 + GAP)));
+  return Math.max(2, Math.ceil(LARGEST_POOL / across));
 }
 
 function layoutTopItems(width: number, tile: number, levelNumber: number, points: number, theme: string) {
@@ -74,8 +93,7 @@ function layoutTopItems(width: number, tile: number, levelNumber: number, points
 
 function layoutRow(word: string, cells: Cell[], top: number, width: number, tile: number): RowView {
   const pitch = tile * (1 + GAP);
-  const rowWidth = cells.length * pitch - tile * GAP;
-  const left = width / 2 - rowWidth / 2;
+  const left = width / 2 - widthFor(cells.length, tile) / 2;
   return {
     word,
     cells: cells.map((cell, index) => ({
@@ -88,13 +106,13 @@ function layoutRow(word: string, cells: Cell[], top: number, width: number, tile
   };
 }
 
-function layoutPool(level: Level, area: Rect, tile: number): PoolTileView[] {
+function layoutPool(level: Level, area: Rect, tile: number, poolRows: number): PoolTileView[] {
   const pitch = tile * (1 + GAP);
   const pool = startingPool(level.answers);
-  const perRow = Math.ceil(pool.length / 2);
-  const rows = [pool.slice(0, perRow), pool.slice(perRow)];
+  const perRow = Math.ceil(pool.length / poolRows);
+  const rows = Array.from({ length: poolRows }, (_, row) => pool.slice(row * perRow, (row + 1) * perRow));
   return rows.flatMap((tiles, rowIndex) => {
-    const left = area.x + area.width / 2 - (tiles.length * pitch - tile * GAP) / 2;
+    const left = area.x + area.width / 2 - widthFor(tiles.length, tile) / 2;
     return tiles.map((poolTile, index) => ({
       ...poolTile,
       x: left + index * pitch,
@@ -107,12 +125,17 @@ function layoutPool(level: Level, area: Rect, tile: number): PoolTileView[] {
 
 /** Everything's position comes from the screen size (D28). */
 export function layoutLevel(level: Level, levelNumber: number, points: number, width: number, height: number): LevelLayout {
-  const tile = tileSizeFor(width, height);
+  const answers = rowOrder(level.answers);
+  const longestRow = Math.max(...answers.map((answer) => cellCount(answer.word)));
+  const tile = tileSizeFor(width, height, longestRow);
+  const usualTile = tileSizeFor(width, height, 0);
+  const topTile = Math.min(usualTile, Math.floor(width / (TOP_TILES_ACROSS * (1 + GAP))));
   const pitch = tile * (1 + GAP);
   const margin = tile * 0.2;
 
-  const top: Rect = { x: 0, y: 0, width, height: tile * 1.2 };
-  const poolHeight = pitch * 2 - tile * GAP;
+  const top: Rect = { x: 0, y: 0, width, height: topTile * 1.2 };
+  const poolRows = poolRowsFor(width, tile);
+  const poolHeight = pitch * poolRows - tile * GAP;
   const poolArea: Rect = {
     x: margin,
     y: height - poolHeight - margin,
@@ -121,7 +144,6 @@ export function layoutLevel(level: Level, levelNumber: number, points: number, w
   };
 
   const rowsSpace = poolArea.y - (top.y + top.height);
-  const answers = rowOrder(level.answers);
   const rowsHeight = answers.length * pitch - tile * GAP;
   const rowsTop = top.height + (rowsSpace - rowsHeight) / 2;
 
@@ -129,13 +151,16 @@ export function layoutLevel(level: Level, levelNumber: number, points: number, w
     width,
     height,
     tileSize: tile,
+    usualTileSize: usualTile,
+    poolRows,
+    topTileSize: topTile,
     top,
-    topItems: layoutTopItems(width, tile, levelNumber, points, level.theme),
+    topItems: layoutTopItems(width, topTile, levelNumber, points, level.theme),
     rows: answers.map((answer, index) =>
       layoutRow(answer.word, startingCells(answer), rowsTop + index * pitch, width, tile),
     ),
     poolArea,
-    poolTiles: layoutPool(level, poolArea, tile),
+    poolTiles: layoutPool(level, poolArea, tile, poolRows),
   };
 }
 

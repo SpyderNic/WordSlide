@@ -98,11 +98,31 @@ The theme is at the top, the rows are in the middle, and the pool is at the bott
 
 **Confirmed:** ☑
 
-### 🟦 R12. Tiles are the same size in every level
+### 🟦 R12. Tiles are the same size in every level on a given screen, with one exception
 
-*From Q7.* Tiles are sized for the smallest screen, with room for about 16 cells across, 5 rows and a two-row pool. Small levels simply have more empty space.
+*From Q7, changed by the designer after playing.* Tiles are sized for 10 cells across, 5 rows and the pool, so they're as large as the screen allows. Small levels simply have more empty space. The one exception: a level with a row of more than 10 cells shrinks its tiles, only if that row wouldn't fit otherwise.
 
 - 🟩 A 3-row level and a 5-row level use the same tile size
+- 🟩 In a 494×880 window, tiles are about 45 pixels, not 28
+- 🟩 A row of 11 cells fits at 800×450 at normal size
+- 🟩 A row of 11 cells shrinks that level's tiles at 360×800
+
+**Confirmed:** ☑
+
+### 🟦 R18. The pool has as many rows as its screen needs
+
+*Added by the designer after playing.* It has 2 rows on a wide screen, and more on a narrow one, so that a level's tiles always fit. On a given screen, the pool area is the same size in every level (R7).
+
+- 🟩 At 800×450, the pool has 2 rows
+- 🟩 At 450×800, the pool has 3 rows
+
+**Confirmed:** ☑
+
+### 🟦 R19. The top of the screen keeps its smaller size on narrow screens
+
+*Added by the designer after playing.* Six items won't fit at full tile size there.
+
+- 🟩 At 450×800, the top of the screen is on screen, with nothing overlapping
 
 **Confirmed:** ☑
 
