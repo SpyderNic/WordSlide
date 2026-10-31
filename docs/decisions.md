@@ -22,8 +22,8 @@ The game is called **Word Slide**.
 ### D2. Orientation: landscape
 The designer preferred portrait but asked for landscape unless evidence favoured portrait, and none was found. CrazyGames requires desktop play in landscape, its key iframe sizes (mobile included) are 16:9, and the supported mobile orientation is set on the submission form, with the site prompting players to rotate.
 
-### D3. Pool layout: both, behind a debug switch
-Support both layouts: all 26 letters, or only the letters in the puzzle. A debug switch selects between them. The designer decides after trying both.
+### D3. Pool layout: only the level's characters
+*Changed 2026-10-31.* The pool shows only the level's characters. The all-letters layout and the debug switch are removed, because they created friction with accents and digits.
 
 ### D4. Winning rule
 The level is won when the highlighted column spells the final word, by **any** arrangement of the rows, not only the designed one.
@@ -121,3 +121,37 @@ Fine detail: standard character-code order among special characters, and among a
 
 ### D22. Final word characters
 The final word contains letters and digits only, never special characters.
+
+## Game decisions (2026-10-31)
+
+### D23. Points instead of stars
+There are no stars. The player gets 1 point per level completed. This replaces the design document's "no agreed scoring".
+
+From here on, decisions come from the mapping of [story 2](example-maps/story-02-show-a-level.md).
+
+### D24. Letters with no copies left
+A letter with no copies left to place stays in the pool as a grey x0 tile, including from the start of a level.
+
+### D25. Revealed letters look different
+Revealed letters use a different tile colour from letters the player places.
+
+### D26. Tile size
+Tiles are the same size in every level.
+
+### D27. Placeholder look
+The game uses a plain placeholder look for now. The real visual style is its own story.
+
+### D28. Layouts leave room for portrait
+Landscape stays the orientation for the CrazyGames launch (D2), but layouts must be able to support portrait later, for a possible Google Play release. Positions and sizes come from the screen size, not fixed coordinates.
+
+### D29. Rotating a device
+When a device rotates during a level, the layout adapts live. The level redraws for the new orientation and keeps the player's progress. A drag in progress is cancelled and its letter goes back to where it came from.
+
+### D30. Top of the screen
+Along the top, left to right: home, level number, theme, points, shop, settings. The home, shop and settings buttons are visible but do nothing for now. The shop button is provisional.
+
+### D31. Working towards a prototype
+The current goal is a working prototype, not a release. If the layout works and the game is fun, stories for a path to release get added then.
+
+### D32. The game may become multi-platform
+The game might later release on web (CrazyGames, Poki, YouTube Playables), Android (Google Play) and PC (Steam). The architecture is Claude's responsibility: game code must never call a platform's SDK directly. Saving, ads, purchases, player identity and similar services go through one interface, with one implementation per platform, chosen at build time. The prototype only has a simple local implementation, and no platform SDK is added until a story asks for it.

@@ -106,7 +106,7 @@ Digits behave exactly like letters: they're in the pool, are dragged the same wa
 
 ### 🟦 R12. Special characters are always revealed and never appear in the pool
 
-This also applies to levels with no other revealed letters, and to both pool layouts (D3).
+This also applies to levels with no other revealed letters.
 
 - 🟩 **HOT DOG:** starts as `_ _ _ ␣ _ _ _`, and the pool gets H, O, T, D, O, G and no space
 - 🟩 **T-REX:** starts as `_ - _ _ _`
