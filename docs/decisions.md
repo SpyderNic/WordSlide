@@ -140,7 +140,7 @@ A letter with no copies left to place stays in the pool as a grey x0 tile, inclu
 Revealed letters use a different tile colour from letters the player places.
 
 ### D26. Tile size
-*Changed 2026-10-31.* On a given screen, tiles are the same size in every level. They're sized for 10 cells across, and only a level with a longer row that wouldn't fit shrinks them. The pool uses more rows on narrow screens, and the top of the screen stays smaller there.
+*Changed 2026-10-31.* On a given screen, tiles are the same size in every level. They're sized for 9 cells across, and only a level with a longer row that wouldn't fit shrinks them. The pool uses more rows on narrow screens. On a portrait screen, the top of the screen has two lines, with the theme on the second.
 
 ### D27. The prototype's look
 *Changed 2026-10-31.* The prototype has a clean, simple look: warm wood and brass, like a cryptex, drawn in code, with gold for the win and a rounded open-licence font. The full art style waits until the game proves fun, and will probably use an asset pack, or an artist or AI image tool. The game is built so that several styles can exist, though the prototype has one.

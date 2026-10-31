@@ -179,7 +179,7 @@ Feature: Show a level
       Examples:
         | size    | rows |
         | 800×450 | 2    |
-        | 450×800 | 3    |
+        | 450×800 | 4    |
 
     Scenario: The largest pool fits a narrow screen
       Given a level with 26 pool tiles
@@ -187,10 +187,16 @@ Feature: Show a level
       When the level opens
       Then every cell and every pool tile is on screen
 
-    Scenario: The top of the screen fits a narrow screen
+    Scenario: The top of the screen fits a portrait screen
       Given a screen of 450×800
       When the level opens
       Then the top of the screen fits with nothing overlapping
+
+    Scenario: On a portrait screen, the top is bigger, with the theme on its own line
+      Given a screen of 450×800
+      When the level opens
+      Then the top of the screen uses the tile size
+      And the theme has its own centred line
 
   Rule: The column and handles stay hidden
 

@@ -319,10 +319,29 @@ Then(/^the pool area has room for (\d+) rows of tiles$/, async ({ scenario }, ro
 
 Then('the top of the screen fits with nothing overlapping', async ({ scenario }) => {
   const layout = layoutOf(scenario);
-  const items = [...layout.topItems].sort((a, b) => a.x - b.x);
-  expect(items[0].x).toBeGreaterThanOrEqual(0);
-  expect(right(items[items.length - 1])).toBeLessThanOrEqual(layout.width);
-  items.slice(1).forEach((item, index) => expect(item.x).toBeGreaterThanOrEqual(right(items[index])));
+  layout.topItems.forEach((item, index) => {
+    expect(item.x).toBeGreaterThanOrEqual(0);
+    expect(right(item)).toBeLessThanOrEqual(layout.width);
+    expect(bottom(item)).toBeLessThanOrEqual(bottom(layout.top));
+    layout.topItems.slice(index + 1).forEach((other) => {
+      const apart = right(item) <= other.x || right(other) <= item.x || bottom(item) <= other.y || bottom(other) <= item.y;
+      expect(apart).toBe(true);
+    });
+  });
+});
+
+Then('the top of the screen uses the tile size', async ({ scenario }) => {
+  const layout = layoutOf(scenario);
+  expect(layout.topTileSize).toBeGreaterThanOrEqual(layout.tileSize * 0.95);
+});
+
+Then('the theme has its own centred line', async ({ scenario }) => {
+  const layout = layoutOf(scenario);
+  const theme = layout.topItems.find((item) => item.name === 'theme')!;
+  expect(centreX(theme)).toBeCloseTo(layout.width / 2);
+  layout.topItems.filter((item) => item !== theme).forEach((item) => {
+    expect(bottom(item)).toBeLessThanOrEqual(theme.y);
+  });
 });
 
 Then("there's no highlighted column", async ({ scenario }) => {

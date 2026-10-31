@@ -100,10 +100,10 @@ The theme is at the top, the rows are in the middle, and the pool is at the bott
 
 ### 🟦 R12. Tiles are the same size in every level on a given screen, with one exception
 
-*From Q7, changed by the designer after playing.* Tiles are sized for 10 cells across, 5 rows and the pool, so they're as large as the screen allows. Small levels simply have more empty space. The one exception: a level with a row of more than 10 cells shrinks its tiles, only if that row wouldn't fit otherwise.
+*From Q7, changed by the designer after playing.* Tiles are sized for 9 cells across, 5 rows and the pool, so they're as large as the screen allows. Small levels simply have more empty space. The one exception: a level with a row of more than 9 cells shrinks its tiles, only if that row wouldn't fit otherwise.
 
 - 🟩 A 3-row level and a 5-row level use the same tile size
-- 🟩 In a 494×880 window, tiles are about 45 pixels, not 28
+- 🟩 In a 494×880 window, tiles are about 50 pixels
 - 🟩 A row of 11 cells fits at 800×450 at normal size
 - 🟩 A row of 11 cells shrinks that level's tiles at 360×800
 
@@ -111,20 +111,22 @@ The theme is at the top, the rows are in the middle, and the pool is at the bott
 
 ### 🟦 R18. The pool has as many rows as its screen needs
 
-*Added by the designer after playing.* It has 2 rows on a wide screen, and more on a narrow one, so that a level's tiles always fit. On a given screen, the pool area is the same size in every level (R7).
+*Added by the designer after playing.* It has room for 2 rows on a wide screen, and more on a narrow one, so that a level's tiles always fit. On a given screen, the pool area is the same size in every level (R7). A level uses as few rows as it can, at the bottom of the area.
 
 - 🟩 At 800×450, the pool has 2 rows
-- 🟩 At 450×800, the pool has 3 rows
+- 🟩 At 450×800, the pool has 4 rows
 
 **Confirmed:** ☑
 
-### 🟦 R19. The top of the screen keeps its smaller size on narrow screens
+### 🟦 R19. On a portrait screen, the top of the screen has two lines and full-size buttons
 
-*Added by the designer after playing.* Six items won't fit at full tile size there.
+*Changed by the designer after playing, with the layout proposed by Claude.* Six items won't fit on one line at full size, and portrait has height to spare. Home, level number, points, shop and settings stay on the first line, and the theme gets its own centred line below. This is an exception to R17 and D30, for portrait only.
 
 - 🟩 At 450×800, the top of the screen is on screen, with nothing overlapping
+- 🟩 At 450×800, the theme is on its own line, centred
+- 🟩 At 800×450, the top of the screen is one line, as in R17
 
-**Confirmed:** ☑
+**Confirmed:** ☐
 
 ### 🟦 R13. The screen also shows the level number, the player's points and three buttons: home, shop and settings
 
