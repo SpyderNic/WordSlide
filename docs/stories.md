@@ -19,13 +19,12 @@ Each story gets an Example Mapping session before any implementation.
 | 11 | **Unlock the next level and save progress**, including 1 point per level completed (D23) | [Approved](example-maps/story-11-next-level-and-progress.md) with its [scenarios](../features/story-11-next-level-and-progress.feature); not implemented | None |
 | 12 | **First-level tutorial**: a strict walkthrough of level 1 (CrazyGames requires that the first minute makes it clear what to do) | [Approved](example-maps/story-12-first-level-onboarding.md) with its [scenarios](../features/story-12-first-level-tutorial.feature); not implemented | None |
 | 14 | **Level generator**: an offline tool, not shipped with the game, that suggests answers and a final word from a theme's word list. Every suggestion goes through the validator and needs the designer's approval (D11) | [Approved](example-maps/story-14-level-generator.md) with its [scenarios](../features/story-14-level-generator.feature); not implemented | None |
-| 15 | **Draft the first levels**: the levels for the first playable version | Not mapped | How many levels? Which themes? Level 1 is the tutorial level (story 12, R11). |
+| 15 | **Draft the first levels**: the levels for the first playable version | [Approved](example-maps/story-15-draft-the-first-levels.md) with its [scenarios](../features/story-15-draft-the-first-levels.feature); not implemented. Needs stories 1 and 14 | None |
 | 16 | **Visual style**: the game's real look, replacing the placeholder (D27) | Not mapped | How does a tapped letter travel from the pool to its cell (story 17, R10)? How do letters travel back to the pool, for Recall All and hinted letters (story 6, R10)? |
-| 18 | **Placeholder sounds** (D34), starting with placing a letter | Not mapped | Which actions get a sound? A word locking needs one (story 6, R14), and so does winning (story 10, R13). |
 
 ## Out of scope for the first playable version
 
 From the design-context document; not to be built unless the designer asks:
-hints, red herrings, power-ups, chapters and their content, daily challenges, async challenges/multiplayer, CrazyGames SDK integration, bonus words (story 13, moved out on 2026-10-31; see [later ideas](later-ideas.md)).
+hints, red herrings, power-ups, chapters and their content, daily challenges, async challenges/multiplayer, CrazyGames SDK integration, bonus words (story 13) and sound (story 18), both moved out on 2026-10-31; see [later ideas](later-ideas.md).
 
 There are no stars: they were replaced by 1 point per level completed (D23).

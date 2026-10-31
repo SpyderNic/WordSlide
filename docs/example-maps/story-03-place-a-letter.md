@@ -167,7 +167,7 @@ The tile's centre is the pointer (R14), so this means the tile mostly covers the
 
 ### 🟥 Q6. Does the prototype have sound?
 
-**Answer:** Yes, simple placeholder sounds, starting with placing a letter. They're story 18, so this story's scenarios stay silent.
+**Answer:** First answered as yes, with simple placeholder sounds in story 18. Sound was parked for the prototype on 2026-10-31.
 
 ### 🟥 Q7. What if the cell under the tile is a fixed cell?
 

@@ -51,7 +51,7 @@ Your document says not to assume a vertical word will emerge by chance.
 
 ### 🟦 R6. Nothing reaches the game until the designer approves it (D11)
 
-The generator only writes suggestions, never finished levels. Each run writes a colour-coded Markdown file, with a box to tick for each level you want (Q2).
+For the prototype, Claude does this review, and the designer stays blind (D46). The generator only writes suggestions, never finished levels. Each run writes a colour-coded Markdown file, with a box to tick for each level you want (Q2).
 
 - 🟩 Running the generator doesn't change the game's levels
 - 🟩 Ticking a suggestion and approving the file adds that level

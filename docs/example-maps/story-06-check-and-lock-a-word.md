@@ -130,7 +130,7 @@ What that looks like is story 7.
 
 ### 🟦 R14. A locking word pulses briefly, then all its tiles take a new colour
 
-*From Q3.* Revealed letters in that word take the locked colour too. It also gets a sound effect, which is in story 18.
+*From Q3.* Revealed letters in that word take the locked colour too. The sound effect is parked with story 18.
 
 - 🟩 When LEMUR locks, its row pulses, and all 5 tiles turn the locked colour
 

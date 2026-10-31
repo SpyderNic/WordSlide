@@ -107,9 +107,9 @@ They can't be used any more (R9).
 
 **Confirmed:** ☑
 
-### 🟦 R13. The only other effect is a win sound
+### 🟦 R13. There are no other effects in the prototype
 
-*From Q6.* The sound goes in story 18. Confetti and similar effects can come with story 16.
+*From Q6.* The win sound is parked with story 18. Confetti and similar effects can come with story 16.
 
 - 🟩 No confetti appears in the prototype
 

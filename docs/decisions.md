@@ -85,7 +85,7 @@ This needs answers that share all their letters, such as TEAM and MEAT, because 
 From the mapping of [story 1](example-maps/story-01-level-data-and-validator.md).
 
 ### D11. Level authoring
-Claude drafts the levels and the designer approves them.
+Claude drafts the levels and the designer approves them. For the prototype only, the designer plays them blind, so Claude approves them instead (D46).
 
 ### D12. Level size
 *Changed 2026-10-31.* A level has 2–5 rows, and answers have a length of 2–8. Length counts letters and digits, not special characters: ICE CREAM has a length of 8 and needs 9 cells on screen. Level 1 is the tutorial. Easy, medium and hard levels will later have their own limits on rows and word length, and extra letters in the pool, with a sawtooth escalation per category in mind.
@@ -165,8 +165,8 @@ A placed letter can be dragged directly to another empty cell, and the pool does
 
 A letter that doesn't land on an empty cell or a placed letter goes to the pool, whether it came from the pool or a cell. A placed letter over the pool highlights its own tile.
 
-### D34. Placeholder sound
-The prototype has simple placeholder sounds, starting with placing a letter. They're their own story.
+### D34. Sound
+*Changed 2026-10-31.* Sound is parked for the prototype, which has no sound.
 
 ### D35. Pool as a keyboard
 A second way to place letters, alongside dragging. Tapping a row selects it, then tapping a pool letter or pressing its key sends the letter to that row's first empty cell. No row is selected when a level opens, and the first input selects the top row. When an input fills a row, the selection moves to the next row with an empty cell, wrapping to the top. Backspace and the Up and Down arrows also work. The full rules are in [story 17](example-maps/story-17-pool-as-a-keyboard.md).
@@ -175,7 +175,7 @@ A second way to place letters, alongside dragging. Tapping a row selects it, the
 Recall All sends every placed letter back to the pool at once, with no confirmation. It's an icon of two arrows pointing down, beside the pool on its right. It's grey with nothing to recall. It has no keyboard shortcut in the prototype.
 
 ### D37. Checking a word
-A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour, with a sound effect.
+A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour.
 
 ### D38. The phase-two ceremony
 Details of D6. The ceremony starts after the last word's lock feedback, takes about 1 second and ignores input. The words slide, the rows move to the vertical centre of the space, and the pool and column fade together. The handles appear last. The column is a strip one cell wide and as tall as the rows, with a down-arrow notch at the top and an up-arrow notch at the bottom. The handles sit in a fixed line at the left edge of the screen. An instant win (D7) comes after the ceremony.
@@ -204,3 +204,9 @@ The game keeps full support for revealed letters (D8, D9), so they can come back
 
 ### D45. Handles depend on the reordering tutorial
 Handles only appear in phase two once the reordering tutorial has been shown, and without them rows can't be moved by any input. Today that's level 1, so this changes nothing yet. It lets reordering be introduced later, as long as earlier levels don't need it, and the validator rejects any that do.
+
+### D46. Blind prototype levels
+The designer wants to play the prototype as a new player, to judge difficulty. Claude writes the word lists and picks the levels, and never shows them. Only the tutorial level and the row counts are shared. After playing, the designer decides whether players need easing in more, and by the end curates the levels.
+
+### D47. Prototype content
+40 levels: Animals, Food, Space and Sports, with 10 each, and the tutorial (FOX, OWL, OX) as the first Animals level. Each theme follows the rows 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, as far as its words allow: with no 2-letter final word, those levels use 3 rows, and with no 3-letter words either, Claude flags it and they use 4. From level 2, reordering is needed and no letters are revealed. A full-screen interstitial naming the new theme fades in and out when the theme changes.
