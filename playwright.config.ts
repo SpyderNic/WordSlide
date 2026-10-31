@@ -1,8 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
+// Add each story here as it's built.
+const built = ["02-show-a-level","03-place-a-letter","04-return-a-letter","05-recall-all","06-check-and-lock-a-word","17-pool-as-a-keyboard"];
+
 const testDir = defineBddConfig({
-  features: ['tests/browser/*.feature', 'features/story-02-show-a-level.feature'],
+  features: ['tests/browser/*.feature', ...built.map((story) => `features/story-${story}.feature`)],
+  tags: '@browser',
   steps: 'tests/browser/steps/*.ts',
 });
 
@@ -10,7 +14,18 @@ export default defineConfig({
   testDir,
   reporter: [['list'], ['html', { outputFolder: 'reports/browser', open: 'never' }]],
   use: { baseURL: 'http://localhost:5173' },
-  projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 800, height: 450 } } }],
+  projects: [
+    {
+      name: 'desktop',
+      grepInvert: /@touch/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 800, height: 450 } },
+    },
+    {
+      name: 'touch',
+      grep: /@touch/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 800, height: 450 }, hasTouch: true },
+    },
+  ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',

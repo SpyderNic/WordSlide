@@ -213,21 +213,25 @@ Feature: Pool as a keyboard
 
   Rule: Tapping and dragging stay separate
 
+    @browser
     Scenario: A press without moving is a tap
       Given ZEBRA's row is selected
       When the player presses and releases a pool tile without moving it
       Then its letter goes to ZEBRA's row
 
+    @browser
     Scenario: A press with movement is a drag
       When the player presses a pool tile and moves it
       Then a drag starts, as in story 3
 
+    @browser
     Scenario: Pressing a placed letter without moving selects its row
       Given a Z placed in cell 1 of LEMUR's row
       When the player presses and releases the Z without moving it
       Then LEMUR's row is selected
       And the Z stays where it is
 
+    @browser
     Scenario: Pressing a placed letter and moving drags it
       Given a Z placed in cell 1 of LEMUR's row
       When the player presses the Z and moves it
@@ -298,12 +302,12 @@ Feature: Pool as a keyboard
       Then nothing changes
 
     Scenario: With no placed letters, Backspace goes back a row
-      Given ZEBRA's row reads Z E B R B
+      Given ZEBRA's row reads Z E B R E
       And KANGAROO's row is selected and has no placed letters
       When the player presses Backspace
       Then ZEBRA's row is selected
       And ZEBRA's row reads Z E B R _
-      And the B count goes up by one
+      And the E count goes up by one
 
     Scenario: Locked rows are skipped when going back
       Given ZEBRA is locked

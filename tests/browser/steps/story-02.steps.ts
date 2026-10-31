@@ -7,7 +7,7 @@ import { test, type GameView, type Scenario } from './fixtures';
 
 const { Given, When, Then } = createBdd(test);
 
-async function open(page: Page, level: Level, levelNumber: number, points: number): Promise<GameView> {
+export async function open(page: Page, level: Level, levelNumber: number, points: number): Promise<GameView> {
   await page.goto('/');
   await page.waitForFunction(() => (window as unknown as { wordSlideReady?: boolean }).wordSlideReady === true);
   return page.evaluate(
@@ -20,7 +20,7 @@ async function open(page: Page, level: Level, levelNumber: number, points: numbe
   );
 }
 
-async function current(page: Page): Promise<GameView> {
+export async function current(page: Page): Promise<GameView> {
   return page.evaluate(() => (window as unknown as { wordSlide: { view: () => GameView } }).wordSlide.view());
 }
 
@@ -270,8 +270,10 @@ Then(/^the pool order is (.+)$/, async ({ scenario }, order: string) => {
   expect(layoutOf(scenario).poolTiles.map((tile) => tile.character)).toEqual(order.split(', '));
 });
 
-Then(/^the pool shows (\S+) x(\d+)$/, async ({ scenario }, character: string, count: string) => {
-  expect(layoutOf(scenario).poolTiles.find((tile) => tile.character === character)?.count).toBe(Number(count));
+Then(/^the pool shows (\S+) x(\d+)$/, async ({ page, scenario }, character: string, count: string) => {
+  if (scenario.views.length === 0) scenario.views.push(await open(page, scenario.level, 1, 0));
+  const { layout } = await current(page);
+  expect(layout.poolTiles.find((tile) => tile.character === character)?.count).toBe(Number(count));
 });
 
 Then(/^the pool shows a grey (\S+) x0 tile between (\S+) and (\S+)$/, async ({ scenario }, character: string, before: string, after: string) => {

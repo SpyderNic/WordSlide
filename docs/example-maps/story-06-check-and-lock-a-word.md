@@ -1,6 +1,6 @@
 # Story 6: Check and lock a word
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-06-check-and-lock-a-word.feature](../../features/story-06-check-and-lock-a-word.feature). Not implemented yet. The typing and selection scenarios need story 17.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-06-check-and-lock-a-word.feature](../../features/story-06-check-and-lock-a-word.feature). Built on 2026-10-31.
 
 *As a player, I want the game to check each word I complete, so that correct words lock in and wrong ones can be fixed without penalty.*
 

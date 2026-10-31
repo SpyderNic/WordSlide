@@ -43,6 +43,7 @@ Feature: Place a letter
       When the player tries to drag the Z
       Then nothing is picked up
 
+    @browser
     Scenario: Pool tiles and rows stay in place
       Given the positions of every pool tile and row
       When the player places the Z
@@ -114,35 +115,42 @@ Feature: Place a letter
 
   Rule: The dragged tile shows where the letter will land
 
+    @browser
     Scenario: The tile's centre stays on the pointer
       When the player picks up a tile by its corner
       Then the tile moves so that its centre is under the pointer
 
+    @browser
     Scenario: The cell under the tile's centre is highlighted
       When the player drags a tile with its centre over cell 2 of ZEBRA's row, and touching cell 3
       Then cell 2 is highlighted
       And cell 3 isn't highlighted
 
+    @browser
     Scenario: The letter lands in the highlighted cell
       Given a tile with its centre over cell 2 of ZEBRA's row, and touching cell 3
       When the player releases it
       Then the letter lands in cell 2
 
+    @browser
     Scenario: The highlight follows the tile's centre
       Given cell 2 of ZEBRA's row is highlighted
       When the tile's centre moves over cell 3
       Then cell 3 is highlighted
       And cell 2 isn't highlighted
 
+    @browser
     Scenario: A placed letter can be highlighted
       Given a Z placed in cell 1 of LEMUR's row
       When the player drags a tile with its centre over that cell
       Then that cell is highlighted
 
+    @browser
     Scenario: A tile away from every cell highlights nothing
       When the player drags a tile over the theme
       Then no cell is highlighted
 
+    @browser
     Scenario: A tile in a gap highlights nothing, even if it touches cells
       Given the pool shows A x3
       When the player drags an A with its centre in the gap between two rows, and touching cells in both
@@ -151,6 +159,7 @@ Feature: Place a letter
       Then the pool shows A x3
       And no cell has changed
 
+    @browser
     Scenario: A fixed cell doesn't highlight
       Given L revealed at position 1 of LEMUR
       When the player drags a tile with its centre over the L, and touching cell 2
@@ -158,15 +167,21 @@ Feature: Place a letter
 
   Rule: Mouse and touch work the same way, one drag at a time
 
+    @browser
     Scenario Outline: Both inputs place a letter
       When the player drags Z to cell 1 of ZEBRA's row with a <input>
       Then cell 1 of ZEBRA's row holds a Z
 
       Examples:
+        | input |
+        | mouse |
+
+      @touch
+      Examples:
         | input  |
-        | mouse  |
         | finger |
 
+    @browser @touch
     Scenario: A second finger is ignored during a drag
       Given the player is dragging a letter with one finger
       When a second finger presses a pool tile
@@ -175,12 +190,14 @@ Feature: Place a letter
 
   Rule: Rotating a device keeps placed letters and cancels a drag
 
+    @browser
     Scenario: Placed letters survive a rotation
       Given a Z and an E placed in cells
       When the device rotates
       Then the level is redrawn
       And the Z and E are in the same cells
 
+    @browser
     Scenario: A pool letter being dragged goes back to the pool
       Given the pool shows A x3
       And the player is dragging an A from the pool
@@ -188,6 +205,7 @@ Feature: Place a letter
       Then the drag is cancelled
       And the pool shows A x3
 
+    @browser
     Scenario: A placed letter being dragged goes back to its cell
       Given the player is dragging a placed Z from cell 1 of LEMUR's row
       When the device rotates

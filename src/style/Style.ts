@@ -17,6 +17,9 @@ export interface Style {
   /** Milliseconds. */
   timings: {
     letterTravel: number;
+    lockPulse: number;
+    wrongShake: number;
+    alreadyFound: number;
     snap: number;
     rowMakeWay: number;
     ceremony: number;

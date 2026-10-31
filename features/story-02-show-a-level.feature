@@ -3,6 +3,7 @@
 # Unless a scenario says otherwise, the level has the theme "Animals",
 # the answers ZEBRA, LEMUR and KANGAROO, and nothing revealed.
 
+@browser
 Feature: Show a level
   As a player
   I want to see the level's theme, rows and available letters when it opens

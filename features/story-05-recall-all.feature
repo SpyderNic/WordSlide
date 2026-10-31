@@ -53,6 +53,7 @@ Feature: Recall All
 
   Rule: Pool tiles and rows stay in place
 
+    @browser
     Scenario: Nothing moves
       Given the positions of every pool tile and row
       And a Z placed in a cell
@@ -61,6 +62,7 @@ Feature: Recall All
 
   Rule: The button can't be used during a drag
 
+    @browser @touch
     Scenario: A second finger on the button is ignored
       Given a Z placed in a cell
       And the player is dragging a letter with one finger
@@ -70,10 +72,12 @@ Feature: Recall All
 
   Rule: The button's place and look
 
+    @browser
     Scenario: The button is beside the pool
       When the level opens
       Then the Recall All button is to the right of the pool
 
+    @browser
     Scenario: The button is an icon
       When the level opens
       Then the Recall All button shows two arrows pointing down

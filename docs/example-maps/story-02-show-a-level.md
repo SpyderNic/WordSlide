@@ -120,13 +120,13 @@ The theme is at the top, the rows are in the middle, and the pool is at the bott
 
 ### 🟦 R19. On a portrait screen, the top of the screen has two lines and full-size buttons
 
-*Changed by the designer after playing, with the layout proposed by Claude.* Six items won't fit on one line at full size, and portrait has height to spare. Home, level number, points, shop and settings stay on the first line, and the theme gets its own centred line below. This is an exception to R17 and D30, for portrait only.
+*Changed by the designer after playing.* Six items won't fit on one line at full size, and portrait has height to spare. Home, level number, points, shop and settings stay on the first line, and the theme gets its own centred line below. This is an exception to R17 and D30, for portrait only.
 
 - 🟩 At 450×800, the top of the screen is on screen, with nothing overlapping
 - 🟩 At 450×800, the theme is on its own line, centred
 - 🟩 At 800×450, the top of the screen is one line, as in R17
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R13. The screen also shows the level number, the player's points and three buttons: home, shop and settings
 

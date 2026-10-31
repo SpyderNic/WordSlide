@@ -1,6 +1,6 @@
 # Story 5: Recall All
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-05-recall-all.feature](../../features/story-05-recall-all.feature). Not implemented yet. The selection scenarios need story 17, and the locked-word scenario needs story 6.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-05-recall-all.feature](../../features/story-05-recall-all.feature). Built on 2026-10-31.
 
 *As a player, I want one button that clears all my placed letters, so that I can start again without losing the words I've solved.*
 

@@ -1,5 +1,5 @@
 import { cellsOf } from './characters';
-import { rowOrder, startingCells, startingPool, type Cell, type Level } from './level';
+import { rowOrder, startingCells, startingPool, type Cell, type Level, type PoolTile } from './level';
 
 export interface Rect {
   x: number;
@@ -22,6 +22,7 @@ export interface CellView extends Rect {
 
 export interface RowView {
   word: string;
+  locked: boolean;
   cells: CellView[];
 }
 
@@ -43,7 +44,20 @@ export interface LevelLayout {
   rows: RowView[];
   poolArea: Rect;
   poolTiles: PoolTileView[];
+  recall: Rect;
 }
+
+/** What's in the rows and pool right now, when it's not the start of the level. */
+export interface LevelContents {
+  rows: { word: string; cells: Cell[]; locked: boolean }[];
+  pool: PoolTile[];
+}
+
+export type Hit =
+  | { kind: 'cell'; row: number; cell: number }
+  | { kind: 'pool'; character: string | null }
+  | { kind: 'recall' }
+  | { kind: 'none' };
 
 const GAP = 0.08;
 const CELLS_ACROSS = 9;
@@ -98,11 +112,12 @@ function layoutTopItems(width: number, tile: number, portrait: boolean, levelNum
   ];
 }
 
-function layoutRow(word: string, cells: Cell[], top: number, width: number, tile: number): RowView {
+function layoutRow(word: string, cells: Cell[], locked: boolean, top: number, width: number, tile: number): RowView {
   const pitch = tile * (1 + GAP);
   const left = width / 2 - widthFor(cells.length, tile) / 2;
   return {
     word,
+    locked,
     cells: cells.map((cell, index) => ({
       cell,
       x: left + index * pitch,
@@ -113,9 +128,8 @@ function layoutRow(word: string, cells: Cell[], top: number, width: number, tile
   };
 }
 
-function layoutPool(level: Level, area: Rect, tile: number, across: number): PoolTileView[] {
+function layoutPool(pool: PoolTile[], area: Rect, tile: number, across: number): PoolTileView[] {
   const pitch = tile * (1 + GAP);
-  const pool = startingPool(level.answers);
   const usedRows = poolRowsFor(pool.length, across);
   const perRow = Math.ceil(pool.length / usedRows);
   const rows = Array.from({ length: usedRows }, (_, row) => pool.slice(row * perRow, (row + 1) * perRow));
@@ -133,7 +147,14 @@ function layoutPool(level: Level, area: Rect, tile: number, across: number): Poo
 }
 
 /** Everything's position comes from the screen size (D28). */
-export function layoutLevel(level: Level, levelNumber: number, points: number, width: number, height: number): LevelLayout {
+export function layoutLevel(
+  level: Level,
+  levelNumber: number,
+  points: number,
+  width: number,
+  height: number,
+  contents?: LevelContents,
+): LevelLayout {
   const answers = rowOrder(level.answers);
   const longestRow = Math.max(...answers.map((answer) => cellCount(answer.word)));
   const tile = tileSizeFor(width, height, longestRow);
@@ -144,14 +165,23 @@ export function layoutLevel(level: Level, levelNumber: number, points: number, w
   const margin = tile * 0.2;
 
   const top: Rect = { x: 0, y: 0, width, height: topTile * (portrait ? 2.2 : 1.2) };
-  const across = poolTilesAcross(width, tile);
+  const recallSize = tile * 1.1;
+  const across = poolTilesAcross(width - (portrait ? recallSize : 0), tile);
   const poolRows = poolRowsFor(LARGEST_POOL, across);
   const poolHeight = pitch * poolRows - tile * GAP;
+  // On a wide screen the pool stays centred. On a narrow one it makes room for Recall All.
+  const poolRight = portrait ? recallSize + margin : 0;
   const poolArea: Rect = {
     x: margin,
     y: height - poolHeight - margin,
-    width: width - margin * 2,
+    width: width - margin * 2 - poolRight,
     height: poolHeight,
+  };
+  const recall: Rect = {
+    x: width - margin - recallSize,
+    y: height - margin - recallSize,
+    width: recallSize,
+    height: recallSize,
   };
 
   const rowsSpace = poolArea.y - (top.y + top.height);
@@ -167,12 +197,31 @@ export function layoutLevel(level: Level, levelNumber: number, points: number, w
     topTileSize: topTile,
     top,
     topItems: layoutTopItems(width, topTile, portrait, levelNumber, points, level.theme),
-    rows: answers.map((answer, index) =>
-      layoutRow(answer.word, startingCells(answer), rowsTop + index * pitch, width, tile),
-    ),
+    rows: answers.map((answer, index) => {
+      const row = contents?.rows[index];
+      return layoutRow(answer.word, row?.cells ?? startingCells(answer), row?.locked ?? false, rowsTop + index * pitch, width, tile);
+    }),
     poolArea,
-    poolTiles: layoutPool(level, poolArea, tile, across),
+    poolTiles: layoutPool(contents?.pool ?? startingPool(level.answers), poolArea, tile, across),
+    recall,
   };
+}
+
+function isInside(rect: Rect, x: number, y: number): boolean {
+  return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+}
+
+/** What's under a point. A dragged tile's centre is the pointer, so this is also its target (story 3, R15). */
+export function hitTest(layout: LevelLayout, x: number, y: number): Hit {
+  for (let row = 0; row < layout.rows.length; row++) {
+    const cell = layout.rows[row].cells.findIndex((candidate) => isInside(candidate, x, y));
+    if (cell !== -1) return { kind: 'cell', row, cell };
+  }
+  if (isInside(layout.recall, x, y)) return { kind: 'recall' };
+  const tile = layout.poolTiles.find((candidate) => isInside(candidate, x, y));
+  if (tile) return { kind: 'pool', character: tile.character };
+  if (isInside(layout.poolArea, x, y)) return { kind: 'pool', character: null };
+  return { kind: 'none' };
 }
 
 /** How a row reads, for tests: _ for an empty cell. */

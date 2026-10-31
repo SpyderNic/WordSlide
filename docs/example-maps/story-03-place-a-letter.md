@@ -1,6 +1,6 @@
 # Story 3: Place a letter
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-03-place-a-letter.feature](../../features/story-03-place-a-letter.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-03-place-a-letter.feature](../../features/story-03-place-a-letter.feature). Built on 2026-10-31.
 
 *As a player, I want to drag letters from the pool into any empty cell, so that I can try out words and use the changing pool to work out the rest.*
 

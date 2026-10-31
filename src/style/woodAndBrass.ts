@@ -17,6 +17,9 @@ export const woodAndBrass: Style = {
   },
   timings: {
     letterTravel: 150,
+    lockPulse: 300,
+    wrongShake: 300,
+    alreadyFound: 1400,
     snap: 100,
     rowMakeWay: 100,
     ceremony: 1000,

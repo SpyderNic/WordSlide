@@ -103,6 +103,7 @@ Feature: Check and lock a word
 
   Rule: A wrong word gets gentle feedback and costs nothing
 
+    @browser
     Scenario: The row shakes and the letters stay
       When the player fills ZEBRA's row with ZEBRE
       Then the row shakes a little sideways
@@ -122,6 +123,7 @@ Feature: Check and lock a word
 
   Rule: Feedback doesn't block the player
 
+    @browser
     Scenario Outline: The player can act during feedback
       Given <feedback> is showing
       When the player drags a letter
@@ -139,6 +141,7 @@ Feature: Check and lock a word
       Given the answers TEAM and MEAT
       And TEAM is locked in row 1
 
+    @browser
     Scenario: The feedback appears and the letters stay
       When the player spells TEAM in row 2
       Then row 1 highlights briefly
@@ -146,6 +149,7 @@ Feature: Check and lock a word
       And row 2 still reads T E A M
       And the pool hasn't changed
 
+    @browser
     Scenario: The text rises and fades
       When "Already found" appears
       Then it gently rises and fades out
@@ -231,11 +235,13 @@ Feature: Check and lock a word
 
   Rule: A locking word pulses, then changes colour
 
+    @browser
     Scenario: The whole word changes
       When LEMUR locks
       Then its row pulses briefly
       And all 5 tiles take the locked colour
 
+    @browser
     Scenario: Revealed letters change too
       Given L revealed at position 1 of LEMUR
       When LEMUR locks

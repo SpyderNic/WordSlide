@@ -1,6 +1,6 @@
 # Story 4: Return a single letter
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-04-return-a-letter.feature](../../features/story-04-return-a-letter.feature). Not implemented yet. The scenario "The next input can fill it" needs story 17.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-04-return-a-letter.feature](../../features/story-04-return-a-letter.feature). Built on 2026-10-31.
 
 *As a player, I want to take a placed letter back to the pool, so that I can change my mind without wasting letters.*
 

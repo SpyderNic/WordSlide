@@ -1,6 +1,6 @@
 # Story 17: Pool as a keyboard
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-17-pool-as-a-keyboard.feature](../../features/story-17-pool-as-a-keyboard.feature). Not implemented yet. Build it after story 6, because its scenarios rely on rows locking.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-17-pool-as-a-keyboard.feature](../../features/story-17-pool-as-a-keyboard.feature). Built on 2026-10-31.
 
 *As a player, I want to select a word and then tap or type its letters, so that I can fill words quickly without dragging each letter.*
 

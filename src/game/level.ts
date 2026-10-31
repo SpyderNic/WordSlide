@@ -24,6 +24,7 @@ export interface PoolTile {
 
 export type Cell =
   | { kind: 'empty' }
+  | { kind: 'placed'; character: string }
   | { kind: 'revealed'; character: string }
   | { kind: 'special'; character: string };
 

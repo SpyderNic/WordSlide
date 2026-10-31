@@ -16,6 +16,21 @@ When('the game opens', async ({ page }) => {
   await page.waitForFunction(() => (window as unknown as { wordSlideReady?: boolean }).wordSlideReady === true);
 });
 
+When('the player types L on the keyboard', async ({ page }) => {
+  await page.keyboard.press('l');
+});
+
+Then('the first row shows L', async ({ page }) => {
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const game = (window as unknown as { wordSlide: { view: () => { layout: { rows: { cells: { cell: unknown }[] }[] } } } }).wordSlide;
+        return game.view().layout.rows[0].cells[0].cell;
+      }),
+    )
+    .toEqual({ kind: 'placed', character: 'L' });
+});
+
 Then('the screen fills the window', async ({ page }) => {
   const box = await page.locator('canvas').boundingBox();
   expect(box).toMatchObject({ x: 0, y: 0, width: 800, height: 450 });

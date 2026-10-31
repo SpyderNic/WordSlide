@@ -61,7 +61,9 @@ Given(/^the answer (?!.* revealed)(.+)$/, function (this: World, word: string) {
 Given('no revealed letters', function () {});
 
 Given(/^(.+) revealed at position (\d+) of (.+)$/, function (this: World, letter: string, position: string, word: string) {
-  reveal(levelOf(this), word, letter, Number(position));
+  const level = levelOf(this);
+  const row = /^row (\d+)$/.exec(word);
+  reveal(level, row ? rowOrder(level.answers)[Number(row[1]) - 1].word : word, letter, Number(position));
 });
 
 When('the validator checks the level', function (this: World) {
