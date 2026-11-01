@@ -496,7 +496,15 @@ Then(/^its range ends at its (\S+)$/, async ({ page, scenario }, end: string) =>
   const word = scenario.level.answers[0].word;
   const view = await two(page);
   const start = rowOf(view, word).columnCell;
-  await dragSlowlyAndRelease(page, word, start, end === 'T' ? 4 : -12);
+  const pitch = await pitchOf(page);
+  await dragWord(page, word, start, end === 'T' ? 4 : -12);
+  // Held past the end, the word stretches from that letter, not from the special character beyond it.
+  const held = await two(page);
+  const cell = Array.from(word).indexOf(end);
+  expect(Math.abs(rowOf(held, word).x - restingX(held, cell, pitch))).toBeLessThan(pitch * 0.45);
+  await page.waitForTimeout(200);
+  await page.mouse.up();
+  await settle(page);
   expect(Array.from(word)[rowOf(await two(page), word).columnCell]).toBe(end);
 });
 
@@ -682,7 +690,7 @@ Then('LEMUR stays where it is', async ({ page, scenario }) => {
 
 When('the player drags it to the right', async ({ page, scenario }) => {
   scenario.twoBefore = await two(page);
-  await dragWord(page, 'LEMUR', 0, 1);
+  await dragWord(page, 'LEMUR', 0, 3);
 });
 
 Then('it moves a little', async ({ page, scenario }) => {
@@ -691,7 +699,7 @@ Then('it moves a little', async ({ page, scenario }) => {
   const before = rowOf(scenario.twoBefore!, word);
   const now = rowOf(view, word);
   expect(Math.hypot(now.x - before.x, now.y - before.y)).toBeGreaterThan(0);
-  expect(Math.hypot(now.x - before.x, now.y - before.y)).toBeLessThan(await pitchOf(page));
+  expect(Math.hypot(now.x - before.x, now.y - before.y)).toBeLessThan((await pitchOf(page)) / 2);
 });
 
 Then('when released, it springs back with its L in the column', async ({ page, scenario }) => {
@@ -732,7 +740,8 @@ Then('then it snaps to its nearest letter', async ({ page }) => {
 
 When('the player flicks KANGAROO hard to the left', async ({ page, scenario }) => {
   await ready(page, scenario);
-  await flick(page, 'KANGAROO', 3, -400);
+  // Short enough that only the glide can carry the word all the way to the end of its range.
+  await flick(page, 'KANGAROO', 3, -200);
 });
 
 Then('it stops with its last O in the column at the furthest', async ({ page }) => {
@@ -1145,7 +1154,7 @@ When(/^the player drags the (top|bottom) row further (up|down)$/, async ({ page,
   scenario.twoBefore = await two(page);
   const word = row === 'top' ? 'LEMUR' : 'KANGAROO';
   scenario.stretchWord = word;
-  await dragHandle(page, word, direction === 'up' ? -1 : 1);
+  await dragHandle(page, word, direction === 'up' ? -3 : 3);
 });
 
 Then('when released, it springs back to its slot', async ({ page, scenario }) => {
@@ -1369,13 +1378,38 @@ When(/^the player (presses an arrow key|tries to drag a word)$/, async ({ page, 
   if (action.includes('arrow')) {
     await page.keyboard.press('ArrowRight');
   } else {
-    const point = await pointOnWord(page, 'LEMUR', 0);
+    const view = await two(page);
+    const pitch = await pitchOf(page);
+    const slot = view.rows.findIndex((row) => row.word === 'LEMUR');
+    // A row is pressed at its final slot, so aim there even while the word is still flying in.
+    const point = { x: (await pointOnWord(page, 'LEMUR', 2)).x, y: view.column.y + view.column.width / 2 + slot * pitch };
     await grab(page, point);
     await page.mouse.move(point.x - 100, point.y, { steps: 3 });
     scenario.heldWord = (await two(page)).dragging;
     await page.mouse.up();
   }
   await settle(page);
+});
+
+// Test audit
+
+Given("ZEBRA's row is selected in slot 2", async ({ page }) => {
+  await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.select(1));
+});
+
+When(/^the player drags LEMUR far past its (first|last) letter$/, async ({ page, scenario }, end: string) => {
+  await ready(page, scenario);
+  scenario.stretchCell = end === 'first' ? 0 : 4;
+  await arrange(page, ['LEMUR', 'ZEBRA', 'KANGAROO'], { LEMUR: scenario.stretchCell });
+  await dragWord(page, 'LEMUR', scenario.stretchCell, end === 'first' ? 3 : -3);
+});
+
+Then('it stretches less than half a cell past that letter', async ({ page, scenario }) => {
+  const view = await two(page);
+  const pitch = await pitchOf(page);
+  const stretch = Math.abs(rowOf(view, 'LEMUR').x - restingX(view, scenario.stretchCell!, pitch));
+  expect(stretch).toBeGreaterThan(0);
+  expect(stretch).toBeLessThan(pitch / 2);
 });
 
 Then('nothing moves', async ({ page, scenario }) => {
@@ -1447,7 +1481,8 @@ Given('the celebration is playing', async ({ page, scenario }) => {
 });
 
 Then('the popup appears for the new orientation', async ({ page }) => {
-  await waitForPopup(page);
+  // Well inside the 1.5 second wait, which would bring the popup up by itself anyway.
+  await expect.poll(async () => (await two(page)).popup !== null, { timeout: 700 }).toBe(true);
   const [panel] = await popupParts(page);
   expect(panel.x).toBe(225);
 });

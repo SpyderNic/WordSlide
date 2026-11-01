@@ -30,6 +30,17 @@ Given('the player is holding the Z from the pool', async ({ page, scenario }) =>
   await page.mouse.move(scenario.pointer.x, scenario.pointer.y, { steps: 4 });
 });
 
+When('the held letter moves over another pool tile', async ({ page }) => {
+  const { layout } = await current(page);
+  const other = layout.poolTiles.find((tile) => tile.character !== 'Z')!;
+  const { x, y } = centre(other);
+  await page.mouse.move(x, y, { steps: 4 });
+});
+
+Then('no pool tile is highlighted', async ({ page }) => {
+  expect((await current(page)).highlighted).toBeNull();
+});
+
 When("the player clicks a cell of ZEBRA's row", async ({ page, scenario }) => {
   const { layout } = await current(page);
   const { x, y } = centre(layout.rows.find((row) => row.word === 'ZEBRA')!.cells[0]);

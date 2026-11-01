@@ -597,11 +597,17 @@ When('"Already found" appears', async ({ page, scenario }) => {
 
 Then('it gently rises and fades out', async ({ page, scenario }) => {
   const first = scenario.before!.foundText!;
-  await expect
-    .poll(async () => (await current(page)).foundText?.y ?? -1)
-    .toBeLessThan(first.y);
-  await expect.poll(async () => (await current(page)).foundText?.alpha ?? 0).toBeLessThan(first.alpha);
-  await expect.poll(async () => (await current(page)).foundText).toBeNull();
+  // Watches the message while it exists: once it has gone, there's nothing left to have risen or faded.
+  const seen = [first];
+  for (let look = 0; look < 100; look++) {
+    const { foundText } = await current(page);
+    if (!foundText) break;
+    seen.push(foundText);
+    await page.waitForTimeout(30);
+  }
+  expect((await current(page)).foundText).toBeNull();
+  expect(Math.min(...seen.map((found) => found.y))).toBeLessThan(first.y);
+  expect(Math.min(...seen.map((found) => found.alpha))).toBeLessThan(first.alpha);
 });
 
 When('LEMUR locks', async ({ page, scenario }) => {

@@ -38,3 +38,27 @@ Feature: What the screen shows
   Scenario: A word that stopped before the release doesn't glide
     When the player swings LEMUR fast, stops, and releases it
     Then it snaps without gliding
+
+  Scenario: A locked word alone leaves the Recall All button grey
+    When LEMUR locks
+    Then the Recall All button is drawn grey
+
+  Scenario: A letter from the pool doesn't highlight a tile over the pool
+    Given the player is holding the Z from the pool
+    When the held letter moves over another pool tile
+    Then no pool tile is highlighted
+
+  Scenario Outline: A word stretches only a little past either end
+    When the player drags LEMUR far past its <end> letter
+    Then it stretches less than half a cell past that letter
+
+    Examples:
+      | end   |
+      | first |
+      | last  |
+
+  Scenario: A row moved with the keyboard can win
+    Given the rows are LEMUR, ZEBRA, KANGAROO with L, E, K in the column
+    And ZEBRA's row is selected in slot 2
+    When the player presses Shift+Up
+    Then the level is won

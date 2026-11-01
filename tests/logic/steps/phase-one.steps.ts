@@ -183,7 +183,8 @@ Given(/^the pool shows (?!these)(.+)$/, function (this: World, text: string) {
   for (const { character, count } of parts) {
     const board = boardOf(this);
     if (isSetup(this)) {
-      while (board.countOf(character) > count) placeSomewhere(this, character);
+      // Bounded, so a count that never falls fails the check below instead of looping forever.
+      for (let tries = board.countOf(character); tries > count; tries--) placeSomewhere(this, character);
     }
     assert.equal(board.countOf(character), count, `${character} count`);
   }

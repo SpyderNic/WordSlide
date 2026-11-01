@@ -40,6 +40,7 @@ export interface Scenario {
   twoBefore?: PhaseTwoTestView;
   slideDistance?: number;
   stretchWord?: string;
+  stretchCell?: number;
   finalWordGiven?: boolean;
   columnPlan?: Record<string, { order: string[]; cells: Record<string, number> }>;
   /** What the screen showed, frame by frame, during the scenario's action. */
