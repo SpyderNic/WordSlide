@@ -650,6 +650,23 @@ Then("its letter goes to ZEBRA's row", async ({ page, scenario }) => {
   expect(layout.rows[rowOf(layout, 'ZEBRA')].cells[0].cell).toEqual({ kind: 'placed', character: 'K' });
 });
 
+When('the player presses a pool tile, wobbles less than 15% of a tile and releases it', async ({ page, scenario }) => {
+  const layout = await layoutNow(page, scenario);
+  const point = centreOf(poolTile(layout, 'K'));
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await page.mouse.move(point.x + layout.tileSize * 0.1, point.y);
+  await page.mouse.up();
+});
+
+When('the player presses a pool tile and moves it just over 15% of a tile', async ({ page, scenario }) => {
+  const layout = await layoutNow(page, scenario);
+  const point = centreOf(poolTile(layout, 'K'));
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await page.mouse.move(point.x + layout.tileSize * 0.2, point.y);
+});
+
 When('the player presses a pool tile and moves it', async ({ page, scenario }) => {
   await holdPoolTile(page, scenario, 'A', themePoint(await layoutNow(page, scenario)));
 });

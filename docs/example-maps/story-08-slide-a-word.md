@@ -104,9 +104,9 @@ The column is centred and every word keeps a cell in it, so every word can alway
 
 ### 🟦 R12. A fast flick keeps the word gliding for a moment before it snaps
 
-*From Q4.* It stops at the end of its range and snaps to its nearest letter as usual.
+*From Q4, and the test audit.* It stops at the end of its range. It eases to a stop on its nearest letter over 0.25 seconds, with no bounce (D39).
 
-- 🟩 Flicking LEMUR left carries it on after release, then it snaps
+- 🟩 Flicking LEMUR left carries it on after release, then it eases to a stop
 - 🟩 A slow release doesn't glide
 
 **Confirmed:** ☑

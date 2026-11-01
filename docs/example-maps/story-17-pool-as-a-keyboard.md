@@ -84,7 +84,8 @@ Upper and lower case are the same.
 ### 🟦 R8. A short press is a tap, and moving while pressed is a drag
 
 - 🟩 Pressing and releasing a pool tile without moving it is a tap
-- 🟩 Pressing a pool tile and moving it starts a drag, as in story 3
+- 🟩 A wobble of less than 15% of a tile while pressing is still a tap
+- 🟩 Pressing a pool tile and moving it 15% of a tile or more starts a drag, as in story 3
 - 🟩 Pressing a placed letter and moving it drags the letter. Without moving, it selects the row.
 
 **Confirmed:** ☑

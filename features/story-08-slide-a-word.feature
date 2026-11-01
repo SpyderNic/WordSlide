@@ -148,6 +148,7 @@ Feature: Slide a word horizontally
     Scenario: The word carries on after a flick
       When the player flicks LEMUR to the left
       Then it keeps moving for a moment after release
+      And it eases to a stop over 0.25 seconds, with no bounce
       And then it snaps to its nearest letter
 
     Scenario: A flick stops at the end of the range

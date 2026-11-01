@@ -731,6 +731,10 @@ Then('it keeps moving for a moment after release', async ({ page }) => {
   expect(rowOf(await two(page), 'LEMUR').x).not.toBe(x);
 });
 
+Then('it eases to a stop over 0.25 seconds, with no bounce', async ({ page }) => {
+  expect(await lastMove(page)).toMatchObject({ ease: 'Sine.easeOut', duration: 250 });
+});
+
 Then('then it snaps to its nearest letter', async ({ page }) => {
   await settle(page);
   const view = await two(page);
@@ -1392,6 +1396,16 @@ When(/^the player (presses an arrow key|tries to drag a word)$/, async ({ page, 
 });
 
 // Test audit
+
+Then('each handle is drawn at its full size', async ({ page }) => {
+  const objects = await screen(page);
+  const { handles } = await two(page);
+  for (const handle of handles) {
+    const tile = tileAt(objects, handle.x + handle.width / 2, handle.y + handle.height / 2)!;
+    expect(tile.width).toBeCloseTo(handle.width);
+    expect(tile.height).toBeCloseTo(handle.height);
+  }
+});
 
 Given("ZEBRA's row is selected in slot 2", async ({ page }) => {
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.select(1));

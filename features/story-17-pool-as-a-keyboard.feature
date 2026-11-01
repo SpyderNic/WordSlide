@@ -220,8 +220,19 @@ Feature: Pool as a keyboard
       Then its letter goes to ZEBRA's row
 
     @browser
+    Scenario: A small wobble is still a tap
+      Given ZEBRA's row is selected
+      When the player presses a pool tile, wobbles less than 15% of a tile and releases it
+      Then its letter goes to ZEBRA's row
+
+    @browser
     Scenario: A press with movement is a drag
       When the player presses a pool tile and moves it
+      Then a drag starts, as in story 3
+
+    @browser
+    Scenario: Moving just over 15% of a tile is a drag
+      When the player presses a pool tile and moves it just over 15% of a tile
       Then a drag starts, as in story 3
 
     @browser

@@ -205,13 +205,21 @@ export class PhaseTwoView {
   }
 
   private buildHandle(): Phaser.GameObjects.Container {
-    const { size } = this.handleRect();
-    const background = this.scene.add.rectangle(0, 0, size, size, colours.tile);
+    const background = this.scene.add.rectangle(0, 0, 0, 0, colours.tile);
     const lines = this.scene.add.graphics({ lineStyle: { width: 3, color: colours.text } });
+    const handle = this.scene.add.container(0, 0, [background, lines]).setDepth(3).setVisible(false);
+    this.sizeHandle(handle);
+    return handle;
+  }
+
+  private sizeHandle(handle: Phaser.GameObjects.Container) {
+    const { size } = this.handleRect();
+    const [background, lines] = handle.list as [Phaser.GameObjects.Rectangle, Phaser.GameObjects.Graphics];
+    background.setSize(size, size);
+    lines.clear();
     for (const offset of [-size * 0.2, 0, size * 0.2]) {
       lines.lineBetween(-size * 0.28, offset, size * 0.28, offset);
     }
-    return this.scene.add.container(0, 0, [background, lines]).setDepth(3).setVisible(false);
   }
 
   private placeEverything() {
@@ -252,8 +260,7 @@ export class PhaseTwoView {
       }
     });
     view.selection.setPosition((cells.length - 1) * this.pitch * 0.5, 0).setSize(cells.length * this.pitch, size * 1.08);
-    const { size: handleSize } = this.handleRect();
-    view.handle.setSize(handleSize, handleSize);
+    this.sizeHandle(view.handle);
   }
 
   private cancelPress() {

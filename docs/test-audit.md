@@ -1,22 +1,28 @@
 # Test audit report
 
-Requested by the designer on 2026-10-31, finished on 2026-11-01. No game behaviour changed. Only tests changed, plus some test-only bookkeeping removed from the game code.
+Requested by the designer on 2026-10-31, finished on 2026-11-01. The audit itself changed no game behaviour: only tests, plus some test-only bookkeeping removed from the game code. The designer's answers below then made two changes to the game, both listed there.
 
 ## Result
 
-- 413 tests pass: 188 logic and 225 browser.
+- 419 tests pass: 191 logic and 228 browser.
 - Each rule in stories 1 to 10 and 17 was broken on purpose, 245 breaks in all.
 - 222 were caught straight away.
-- 14 of the other 23 are now caught, after stronger tests or a corrected break.
-- 9 remain uncaught. No player could see 8 of them. The other is a question below.
+- 15 of the other 23 are now caught, after stronger tests or a corrected break.
+- 8 remain uncaught, and no player could notice any of them.
+- The agreed changes below were broken on purpose as well, and all 5 breaks were caught.
 
 ## Questions for the designer
 
-1. **Tap or drag.** A press counts as a tap until it moves 15% of a tile, so a slightly shaky press still taps. The scenarios only say "without moving". Should that allowance stay? Recommendation: keep it, and agree the amount.
-2. **The snap after a flick.** D39 reads as a bounce, but after a flick the word eases to a stop over 0.25 seconds, with no bounce. Which do you want? Recommendation: keep the ease, because a bounce after a glide could feel jumpy, and update D39.
-3. **`?level=N` in the released game.** D42 says development builds only, but it works in the released game too. Recommendation: remove it from released builds.
-4. **Ctrl and Alt with a letter.** Pressing Ctrl+R types an R if the pool has one. No scenario covers this. Recommendation: ignore keys held with Ctrl or Alt.
-5. **Handles after rotating.** After a rotation, a handle may keep its old size while the rest of the row resizes. This comes from reading the code, not from seeing it happen. Recommendation: check it, then fix it if it's real.
+Answered on 2026-11-01:
+
+1. **Tap or drag: keep it.** A press stays a tap until it moves 15% of a tile. This is now in story 17, tested just under and just over the limit.
+2. **The snap after a flick: keep the ease.** D39 and story 8 now say a flick eases to a stop over 0.25 seconds, with no bounce.
+3. **`?level=N`: development builds only.** Changed in the game. The released build no longer contains the code that reads it.
+5. **Handles after rotating: a real bug, now fixed.** After a rotation, a handle kept its old size, 46 instead of 83 in the test.
+
+Still open:
+
+4. **Ctrl and Alt with a letter.** Ignoring both would break accented letters, because many keyboards type é with Alt or AltGr, so nothing has changed. Pressing a browser shortcut such as Ctrl+C can still place a letter. The narrower option is to ignore Ctrl or Cmd held on their own, and keep anything with Alt or AltGr.
 
 ## Wording to tighten
 
@@ -48,13 +54,12 @@ These need the designer's approval, so they're unchanged:
 
 **Story 10.** Winning with Shift+arrow had no test. Fixed. Gold, fade, popup and snap read values the game kept for the tests, and now read the real objects. Rotating during the celebration only checked that a popup appeared, which happens anyway after 1.5 seconds. It now has to jump there.
 
-**Story 17.** "Row is selected" now uses a real click. The arrow selection is checked per arrow. See question 1.
+**Story 17.** "Row is selected" now uses a real click. The arrow selection is checked per arrow. A press now has a tested 15% allowance before it becomes a drag.
 
 ## Breaks that nothing catches, and why
 
 | Break | Why nothing fails |
 | --- | --- |
-| Tap or drag allowance removed | Question 1: no agreed rule to test yet |
 | Second touch pointer removed | That line lets the game track a second finger, and the rule is to ignore it. The line is unnecessary |
 | First typed letter's row | A later line moves on from a full row, with the same result |
 | Accented key check | Redundant: the next line already rejects that case |

@@ -3,6 +3,7 @@ import { Board, type BoardEvent } from '../game/board';
 import { PhaseTwo } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Level } from '../game/level';
+import { startingLevelNumber } from '../game/startingLevel';
 import { testLevels } from '../levels/testLevels';
 import { currentStyle } from '../style';
 import { PhaseTwoView } from './PhaseTwoView';
@@ -24,11 +25,6 @@ interface Press {
 
 function hex(colour: number): string {
   return `#${colour.toString(16).padStart(6, '0')}`;
-}
-
-function firstLevelNumber(): number {
-  const requested = Number(new URLSearchParams(window.location.search).get('level'));
-  return requested >= 1 && requested <= testLevels.length ? requested : 1;
 }
 
 function centre(rect: Rect) {
@@ -57,7 +53,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.levelNumber = firstLevelNumber();
+    this.levelNumber = startingLevelNumber(window.location.search, testLevels.length, import.meta.env.DEV);
     this.show(testLevels[this.levelNumber - 1], this.levelNumber, 0);
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.onResize());
 

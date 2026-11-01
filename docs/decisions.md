@@ -181,7 +181,7 @@ A row is checked as soon as it's full, with no button. A wrong word's row shakes
 Details of D6. The ceremony starts after the last word's lock feedback, takes about 1 second and ignores input. The words slide, the rows move to the vertical centre of the space, and the pool and column fade together. The handles appear last. The column is a strip one cell wide and as tall as the rows, with a down-arrow notch at the top and an up-arrow notch at the bottom. The handles sit in a fixed line at the left edge of the screen. An instant win (D7) comes after the ceremony.
 
 ### D39. Sliding words
-A word follows the pointer smoothly, then snaps to its nearest letter with a 0.1 second bounce-out tween. Past the end of its range it stretches slightly and springs back, and a fast flick glides before snapping. Letters in the column look ordinary until the right word is found.
+A word follows the pointer smoothly, then snaps to its nearest letter with a 0.1 second bounce-out tween. Past the end of its range it stretches slightly and springs back. A fast flick glides on and eases to a stop on a letter over 0.25 seconds, with no bounce. Letters in the column look ordinary until the right word is found.
 
 On a keyboard, Up and Down select a row and wrap around. Left and Right slide it one letter at a time and don't wrap. With no row selected, Left or Right selects the top row. A drag hides the selection until the next arrow.
 

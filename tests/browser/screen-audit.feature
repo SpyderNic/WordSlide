@@ -57,6 +57,12 @@ Feature: What the screen shows
       | first |
       | last  |
 
+  Scenario: Handles resize with a rotation
+    Given the ceremony has ended
+    When the device rotates to 1000×800
+    Then each handle is drawn at its full size
+    And each handle shows three short horizontal lines
+
   Scenario: A row moved with the keyboard can win
     Given the rows are LEMUR, ZEBRA, KANGAROO with L, E, K in the column
     And ZEBRA's row is selected in slot 2
