@@ -18,11 +18,8 @@ Answered on 2026-11-01:
 1. **Tap or drag: keep it.** A press stays a tap until it moves 15% of a tile. This is now in story 17, tested just under and just over the limit.
 2. **The snap after a flick: keep the ease.** D39 and story 8 now say a flick eases to a stop over 0.25 seconds, with no bounce.
 3. **`?level=N`: development builds only.** Changed in the game. The released build no longer contains the code that reads it.
+4. **Ctrl and Alt with a letter: leave it as it is.** Ignoring either would risk accented letters, because many keyboards type é with Alt or AltGr. A browser shortcut such as Ctrl+C can still place a letter, and the designer accepts that.
 5. **Handles after rotating: a real bug, now fixed.** After a rotation, a handle kept its old size, 46 instead of 83 in the test.
-
-Still open:
-
-4. **Ctrl and Alt with a letter.** Ignoring both would break accented letters, because many keyboards type é with Alt or AltGr, so nothing has changed. Pressing a browser shortcut such as Ctrl+C can still place a letter. The narrower option is to ignore Ctrl or Cmd held on their own, and keep anything with Alt or AltGr.
 
 ## Wording to tighten
 
