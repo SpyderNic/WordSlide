@@ -2,14 +2,17 @@ import { expect, type Page } from '@playwright/test';
 import { createBdd, type DataTable } from 'playwright-bdd';
 import { rowText, type CellView, type LevelLayout, type PoolTileView, type Rect, type RowView } from '../../../src/game/layout';
 import type { Level } from '../../../src/game/level';
+import { startingPool } from '../../../src/game/level';
 import { levelContaining, levelWithRows, makeLevel, parseWords, reveal } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
+import { drawnIn, installProbe, screen, textAt, tileAt } from './probe';
 
 const { Given, When, Then } = createBdd(test);
 
 export async function open(page: Page, level: Level, levelNumber: number, points: number): Promise<GameView> {
   await page.goto('/');
   await page.waitForFunction(() => (window as unknown as { wordSlideReady?: boolean }).wordSlideReady === true);
+  await installProbe(page);
   return page.evaluate(
     ({ level, levelNumber, points }) => {
       const game = (window as unknown as { wordSlide: { show: (...args: unknown[]) => void; view: () => GameView } }).wordSlide;
@@ -36,6 +39,15 @@ function rowOf(layout: LevelLayout, word: string): RowView {
   const row = layout.rows.find((candidate) => candidate.word === word);
   if (!row) throw new Error(`No row for ${word}`);
   return row;
+}
+
+function centreY(rect: Rect) {
+  return rect.y + rect.height / 2;
+}
+
+async function topText(page: Page, scenario: Scenario, name: string) {
+  const item = layoutOf(scenario).topItems.find((candidate) => candidate.name === name)!;
+  return textAt(await screen(page), centreX(item), centreY(item))?.text;
 }
 
 function bottom(rect: Rect) {
@@ -91,7 +103,9 @@ Given(/^the answers (.+)$/, async ({ scenario }, list: string) => {
   scenario.level = makeLevel(parseWords(list));
 });
 
-Given('nothing revealed', async () => {});
+Given('nothing revealed', async ({ scenario }) => {
+  expect(scenario.level.answers.every((answer) => !answer.revealed?.length)).toBe(true);
+});
 
 Given(/^(\S+) revealed at position (\d+) of (.+)$/, async ({ scenario }, letter: string, position: string, word: string) => {
   reveal(scenario.level, word, letter, Number(position));
@@ -112,7 +126,10 @@ Given('one level with 8 pool tiles and one with 20', async ({ scenario }) => {
   ];
 });
 
-Given('both levels have 3 rows', async () => {});
+Given('both levels have 3 rows', async ({ scenario }) => {
+  expect(scenario.levels.map((level) => level.answers.length)).toEqual([3, 3]);
+  expect(scenario.levels.map((level) => startingPool(level.answers).length)).toEqual([8, 20]);
+});
 
 Given('one level with 3 rows and one with 5', async ({ scenario }) => {
   scenario.levels = [levelWithRows(3), levelWithRows(5)];
@@ -152,9 +169,9 @@ When(/^the device rotates to (\d+×\d+)$/, async ({ page, scenario }, size: stri
   scenario.views.push(await current(page));
 });
 
-Then('the theme {string} is at the top of the screen', async ({ scenario }, theme: string) => {
+Then('the theme {string} is at the top of the screen', async ({ page, scenario }, theme: string) => {
   const item = layoutOf(scenario).topItems.find((candidate) => candidate.name === 'theme')!;
-  expect(item.text).toBe(theme);
+  expect(await topText(page, scenario, 'theme')).toBe(theme);
   expect(bottom(item)).toBeLessThanOrEqual(bottom(layoutOf(scenario).top));
 });
 
@@ -178,12 +195,12 @@ Then('the top of the screen reads, from left to right: home, level number, theme
   items.slice(1).forEach((item, index) => expect(item.x).toBeGreaterThanOrEqual(right(items[index])));
 });
 
-Then(/^the level number shows (\d+)$/, async ({ scenario }, level: string) => {
-  expect(layoutOf(scenario).topItems.find((item) => item.name === 'level')!.text).toContain(String(level));
+Then(/^the level number shows (\d+)$/, async ({ page, scenario }, level: string) => {
+  expect(await topText(page, scenario, 'level')).toContain(String(level));
 });
 
-Then(/^the points show (\d+)$/, async ({ scenario }, points: string) => {
-  expect(layoutOf(scenario).topItems.find((item) => item.name === 'points')!.text).toContain(String(points));
+Then(/^the points show (\d+)$/, async ({ page, scenario }, points: string) => {
+  expect(await topText(page, scenario, 'points')).toContain(String(points));
 });
 
 Then(/^the rows are (.+) from top to bottom$/, async ({ scenario }, rows: string) => {
@@ -218,12 +235,15 @@ Then(/^its row starts as (.+)$/, async ({ scenario }, row: string) => {
   expect(rowText(rowOf(layoutOf(scenario), scenario.level.answers[0].word))).toBe(row);
 });
 
-Then('the L is on a revealed-colour tile', async ({ scenario }) => {
-  const { cell } = rowOf(layoutOf(scenario), 'LEMUR').cells[0];
-  expect(cell).toEqual({ kind: 'revealed', character: 'L' });
+Then('the L is on a revealed-colour tile', async ({ page, scenario }) => {
+  const cell = rowOf(layoutOf(scenario), 'LEMUR').cells[0];
+  expect(cell.cell).toEqual({ kind: 'revealed', character: 'L' });
   const { tileRevealed, tile, tilePlaced } = viewOf(scenario).colours;
   expect(tileRevealed).not.toBe(tile);
   expect(tileRevealed).not.toBe(tilePlaced);
+  const objects = await screen(page);
+  expect(tileAt(objects, centreX(cell), centreY(cell))?.fill).toBe(tileRevealed);
+  expect(textAt(objects, centreX(cell), centreY(cell))?.text).toBe('L');
 });
 
 Then("there's a one-cell gap between HOT and DOG", async ({ scenario }) => {
@@ -232,16 +252,19 @@ Then("there's a one-cell gap between HOT and DOG", async ({ scenario }) => {
   expect(cells[3].width).toBe(cells[2].width);
 });
 
-Then('that gap has no tile and no outline', async ({ scenario }) => {
-  expect(rowOf(layoutOf(scenario), 'HOT DOG').cells[3].cell.kind).toBe('special');
+Then('that gap has no tile and no outline', async ({ page, scenario }) => {
+  const drawn = drawnIn(await screen(page), rowOf(layoutOf(scenario), 'HOT DOG').cells[3]);
+  expect(drawn.filter((object) => object.kind === 'rect')).toEqual([]);
 });
 
 Then('cell 2 shows a hyphen', async ({ scenario }) => {
   expect(rowOf(layoutOf(scenario), 'T-REX').cells[1].cell).toEqual({ kind: 'special', character: '-' });
 });
 
-Then('that cell has no tile and no outline', async ({ scenario }) => {
-  expect(rowOf(layoutOf(scenario), 'T-REX').cells[1].cell.kind).toBe('special');
+Then('that cell has no tile and no outline', async ({ page, scenario }) => {
+  const drawn = drawnIn(await screen(page), rowOf(layoutOf(scenario), 'T-REX').cells[1]);
+  expect(drawn.filter((object) => object.kind === 'rect')).toEqual([]);
+  expect(drawn.map((object) => object.text)).toEqual(['-']);
 });
 
 Then(/^the pool has (\d+) tiles holding (\d+) letters$/, async ({ scenario }, tiles: string, letters: string) => {
@@ -258,12 +281,13 @@ Then('the pool shows these tiles in this order:', async ({ scenario }, table: Da
 Then("each pool tile shows its count in its bottom-right corner", async ({ page, scenario }) => {
   const { poolTiles } = layoutOf(scenario);
   expect(poolTiles.length).toBeGreaterThan(0);
-  const counts = await page.evaluate(() => (window as unknown as { wordSlide: { countPositions: () => { x: number; y: number }[] } }).wordSlide.countPositions());
-  counts.forEach((position, index) => {
-    const tile = poolTiles[index];
-    expect(position.x).toBeGreaterThan(centreX(tile));
-    expect(position.y).toBeGreaterThan(tile.y + tile.height / 2);
-  });
+  const objects = await screen(page);
+  for (const tile of poolTiles) {
+    const count = drawnIn(objects, tile).find((object) => object.text === `x${tile.count}`);
+    expect(count, `${tile.character}'s count`).toBeDefined();
+    expect(count!.x).toBeGreaterThan(centreX(tile));
+    expect(count!.y).toBeGreaterThan(tile.y + tile.height / 2);
+  }
 });
 
 Then(/^the pool order is (.+)$/, async ({ scenario }, order: string) => {
@@ -276,8 +300,10 @@ Then(/^the pool shows (\S+) x(\d+)$/, async ({ page, scenario }, character: stri
   expect(layout.poolTiles.find((tile) => tile.character === character)?.count).toBe(Number(count));
 });
 
-Then(/^the pool shows a grey (\S+) x0 tile between (\S+) and (\S+)$/, async ({ scenario }, character: string, before: string, after: string) => {
+Then(/^the pool shows a grey (\S+) x0 tile between (\S+) and (\S+)$/, async ({ page, scenario }, character: string, before: string, after: string) => {
   const tiles = layoutOf(scenario).poolTiles;
+  const grey = tiles.find((tile) => tile.character === character)!;
+  expect(tileAt(await screen(page), centreX(grey), centreY(grey))?.fill).toBe(viewOf(scenario).colours.tileGrey);
   const index = tiles.findIndex((tile) => tile.character === character);
   expect(tiles[index].count).toBe(0);
   expect(tiles[index - 1].character).toBe(before);
@@ -346,12 +372,15 @@ Then('the theme has its own centred line', async ({ scenario }) => {
   });
 });
 
-Then("there's no highlighted column", async ({ scenario }) => {
+Then("there's no highlighted column", async ({ page, scenario }) => {
   expect(layoutOf(scenario)).not.toHaveProperty('column');
+  expect((await screen(page)).filter((object) => object.triangles.length > 0)).toEqual([]);
 });
 
-Then('there are no row handles', async ({ scenario }) => {
+Then('there are no row handles', async ({ page, scenario }) => {
   expect(layoutOf(scenario)).not.toHaveProperty('handles');
+  // The only graphics in phase one are the Recall All arrows.
+  expect((await screen(page)).filter((object) => object.kind === 'graphics')).toHaveLength(1);
 });
 
 Then('the level stays exactly as it was', async ({ page, scenario }) => {

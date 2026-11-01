@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import { Given, Then, When } from '@cucumber/cucumber';
 import { cellsOf } from '../../../src/game/characters';
-import { rowOrder, startingCells, startingPool, type Answer, type Level } from '../../../src/game/level';
+import { layoutLevel } from '../../../src/game/layout';
+import { rowOrder, startingCells, startingPool, type Answer, type Cell, type Level } from '../../../src/game/level';
 import { validateLevel, type ValidationResult } from '../../../src/game/validator';
 import { DEFAULT_WORDS, levelContaining, levelWithRows, makeLevel, parseWords, reveal } from '../../support/levels';
 
 interface World {
   level?: Level;
   answer?: Answer;
+  answers?: Answer[];
+  cells?: Cell[];
   result?: ValidationResult;
   rows?: string[];
   centre?: number;
@@ -58,7 +61,9 @@ Given(/^the answer (?!.* revealed)(.+)$/, function (this: World, word: string) {
   this.answer = this.level.answers[0];
 });
 
-Given('no revealed letters', function () {});
+Given('no revealed letters', function (this: World) {
+  assert.ok(levelOf(this).answers.every((answer) => !answer.revealed?.length));
+});
 
 Given(/^(.+) revealed at position (\d+) of (.+)$/, function (this: World, letter: string, position: string, word: string) {
   const level = levelOf(this);
@@ -70,9 +75,13 @@ When('the validator checks the level', function (this: World) {
   this.result = validateLevel(levelOf(this));
 });
 
-When('the pool is worked out', function () {});
+When('the pool is worked out', function (this: World) {
+  this.answers = levelOf(this).answers;
+});
 
-When('the level starts', function () {});
+When('the level starts', function (this: World) {
+  this.cells = startingCells(this.answer!);
+});
 
 When('the row order is worked out', function (this: World) {
   this.rows = rowOrder(levelOf(this).answers).map((answer) => answer.word);
@@ -80,7 +89,10 @@ When('the row order is worked out', function (this: World) {
 
 When('its position is worked out', function (this: World) {
   // The screen's centre line, counted in cells from the middle of cell 1.
-  this.centre = (cellsOf(this.answer!.word).length - 1) / 2;
+  const layout = layoutLevel(levelOf(this), 1, 0, 1600, 900);
+  const { cells } = layout.rows.find((row) => row.word === this.answer!.word)!;
+  const middleOf = (index: number) => cells[index].x + cells[index].width / 2;
+  this.centre = (layout.width / 2 - middleOf(0)) / (middleOf(1) - middleOf(0));
 });
 
 Then('the level passes', function (this: World) {
@@ -92,7 +104,11 @@ Then(/^the level is rejected because (.+)$/, function (this: World, reason: stri
 });
 
 Then('the validator reports one solution for the level', function (this: World) {
-  assert.equal(this.result!.solution?.length, cellsOf(levelOf(this).finalWord).length);
+  const level = levelOf(this);
+  const solution = this.result!.solution!;
+  const spelled = solution.map((step) => cellsOf(step.word)[step.position - 1]).join('');
+  assert.equal(spelled, level.finalWord);
+  assert.equal(new Set(solution.map((step) => step.word)).size, level.answers.length);
 });
 
 Then('the validator warns that the level starts already solved', function (this: World) {
@@ -104,7 +120,7 @@ Then('the validator gives no warning', function (this: World) {
 });
 
 function poolOf(world: World) {
-  return startingPool(levelOf(world).answers);
+  return startingPool(world.answers!);
 }
 
 function lettersIn(world: World) {
@@ -128,7 +144,7 @@ Then(/^the pool order is (.+)$/, function (this: World, order: string) {
 });
 
 Then(/^its row starts as (.+)$/, function (this: World, row: string) {
-  const shown = startingCells(this.answer!).map((cell) => {
+  const shown = this.cells!.map((cell) => {
     if (cell.kind === 'empty') return '_';
     return cell.character === ' ' ? '␣' : cell.character;
   });
@@ -151,9 +167,10 @@ Then(/^(.+) comes before (.+)$/, function (this: World, first: string, second: s
 });
 
 Then(/^the screen's centre line falls on the middle of cell (\d+)$/, function (this: World, cell: string) {
-  assert.equal(this.centre, Number(cell) - 1);
+  assert.ok(Math.abs(this.centre! - (Number(cell) - 1)) < 0.001, `Centre was ${this.centre}`);
 });
 
 Then(/^the screen's centre line falls between cells (\d+) and (\d+)$/, function (this: World, left: string, right: string) {
-  assert.equal(this.centre, (Number(left) - 1 + Number(right) - 1) / 2);
+  const expected = (Number(left) - 1 + Number(right) - 1) / 2;
+  assert.ok(Math.abs(this.centre! - expected) < 0.001, `Centre was ${this.centre}`);
 });

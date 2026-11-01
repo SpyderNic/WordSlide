@@ -3,6 +3,7 @@ import { createBdd } from 'playwright-bdd';
 import type { LevelLayout, Rect } from '../../../src/game/layout';
 import { levelWithRows, makeLevel } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
+import { drawnIn, outlineOf, screen, startRecording, stopRecording, textAt, tileAt, type Drawn, type Frame } from './probe';
 import { current, open } from './story-02.steps';
 
 const { Given, When, Then } = createBdd(test);
@@ -92,6 +93,38 @@ async function touch(page: Page, scenario: Scenario, type: 'touchStart' | 'touch
     type,
     touchPoints: points.map((point, id) => ({ ...point, id })),
   });
+}
+
+/** The frames recorded so far, once the feedback has had time to play. */
+async function recorded(page: Page, scenario: Scenario): Promise<Frame[]> {
+  if (!scenario.frames) {
+    await page.waitForTimeout(450);
+    scenario.frames = await stopRecording(page);
+  }
+  return scenario.frames;
+}
+
+/** The tiles in a row, in one frame. */
+function rowTiles(frame: Frame, layout: LevelLayout, row: number): Drawn[] {
+  const y = centreOf(layout.rows[row].cells[0]).y;
+  return frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && Math.abs(object.y - y) < 2);
+}
+
+async function expectRowColour(page: Page, row: number, fill: number) {
+  const { layout } = await current(page);
+  const objects = await screen(page);
+  for (const cell of layout.rows[row].cells) {
+    const { x, y } = centreOf(cell);
+    expect(tileAt(objects, x, y)?.fill).toBe(fill);
+  }
+}
+
+/** Every tile-sized highlight on the screen. */
+async function highlightsDrawn(page: Page) {
+  const { layout, colours } = await current(page);
+  return (await screen(page)).filter(
+    (object) => object.kind === 'rect' && object.stroke === colours.highlight && Math.abs(object.width - layout.tileSize) < 2,
+  );
 }
 
 /** The screen rounds pointer positions, so allow a pixel or two. */
@@ -298,14 +331,15 @@ Then('the tile moves so that its centre is under the pointer', async ({ page, sc
   await expectTileAt(page, scenario.pointer!);
 });
 
-async function expectHighlight(page: Page, scenario: Scenario, cell: number) {
-  const { highlighted, layout } = await current(page);
-  expect(highlighted).toEqual({ kind: 'cell', row: rowOf(layout, 'ZEBRA'), cell });
-  void scenario;
+async function expectHighlight(page: Page, row: number, cell: number) {
+  const { highlighted, layout, colours } = await current(page);
+  expect(highlighted).toEqual({ kind: 'cell', row, cell });
+  expect(outlineOf(await screen(page), layout.rows[row].cells[cell], colours.highlight)).toBeDefined();
 }
 
-Then(/^cell (\d+) is highlighted$/, async ({ page, scenario }, cell: string) => {
-  await expectHighlight(page, scenario, Number(cell) - 1);
+Then(/^cell (\d+) is highlighted$/, async ({ page }, cell: string) => {
+  const { layout } = await current(page);
+  await expectHighlight(page, rowOf(layout, 'ZEBRA'), Number(cell) - 1);
 });
 
 Then(/^cell (\d+) isn't highlighted$/, async ({ page }, cell: string) => {
@@ -319,34 +353,48 @@ Then('the letter lands in cell 2', async ({ page, scenario }) => {
 });
 
 Then('that cell is highlighted', async ({ page, scenario }) => {
-  expect((await current(page)).highlighted).toEqual({ kind: 'cell', ...scenario.tileRef });
+  await expectHighlight(page, scenario.tileRef!.row, scenario.tileRef!.cell);
 });
 
 Then('no cell is highlighted', async ({ page }) => {
   expect((await current(page)).highlighted).toBeNull();
+  expect(await highlightsDrawn(page)).toEqual([]);
 });
 
-Then(/^the (?:grey )?Z tile is highlighted$/, async ({ page, scenario }) => {
+Then(/^the (grey )?Z tile is highlighted$/, async ({ page, scenario }, grey?: string) => {
   if ((await current(page).catch(() => null))?.dragging !== 'Z') {
     await ready(page, scenario);
     await placeLetter(0, 0, 'Z')(page);
     const layout = (await current(page)).layout;
     await hold(page, centreOf(layout.rows[0].cells[0]), centreOf(layout.poolTiles[0]));
   }
-  expect((await current(page)).highlighted).toEqual({ kind: 'pool', character: 'Z' });
+  const { highlighted, layout, colours } = await current(page);
+  expect(highlighted).toEqual({ kind: 'pool', character: 'Z' });
+  const tile = poolTile(layout, 'Z');
+  const objects = await screen(page);
+  expect(outlineOf(objects, tile, colours.highlight)).toBeDefined();
+  if (grey) {
+    expect(tile.count).toBe(0);
+    expect(tileAt(objects, centreOf(tile).x, centreOf(tile).y)?.fill).toBe(colours.tileGrey);
+  }
 });
 
-Then('no other tile is highlighted', async () => {});
+Then('no other tile is highlighted', async ({ page }) => {
+  expect(await highlightsDrawn(page)).toHaveLength(1);
+});
 
 Then("the Z tile isn't highlighted", async ({ page }) => {
   expect((await current(page)).highlighted).toBeNull();
+  expect(await highlightsDrawn(page)).toEqual([]);
 });
 
 // Board state
 
 Then(/^cell (\d+) of (.+)'s row holds an? (\S+)$/, async ({ page, scenario }, cell: string, word: string, character: string) => {
   const layout = await layoutNow(page, scenario);
-  expect(layout.rows[rowOf(layout, word)].cells[Number(cell) - 1].cell).toEqual({ kind: 'placed', character });
+  const target = layout.rows[rowOf(layout, word)].cells[Number(cell) - 1];
+  expect(target.cell).toEqual({ kind: 'placed', character });
+  expect(textAt(await screen(page), centreOf(target).x, centreOf(target).y)?.text).toBe(character);
 });
 
 Then(/^cell (\d+) of (.+)'s row is empty$/, async ({ page, scenario }, cell: string, word: string) => {
@@ -383,9 +431,9 @@ Then('nothing else is picked up', async ({ page }) => {
 Then('the first drag carries on', async ({ page, scenario }) => {
   const to = { x: scenario.touchPoint!.x + 30, y: scenario.touchPoint!.y + 30 };
   if ((await current(page)).phaseTwo) {
-    await touch(page, scenario, 'touchMove', [{ x: scenario.touchPoint!.x - 10, y: scenario.touchPoint!.y + 5 }, scenario.secondFinger!]);
     const row = (view: GameView) => view.phaseTwo!.rows.find((candidate) => candidate.word === 'LEMUR')!;
-    const before = scenario.twoBefore!.rows.find((candidate) => candidate.word === 'LEMUR')!;
+    const before = row(await current(page));
+    await touch(page, scenario, 'touchMove', [{ x: scenario.touchPoint!.x - 10, y: scenario.touchPoint!.y + 5 }, scenario.secondFinger!]);
     await expect.poll(async () => Math.hypot(row(await current(page)).x - before.x, row(await current(page)).y - before.y)).toBeGreaterThan(0);
     return;
   }
@@ -408,7 +456,9 @@ Then('the Z and E are in the same cells', async ({ page }) => {
 });
 
 Then('the drag is cancelled', async ({ page }) => {
-  expect((await current(page)).dragging).toBeNull();
+  const view = await current(page);
+  expect(view.dragging).toBeNull();
+  if (view.phaseTwo) expect(view.phaseTwo.dragging).toBe(false);
 });
 
 Then("the Z is back in cell 1 of LEMUR's row", async ({ page, scenario }) => {
@@ -425,10 +475,22 @@ Then('the Recall All button is to the right of the pool', async ({ page, scenari
 });
 
 Then('the Recall All button shows two arrows pointing down', async ({ page }) => {
-  expect((await current(page)).recallArrows).toBe(2);
+  const { recall } = (await current(page)).layout;
+  const lines = (await screen(page)).filter((object) => object.kind === 'graphics').flatMap((object) => object.lines);
+  const inside = lines.filter((line) => line.x1 >= recall.x && line.x2 <= recall.x + recall.width && line.y1 >= recall.y && line.y2 <= recall.y + recall.height);
+  expect(inside).toHaveLength(4);
+  // Each arrow is two strokes that meet at a point below their other ends.
+  for (const [left, right] of [inside.slice(0, 2), inside.slice(2)]) {
+    expect([left.x2, left.y2]).toEqual([right.x1, right.y1]);
+    expect(left.y2).toBeGreaterThan(left.y1);
+    expect(right.y1).toBeGreaterThan(right.y2);
+  }
 });
 
-Then('it has no text', async () => {});
+Then('it has no text', async ({ page }) => {
+  const { recall } = (await current(page)).layout;
+  expect(drawnIn(await screen(page), recall).filter((object) => object.kind === 'text')).toEqual([]);
+});
 
 // Feedback
 
@@ -448,13 +510,19 @@ Given('TEAM is locked in row 1', async ({ scenario }) => {
 
 When("the player fills ZEBRA's row with ZEBRE", async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
-  scenario.before = await current(page);
+  await startRecording(page);
   await fillRow(rowOf(layout, 'ZEBRA'), 'ZEBRE')(page);
   scenario.before = await current(page);
 });
 
-Then('the row shakes a little sideways', async ({ page }) => {
-  expect((await current(page)).feedback).toContainEqual({ type: 'wrong', row: 1 });
+Then('the row shakes a little sideways', async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const left = centreOf(layout.rows[1].cells[0]).x;
+  const offsets = (await recorded(page, scenario)).map((frame) => Math.min(...rowTiles(frame, layout, 1).map((tile) => tile.x)) - left);
+  const furthest = Math.max(...offsets.filter(Number.isFinite));
+  expect(furthest).toBeGreaterThan(2);
+  expect(furthest).toBeLessThan(layout.tileSize / 2);
+  expect(offsets[offsets.length - 1]).toBeCloseTo(0);
 });
 
 Then('the row still reads Z E B R E', async ({ page }) => {
@@ -492,18 +560,27 @@ Then('the drag works as usual', async ({ page }) => {
 
 When('the player spells TEAM in row 2', async ({ page, scenario }) => {
   await ready(page, scenario);
+  await startRecording(page);
   await fillRow(1, 'TEAM')(page);
   scenario.before = await current(page);
 });
 
-Then('row 1 highlights briefly', async ({ page }) => {
-  expect((await current(page)).feedback).toContainEqual({ type: 'alreadyFound', row: 1, lockedRow: 0 });
+Then('row 1 highlights briefly', async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const alphas = (await recorded(page, scenario)).map((frame) => Math.min(...rowTiles(frame, layout, 0).map((tile) => tile.alpha)));
+  expect(Math.min(...alphas)).toBeLessThan(0.9);
+  expect(alphas[alphas.length - 1]).toBe(1);
 });
 
-Then('"Already found" appears on a background in the centre of the screen', async ({ page }) => {
-  const { foundText, layout } = await current(page);
-  expect(foundText).not.toBeNull();
-  expect(foundText!.y).toBeLessThanOrEqual(layout.height / 2);
+Then('"Already found" appears on a background in the centre of the screen', async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const first = (await recorded(page, scenario)).find((frame) => frame.screen.some((object) => object.text === 'Already found'))!;
+  const text = first.screen.find((object) => object.text === 'Already found')!;
+  expect(text.x).toBeCloseTo(layout.width / 2);
+  expect(Math.abs(text.y - layout.height / 2)).toBeLessThan(3);
+  const background = tileAt(first.screen.filter((object) => object.depth === text.depth), text.x, text.y);
+  expect(background).toBeDefined();
+  expect(background!.width).toBeGreaterThan(text.width);
 });
 
 Then('row 2 still reads T E A M', async ({ page }) => {
@@ -523,35 +600,41 @@ Then('it gently rises and fades out', async ({ page, scenario }) => {
   await expect
     .poll(async () => (await current(page)).foundText?.y ?? -1)
     .toBeLessThan(first.y);
+  await expect.poll(async () => (await current(page)).foundText?.alpha ?? 0).toBeLessThan(first.alpha);
   await expect.poll(async () => (await current(page)).foundText).toBeNull();
 });
 
 When('LEMUR locks', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
+  await startRecording(page);
   await fillRow(rowOf(layout, 'LEMUR'), 'LEMUR')(page);
 });
 
-Then('its row pulses briefly', async ({ page }) => {
-  expect((await current(page)).feedback).toContainEqual({ type: 'locked', row: 0, word: 'LEMUR' });
+Then('its row pulses briefly', async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const scales = (await recorded(page, scenario)).map((frame) => Math.max(...rowTiles(frame, layout, 0).map((tile) => tile.scale)));
+  expect(Math.max(...scales)).toBeGreaterThan(1.02);
+  expect(scales[scales.length - 1]).toBe(1);
 });
 
 Then(/^all 5 tiles take the locked colour$/, async ({ page }) => {
-  expect((await current(page)).layout.rows[0].locked).toBe(true);
+  await recordedColours(page);
 });
 
 Then('the L takes the locked colour', async ({ page }) => {
-  const { layout, colours } = await current(page);
-  expect(layout.rows[0].locked).toBe(true);
+  const { layout } = await current(page);
   expect(layout.rows[0].cells[0].cell.kind).toBe('revealed');
-  expect(colours.tileLocked).not.toBe(colours.tileRevealed);
+  await recordedColours(page);
 });
+
+async function recordedColours(page: Page) {
+  const { colours } = await current(page);
+  await expectRowColour(page, 0, colours.tileLocked);
+}
 
 // Tapping and dragging stay separate
 
 When('the player presses and releases a pool tile without moving it', async ({ page, scenario }) => {
-  await layoutNow(page, scenario);
-  const zebra = cellPoint((await current(page)).layout, 'ZEBRA', 1);
-  await page.mouse.click(zebra.x, zebra.y);
   const point = centreOf(poolTile(await layoutNow(page, scenario), 'K'));
   await page.mouse.click(point.x, point.y);
 });

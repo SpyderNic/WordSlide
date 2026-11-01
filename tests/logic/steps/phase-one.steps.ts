@@ -41,6 +41,14 @@ function poolOf(world: World): string {
   return JSON.stringify(boardOf(world).pool);
 }
 
+/** How many more copies of a letter are on the board than before the last action. */
+function placedCopiesAdded(world: World, character: string): number {
+  const placed = (rows: Board['rows']) =>
+    rows.flatMap((row) => row.cells).filter((cell) => cell.kind === 'placed' && cell.character === character).length;
+  const change = placed(boardOf(world).rows) - placed(JSON.parse(world.before!).rows);
+  return Math.max(change, 0);
+}
+
 function act(world: World, action: (board: Board) => BoardEvent[] | void) {
   world.before = snapshot(world);
   world.events = action(boardOf(world)) ?? [];
@@ -190,9 +198,10 @@ Then(/^the Z and N tiles aren't grey$/, function (this: World) {
 });
 
 Then(/^the (\S+) count goes up by one$/, function (this: World, character: string) {
-  if (this.events.some((event) => event.type === 'hintsReturned' && event.letters.includes(character))) return;
   const before = JSON.parse(this.before!).pool.find((tile: { character: string }) => tile.character === character).count;
-  assert.equal(boardOf(this).countOf(character), before + 1);
+  // Building a word in the same move uses up copies of the letter.
+  const used = placedCopiesAdded(this, character);
+  assert.equal(boardOf(this).countOf(character), before - used + 1);
 });
 
 Then(/^the (\S+) count drops by one$/, function (this: World, character: string) {
@@ -215,11 +224,13 @@ Then(/^the pool holds (.+)$/, function (this: World, letters: string) {
 });
 
 Then(/^another (\S+) can still be dragged$/, function (this: World, character: string) {
-  assert.ok(boardOf(this).countOf(character) > 0);
+  const board = boardOf(this);
+  board.dropOnCell(0, 0);
+  assert.ok(board.pickUpFromPool(character));
 });
 
 Then(/^the (\S+) can be dragged again$/, function (this: World, character: string) {
-  assert.ok(boardOf(this).countOf(character) > 0);
+  assert.ok(boardOf(this).pickUpFromPool(character));
 });
 
 Then('the E goes back to the pool', function (this: World) {
@@ -263,7 +274,9 @@ Given('a Z, an A and an N placed in cells', function (this: World) {
   ['Z', 'A', 'N'].forEach((character) => placeSomewhere(this, character));
 });
 
-Given('no placed letters', function () {});
+Given('no placed letters', function (this: World) {
+  assert.equal(boardOf(this).hasPlacedLetters(), false);
+});
 
 When(/^the player drags (\S+) from the pool to cell (\d+) of (.+)'s row$/, function (this: World, character: string, cell: string, word: string) {
   const row = rowIndex(this, `${word}'s row`);
@@ -433,7 +446,9 @@ Then('nothing changes', function (this: World) {
   assert.equal(snapshot(this), this.before);
 });
 
-Then('no confirmation appears', function () {});
+Then('no confirmation appears', function (this: World) {
+  assert.equal(boardOf(this).hasPlacedLetters(), false);
+});
 
 // Words
 
@@ -527,8 +542,13 @@ When("the player swaps the A and the last R of ZEBRA's row", function (this: Wor
 });
 
 Given('the pool counts are noted after placing the R', function (this: World) {
-  this.events = place(this, 0, 4, 'R');
+  boardOf(this).pickUpFromPool('R');
   this.notedPool = poolOf(this);
+});
+
+Then('the word locks', function (this: World) {
+  if (this.stepType === 'Action') act(this, (board) => board.dropOnCell(0, 4));
+  assert.ok(this.events.some((event) => event.type === 'locked'), JSON.stringify(this.events));
 });
 
 Then('the pool counts are the same', function (this: World) {
@@ -546,13 +566,9 @@ When('the player spells the right word', function (this: World) {
   act(this, () => fillRow(this, 0, 'LEMUR'));
 });
 
-Then(/^(?!an input)(.+?) locks(?: in row (\d+))?$/, function (this: World, word: string, row?: string) {
+Then(/^(?!an input|the word locks$)(.+?) locks(?: in row (\d+))?$/, function (this: World, word: string, row?: string) {
   if (this.stepType === 'Action') {
-    if (word !== 'the word') act(this, () => fillRow(this, rowIndex(this, `${word}'s row`), word));
-    return;
-  }
-  if (word === 'the word') {
-    assert.ok(this.events.some((event) => event.type === 'locked'), JSON.stringify(this.events));
+    act(this, () => fillRow(this, rowIndex(this, `${word}'s row`), word));
     return;
   }
   assert.ok(hasLock(this, word), JSON.stringify(this.events));
@@ -639,15 +655,21 @@ Given('a letter was placed by that drag', function (this: World) {
   placeSomewhere(this, 'A');
 });
 
-Given('no row is selected', function () {});
+Given('no row is selected', function (this: World) {
+  assert.equal(boardOf(this).selectedRow, null);
+});
 
-Given('no other row has a placed letter', function () {});
+Given('no other row has a placed letter', function (this: World) {
+  assert.equal(boardOf(this).hasPlacedLetters(), false);
+});
 
 Given('a row with empty cells is selected', function (this: World) {
   boardOf(this).selectRow(0);
 });
 
-Given(/^(.+)'s row has an empty cell$/, function (_word: string) {});
+Given(/^(.+)'s row has an empty cell$/, function (this: World, word: string) {
+  assert.ok(boardOf(this).rows[rowIndex(this, `${word}'s row`)].cells.some((cell) => cell.kind === 'empty'));
+});
 
 Given(/^(.+)'s row has a placed letter$/, function (this: World, word: string) {
   quietly(this, () => place(this, rowIndex(this, `${word}'s row`), 0, word === 'LEMUR' ? 'L' : 'K'));
@@ -702,7 +724,9 @@ When(/^the player's input fills it with (.+)$/, function (this: World, word: str
   act(this, (board) => cellsOf(word).flatMap((character) => board.input(character)));
 });
 
-When(/^the level opens$/, function () {});
+When(/^the level opens$/, function (this: World) {
+  boardOf(this);
+});
 
 Then(/^(.+)'s row is marked as selected$/, function (this: World, word: string) {
   assert.equal(boardOf(this).markedRow, rowIndex(this, `${word}'s row`));
@@ -745,8 +769,8 @@ Then("ZEBRA's row hasn't changed", function (this: World) {
 });
 
 Then('another letter can be tapped straight away', function (this: World) {
-  assert.equal(boardOf(this).input('E').length, 0);
-  assert.notEqual(rowText(this, rowIndex(this, "ZEBRA's row")), '_ _ _ _ _');
+  assert.deepEqual(boardOf(this).input('E'), []);
+  assert.equal(rowText(this, rowIndex(this, "ZEBRA's row")), 'Z E _ _ _');
 });
 
 Then(/^the (E|É) is used$/, function (this: World, character: string) {

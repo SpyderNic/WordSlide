@@ -5,6 +5,7 @@ import type { PhaseTwoTestView } from '../../../src/scenes/PhaseTwoView';
 import type { Level } from '../../../src/game/level';
 import type { Style } from '../../../src/style/Style';
 import { DEFAULT_WORDS, makeLevel } from '../../support/levels';
+import type { Frame } from './probe';
 
 export interface GameView {
   layout: LevelLayout;
@@ -41,6 +42,12 @@ export interface Scenario {
   stretchWord?: string;
   finalWordGiven?: boolean;
   columnPlan?: Record<string, { order: string[]; cells: Record<string, number> }>;
+  /** What the screen showed, frame by frame, during the scenario's action. */
+  frames?: Frame[];
+  lastKey?: string;
+  /** Whether a word was being dragged at the moment the step let go of it. */
+  heldWord?: boolean;
+  goldLetters?: { letter: string; t: number; pulsed: boolean }[];
 }
 
 export const test = base.extend<{ scenario: Scenario }>({

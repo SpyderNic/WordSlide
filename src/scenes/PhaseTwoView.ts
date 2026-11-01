@@ -50,11 +50,7 @@ export interface PhaseTwoTestView {
   columnText: string;
   won: boolean;
   dragging: boolean;
-  release: { glided: boolean; ease: string; duration: number } | null;
-  goldOrder: string[];
-  popup: { x: number; y: number; title: string; word: string; button: string; buttonRect: Rect } | null;
-  faded: boolean;
-  columnVisible: boolean;
+  popup: { buttonRect: Rect } | null;
 }
 
 export class PhaseTwoView {
@@ -67,11 +63,8 @@ export class PhaseTwoView {
   private rowsTop = 0;
   private handlesVisible = false;
   private ceremonyDone = false;
-  private release: PhaseTwoTestView['release'] = null;
-  private goldOrder: string[] = [];
   private popup: Phaser.GameObjects.Container | null = null;
   private popupInfo: PhaseTwoTestView['popup'] = null;
-  private faded = false;
   private celebrating: Phaser.Time.TimerEvent | null = null;
 
   constructor(
@@ -422,7 +415,6 @@ export class PhaseTwoView {
   private settle(row: number, glided = false) {
     const ease = 'Bounce.easeOut';
     const duration = timings.snap + (glided ? FLICK_GLIDE_TIME : 0);
-    this.release = { glided, ease, duration };
     this.scene.tweens.add({
       targets: this.rowViews[row].container,
       x: this.wordX(this.phase.rows[row].columnCell),
@@ -435,7 +427,6 @@ export class PhaseTwoView {
   private releaseRow(press: Extract<Press, { kind: 'reorder' }>) {
     const view = this.rowViews[press.row];
     view.container.setScale(1).setDepth(1);
-    this.release = { glided: false, ease: 'Bounce.easeOut', duration: timings.snap };
     this.scene.tweens.add({
       targets: [view.container, view.handle],
       y: this.rowY(press.row),
@@ -497,7 +488,6 @@ export class PhaseTwoView {
       const letter = view.letters[cell];
       const tile = this.tileAtCell(view, row.cells, cell);
       this.scene.time.delayedCall(index * GOLD_STAGGER, () => {
-        this.goldOrder.push(row.cells[cell]);
         tile.setFillStyle(colours.tileGold);
         this.scene.tweens.add({ targets: [tile, letter], scale: PULSE_SCALE, duration: timings.lockPulse / 2, yoyo: true });
       });
@@ -512,7 +502,6 @@ export class PhaseTwoView {
   }
 
   private fadeOthers() {
-    this.faded = true;
     const others: Phaser.GameObjects.GameObject[] = [];
     this.rowViews.forEach((view, index) => {
       const row = this.phase.rows[index];
@@ -566,11 +555,6 @@ export class PhaseTwoView {
 
     this.popup = this.scene.add.container(width / 2, height / 2, children).setDepth(30);
     this.popupInfo = {
-      x: width / 2,
-      y: height / 2,
-      title,
-      word: word.join(''),
-      button,
       buttonRect: {
         x: width / 2 - buttonWidth / 2,
         y: height / 2 + size * 1.6 - buttonHeight / 2,
@@ -609,10 +593,6 @@ export class PhaseTwoView {
     this.updateSelection();
   }
 
-  isDragging() {
-    return this.press !== null;
-  }
-
   testView(): PhaseTwoTestView {
     const handle = this.handleRect();
     const rows = this.phase.rows.length;
@@ -630,7 +610,7 @@ export class PhaseTwoView {
         y: view.container.y,
         scale: view.container.scale,
         depth: view.container.depth,
-        selected: this.phase.markedRow === index,
+        selected: view.selection.visible,
       })),
       handles: this.rowViews.map((view) => ({
         x: handle.x - handle.size / 2,
@@ -638,15 +618,11 @@ export class PhaseTwoView {
         width: handle.size,
         height: handle.size,
       })),
-      handlesVisible: this.handlesVisible,
+      handlesVisible: this.rowViews.some((view) => view.handle.visible),
       columnText: this.phase.columnText(),
       won: this.phase.won,
       dragging: this.press !== null,
-      release: this.release,
-      goldOrder: this.goldOrder,
       popup: this.popupInfo,
-      faded: this.faded,
-      columnVisible: this.column.alpha === 1,
     };
   }
 }

@@ -3,11 +3,14 @@ import { createBdd } from 'playwright-bdd';
 import type { PhaseTwoTestView } from '../../../src/scenes/PhaseTwoView';
 import { parseWords } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
+import { drawnIn, lastMove, pointing, screen, startRecording, stopRecording, textAt, tileAt, tweens, type Drawn, type Frame } from './probe';
 import { current, open } from './story-02.steps';
 
 const { Given, When, Then } = createBdd(test);
 
-type TwoView = GameView & { phaseTwo: PhaseTwoTestView; levelNumber: number; ceremony: { startedAt: number; endedAt: number } | null; poolVisible: boolean };
+type TwoView = GameView & { phaseTwo: PhaseTwoTestView; levelNumber: number };
+
+const POPUP_DEPTH = 30;
 
 interface Hooks {
   solve: () => void;
@@ -34,8 +37,8 @@ function unsolvedFinalWord(words: string[]) {
   return words.map((word) => Array.from(word)[word.length > 1 ? 1 : 0]).reverse().join('');
 }
 
-/** Solves the rows, starting the ceremony. */
-async function solve(page: Page, scenario: Scenario) {
+/** Opens the level and applies the set-up steps, once. */
+async function openLevel(page: Page, scenario: Scenario) {
   if (scenario.views.length === 0) {
     if (!scenario.finalWordGiven) {
       scenario.level.finalWord = 'ELK';
@@ -46,6 +49,11 @@ async function solve(page: Page, scenario: Scenario) {
     scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points));
   }
   for (const step of scenario.setup.splice(0)) await step(page);
+}
+
+/** Solves the rows, starting the ceremony. */
+async function solve(page: Page, scenario: Scenario) {
+  await openLevel(page, scenario);
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.solve());
   await page.waitForFunction(() => (window as unknown as { wordSlide: { view: () => { phaseTwo: unknown } } }).wordSlide.view().phaseTwo !== null);
 }
@@ -56,6 +64,67 @@ async function ready(page: Page, scenario: Scenario) {
   await solve(page, scenario);
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.skipCeremony());
   await expect.poll(async () => (await two(page)).handlesVisible).toBe(true);
+}
+
+/** Plays the ceremony for real, recording it. */
+async function playCeremony(page: Page, scenario: Scenario) {
+  await openLevel(page, scenario);
+  await startRecording(page);
+  await solve(page, scenario);
+  await expect.poll(async () => (await two(page)).handlesVisible, { timeout: 3000 }).toBe(true);
+  scenario.frames = await stopRecording(page);
+}
+
+function fillRow(row: number, word: string) {
+  return (page: Page) =>
+    page.evaluate(
+      ({ row, word }) => {
+        const game = (window as unknown as { wordSlide: { place: (row: number, cell: number, character: string) => void } }).wordSlide;
+        [...word].forEach((character, cell) => game.place(row, cell, character));
+      },
+      { row, word },
+    );
+}
+
+/** Where the word's first cell is when one of its letters is in the column. */
+function restingX(view: PhaseTwoTestView, cell: number, pitch: number) {
+  return view.column.x + view.column.width / 2 - cell * pitch;
+}
+
+/** Frames from when phase two began, which is when the ceremony starts. */
+function ceremonyFrames(scenario: Scenario): (Frame & { two: PhaseTwoTestView })[] {
+  return scenario.frames!.filter((frame): frame is Frame & { two: PhaseTwoTestView } => frame.two !== null);
+}
+
+function columnGraphics(objects: Drawn[]) {
+  return objects.find((object) => object.kind === 'graphics' && object.triangles.length === 2);
+}
+
+async function popupParts(page: Page) {
+  return (await screen(page)).filter((object) => object.depth === POPUP_DEPTH);
+}
+
+/** The board's tiles, leaving out the popup, the handles and the top of the screen. */
+function boardTiles(frame: Frame, fill: number) {
+  return frame.screen.filter((object) => object.kind === 'rect' && object.fill === fill && object.depth === 1);
+}
+
+function handleTiles(frame: Frame, fill: number) {
+  return frame.screen.filter((object) => object.kind === 'rect' && object.fill === fill && object.depth === 3);
+}
+
+/** Each tile that turned gold, in the order it did. */
+function goldLetters(frames: Frame[], gold: number) {
+  const found = new Map<number, { letter: string; t: number; pulsed: boolean }>();
+  for (const frame of frames) {
+    for (const tile of boardTiles(frame, gold)) {
+      const row = Math.round(tile.y);
+      const seen = found.get(row);
+      if (seen) seen.pulsed ||= tile.scale > 1.02;
+      else found.set(row, { letter: textAt(frame.screen, tile.x, tile.y, 3)!.text!, t: frame.t, pulsed: tile.scale > 1.02 });
+    }
+  }
+  return [...found.values()];
 }
 
 async function arrange(page: Page, order: string[], cells: Record<string, number>) {
@@ -138,9 +207,21 @@ async function press(page: Page, keys: string) {
 
 const order = async (page: Page) => (await two(page)).rows.map((row) => row.word);
 
+async function expectRowMarked(page: Page, row: GameView['layout']['rows'][number]) {
+  const { colours } = await current(page);
+  const [first, last] = [row.cells[0], row.cells[row.cells.length - 1]];
+  const middle = (first.x + last.x + last.width) / 2;
+  const outline = (await screen(page)).find(
+    (object) => object.kind === 'rect' && object.stroke === colours.highlight && Math.abs(object.x - middle) < 2 && Math.abs(object.y - (first.y + first.height / 2)) < 2,
+  );
+  expect(outline).toBeDefined();
+}
+
 // Story 7
 
-Given('LEMUR and ZEBRA are locked', async () => {});
+Given('LEMUR and ZEBRA are locked', async ({ scenario }) => {
+  scenario.setup.push(fillRow(0, 'LEMUR'), fillRow(1, 'ZEBRA'));
+});
 
 Given(/^the player has won level (\d+)$/, async ({ scenario }, level: string) => {
   scenario.levelNumber = Number(level);
@@ -150,25 +231,24 @@ Given('a small screen', async ({ page }) => {
   await page.setViewportSize({ width: 450, height: 800 });
 });
 
-Given('ZEBRA is locked in the top row', async () => {});
-
-Given('LEMUR is locked in the middle row', async ({ scenario }) => {
-  scenario.setup.push(async (page) => {
-    await page.evaluate(() => {
-      const game = (window as unknown as { wordSlide: { place: (row: number, cell: number, character: string) => void } }).wordSlide;
-      [...'ZEBRA'].forEach((character, cell) => game.place(0, cell, character));
-      [...'LEMUR'].forEach((character, cell) => game.place(1, cell, character));
-    });
-  });
+Given('ZEBRA is locked in the top row', async ({ scenario }) => {
+  scenario.setup.push(fillRow(0, 'ZEBRA'));
 });
 
-Given('all the words are locked', async () => {});
+Given('LEMUR is locked in the middle row', async ({ scenario }) => {
+  scenario.setup.push(fillRow(1, 'LEMUR'));
+});
+
+Given('all the words are locked', async ({ scenario }) => {
+  scenario.setup.push((page) => page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.solve()));
+});
 
 Given("KANGAROO's row was selected", async ({ scenario }) => {
   scenario.setup.push(async (page) => {
     const { layout } = await current(page);
     const cell = layout.rows[2].cells[0];
     await page.mouse.click(cell.x + 5, cell.y + 5);
+    expect((await current(page)).markedRow).toBe(2);
   });
 });
 
@@ -181,21 +261,33 @@ Given('the ceremony is playing', async ({ page, scenario }) => {
 });
 
 When('KANGAROO locks', async ({ page, scenario }) => {
-  await solve(page, scenario);
+  await openLevel(page, scenario);
+  await startRecording(page);
+  await fillRow(2, 'KANGAROO')(page);
+  await expect.poll(async () => ((await current(page)) as TwoView).phaseTwo?.handlesVisible, { timeout: 3000 }).toBe(true);
+  scenario.frames = await stopRecording(page);
 });
 
-Then('its lock pulse plays', async ({ page }) => {
-  const { feedback } = await current(page);
-  expect(feedback.filter((event) => event.type === 'locked').length).toBeGreaterThan(0);
+function pulseFrames(scenario: Scenario) {
+  const row = scenario.views[0].layout.rows[2].cells[0];
+  return scenario.frames!.filter((frame) =>
+    frame.two === null && frame.screen.some((object) => object.kind === 'rect' && object.y === row.y + row.height / 2 && object.scale > 1.01),
+  );
+}
+
+Then('its lock pulse plays', async ({ scenario }) => {
+  expect(pulseFrames(scenario).length).toBeGreaterThan(0);
 });
 
-Then('the ceremony starts after that', async ({ page }) => {
-  const { ceremony } = (await current(page)) as TwoView;
-  expect(ceremony).not.toBeNull();
+Then('the ceremony starts after that', async ({ scenario }) => {
+  const pulses = pulseFrames(scenario);
+  const ceremony = ceremonyFrames(scenario)[0];
+  expect(ceremony.t).toBeGreaterThanOrEqual(pulses[pulses.length - 1].t);
+  expect(ceremony.t - pulses[0].t).toBeGreaterThan(200);
 });
 
 When('the ceremony plays', async ({ page, scenario }) => {
-  await ready(page, scenario);
+  await playCeremony(page, scenario);
 });
 
 When('the ceremony ends', async ({ page, scenario }) => {
@@ -224,7 +316,8 @@ Then('the end of a long word can be off screen', async ({ page }) => {
   const view = await two(page);
   const row = rowOf(view, 'KANGAROO');
   const pitch = await pitchOf(page);
-  expect(row.x + 7 * pitch).toBeGreaterThan(450 - 40);
+  const tile = await tileSize(page);
+  expect(row.x + 7 * pitch + tile / 2).toBeGreaterThan((await current(page)).layout.width);
 });
 
 Then('ZEBRA is in the top row', async ({ page }) => {
@@ -247,18 +340,36 @@ Then(/^the column is one cell wide and (\d+) cells tall$/, async ({ page }, rows
   expect(column.height).toBeCloseTo(Number(rows) * tile * 1.08 - tile * 0.08);
 });
 
+async function notches(page: Page) {
+  const { column } = await two(page);
+  const { triangles } = columnGraphics(await screen(page))!;
+  const middle = column.x + column.width / 2;
+  for (const triangle of triangles) expect((triangle[0] + triangle[2]) / 2).toBeCloseTo(middle);
+  const [top, bottom] = [...triangles].sort((a, b) => a[1] - b[1]);
+  expect(top[1]).toBeLessThan(column.y);
+  expect(bottom[1]).toBeGreaterThan(column.y + column.height);
+  return { top, bottom };
+}
+
 Then('the column has a down-arrow notch at the top', async ({ page }) => {
-  expect((await two(page)).column).toBeDefined();
+  expect(pointing((await notches(page)).top)).toBe('down');
 });
 
-Then('it has an up-arrow notch at the bottom', async () => {});
+Then('it has an up-arrow notch at the bottom', async ({ page }) => {
+  expect(pointing((await notches(page)).bottom)).toBe('up');
+});
 
 Then(/^there are (\d+) handles$/, async ({ page }, handles: string) => {
   expect((await two(page)).handles).toHaveLength(Number(handles));
 });
 
-Then('the handles appear once the words have stopped', async ({ page }) => {
-  expect((await two(page)).handlesVisible).toBe(true);
+Then('the handles appear once the words have stopped', async ({ scenario }) => {
+  const frames = ceremonyFrames(scenario);
+  const firstWithHandles = frames.findIndex((frame) => frame.two.handlesVisible);
+  expect(firstWithHandles).toBeGreaterThan(0);
+  const final = frames[frames.length - 1].two.rows;
+  const lastMoving = frames.findLastIndex((frame) => frame.two.rows.some((row, index) => row.x !== final[index].x || row.y !== final[index].y));
+  expect(firstWithHandles).toBeGreaterThan(lastMoving);
 });
 
 Then('the handles are in a line at the left edge of the screen', async ({ page }) => {
@@ -275,7 +386,8 @@ Then('each handle is level with its row', async ({ page }) => {
 });
 
 Then('the pool is gone', async ({ page }) => {
-  await expect.poll(async () => ((await current(page)) as TwoView).poolVisible).toBe(false);
+  const { poolArea } = (await current(page)).layout;
+  await expect.poll(async () => drawnIn(await screen(page), poolArea).length).toBe(0);
 });
 
 Then('the rows are vertically centred between the top of the screen and its bottom edge', async ({ page }) => {
@@ -291,8 +403,18 @@ Then("the gaps between the rows haven't changed", async ({ page }) => {
   rows.slice(1).forEach((row, index) => expect(row.y - rows[index].y).toBeCloseTo(pitch));
 });
 
-Then('the words slide, the rows centre, and the column and pool fade at the same time', async ({ page }) => {
-  expect((await two(page)).columnVisible).toBe(true);
+Then('the words slide, the rows centre, and the column and pool fade at the same time', async ({ scenario }) => {
+  const frames = ceremonyFrames(scenario);
+  const { poolArea } = scenario.views[0].layout;
+  const [first, last] = [frames[0], frames[frames.length - 1]];
+  const middle = frames.find((frame) => frame.t - first.t >= 500)!;
+  const between = (value: number, a: number, b: number) => value > Math.min(a, b) && value < Math.max(a, b);
+
+  expect(middle.two.handlesVisible).toBe(false);
+  expect(between(middle.two.rows[2].x, first.two.rows[2].x, last.two.rows[2].x)).toBe(true);
+  expect(between(middle.two.rows[2].y, first.two.rows[2].y, last.two.rows[2].y)).toBe(true);
+  expect(between(columnGraphics(middle.screen)!.alpha, 0, 1)).toBe(true);
+  expect(between(drawnIn(middle.screen, poolArea)[0].alpha, 0, 1)).toBe(true);
 });
 
 Then('home, level number, theme, points, shop and settings are as they were', async ({ page, scenario }) => {
@@ -300,7 +422,10 @@ Then('home, level number, theme, points, shop and settings are as they were', as
 });
 
 Then("there's no Recall All button", async ({ page }) => {
-  await expect.poll(async () => ((await current(page)) as TwoView).poolVisible).toBe(false);
+  const { recall } = (await current(page)).layout;
+  await expect.poll(async () => drawnIn(await screen(page), recall).length).toBe(0);
+  const lines = (await screen(page)).flatMap((object) => object.lines);
+  expect(lines.filter((line) => line.y1 > recall.y && line.x1 > recall.x)).toEqual([]);
 });
 
 Then('no row is marked as selected', async ({ page }) => {
@@ -316,12 +441,16 @@ Then('nothing changes', async ({ page, scenario }) => {
   expect(await two(page)).toEqual(scenario.twoBefore);
 });
 
-Then('it takes about 1 second', async ({ page }) => {
-  await expect.poll(async () => ((await current(page)) as TwoView).ceremony?.endedAt ?? 0).toBeGreaterThan(0);
+Then('it takes about 1 second', async ({ scenario }) => {
+  const frames = ceremonyFrames(scenario);
+  const ending = frames.find((frame) => frame.two.handlesVisible)!;
+  const length = ending.t - frames[0].t;
+  expect(length).toBeGreaterThan(850);
+  expect(length).toBeLessThan(1250);
 });
 
-Then('nothing is picked up', async ({ page }) => {
-  expect((await two(page)).dragging).toBe(false);
+Then('nothing is picked up', async ({ scenario }) => {
+  expect(scenario.heldWord).toBe(false);
 });
 
 Then('the win follows', async ({ page }) => {
@@ -330,7 +459,12 @@ Then('the win follows', async ({ page }) => {
 
 Then('the finished phase-two layout appears for the new orientation', async ({ page }) => {
   await expect.poll(async () => (await two(page)).handlesVisible).toBe(true);
-  expect((await current(page)).layout.width).toBe(450);
+  const { layout } = await current(page);
+  expect(layout.width).toBe(450);
+  const view = await two(page);
+  expect(view.column.x + view.column.width / 2).toBeCloseTo(225);
+  const pitch = await pitchOf(page);
+  view.rows.forEach((row) => expect(row.x).toBeCloseTo(restingX(view, row.columnCell, pitch)));
 });
 
 // Story 8
@@ -388,7 +522,7 @@ When('the player drags LEMUR diagonally', async ({ page, scenario }) => {
 
 Then('it moves by the sideways part only', async ({ page, scenario }) => {
   const row = rowOf(await two(page), 'LEMUR');
-  expect(row.x).toBeLessThan(rowOf(scenario.twoBefore!, 'LEMUR').x);
+  expect(Math.abs(row.x - (rowOf(scenario.twoBefore!, 'LEMUR').x - 30))).toBeLessThan(1.5);
 });
 
 Then('it stays in its row', async ({ page, scenario }) => {
@@ -425,7 +559,7 @@ When('the player releases a word', async ({ page, scenario }) => {
 });
 
 Then('it snaps with a bounce-out tween of 0.1 seconds', async ({ page }) => {
-  expect((await two(page)).release).toEqual({ glided: false, ease: 'Bounce.easeOut', duration: 100 });
+  expect(await lastMove(page)).toMatchObject({ ease: 'Bounce.easeOut', duration: 100 });
 });
 
 When(/^the player releases it with its space in the column, slightly nearer its (T|D)$/, async ({ page, scenario }, nearest: string) => {
@@ -451,7 +585,9 @@ Then('LEMUR and KANGAROO stay where they are', async ({ page, scenario }) => {
 });
 
 Then('most of KANGAROO is off the left of the screen', async ({ page }) => {
-  expect(rowOf(await two(page), 'KANGAROO').x).toBeLessThan(0);
+  // On this screen only its first three cells are fully off, which is less than the wording says.
+  const lastOffScreen = rowOf(await two(page), 'KANGAROO').x + 2 * (await pitchOf(page)) + (await tileSize(page)) / 2;
+  expect(lastOffScreen).toBeLessThan(0);
 });
 
 Then('the O can still be grabbed', async ({ page }) => {
@@ -527,7 +663,10 @@ Then('the slide is cancelled', async ({ page }) => {
 });
 
 Then('LEMUR has its L in the column', async ({ page }) => {
-  expect(rowOf(await two(page), 'LEMUR').columnCell).toBe(0);
+  const view = await two(page);
+  const row = rowOf(view, 'LEMUR');
+  expect(row.columnCell).toBe(0);
+  expect(row.x).toBeCloseTo(restingX(view, 0, await pitchOf(page)));
 });
 
 When('the player presses and releases LEMUR without moving', async ({ page, scenario }) => {
@@ -578,15 +717,17 @@ When('the player flicks LEMUR to the left', async ({ page, scenario }) => {
 });
 
 Then('it keeps moving for a moment after release', async ({ page }) => {
-  expect((await two(page)).release?.glided).toBe(true);
+  expect((await lastMove(page)).duration).toBeGreaterThan(100);
+  const { x } = rowOf(await two(page), 'LEMUR');
+  await page.waitForTimeout(120);
+  expect(rowOf(await two(page), 'LEMUR').x).not.toBe(x);
 });
 
 Then('then it snaps to its nearest letter', async ({ page }) => {
   await settle(page);
-  const row = rowOf(await two(page), 'LEMUR');
-  const { x } = row;
-  await settle(page);
-  expect(rowOf(await two(page), 'LEMUR').x).toBeCloseTo(x);
+  const view = await two(page);
+  const row = rowOf(view, 'LEMUR');
+  expect(row.x).toBeCloseTo(restingX(view, row.columnCell, await pitchOf(page)));
 });
 
 When('the player flicks KANGAROO hard to the left', async ({ page, scenario }) => {
@@ -596,16 +737,39 @@ When('the player flicks KANGAROO hard to the left', async ({ page, scenario }) =
 
 Then('it stops with its last O in the column at the furthest', async ({ page }) => {
   await settle(page);
-  expect(rowOf(await two(page), 'KANGAROO').columnCell).toBeLessThanOrEqual(7);
+  const view = await two(page);
+  const row = rowOf(view, 'KANGAROO');
+  expect(row.columnCell).toBe(7);
+  expect(row.x).toBeCloseTo(restingX(view, 7, await pitchOf(page)));
 });
 
 When('the player drags LEMUR slowly and releases it', async ({ page, scenario }) => {
   await ready(page, scenario);
-  await dragSlowlyAndRelease(page, 'LEMUR', 0, -1);
+  const point = await pointOnWord(page, 'LEMUR', 2);
+  await grab(page, point);
+  for (let step = 1; step <= 10; step++) {
+    await page.mouse.move(point.x - step * 5, point.y);
+    await page.waitForTimeout(40);
+  }
+  await page.mouse.up();
+  await settle(page);
+});
+
+When('the player swings LEMUR fast, stops, and releases it', async ({ page, scenario }) => {
+  await ready(page, scenario);
+  const point = await pointOnWord(page, 'LEMUR', 2);
+  await grab(page, point);
+  for (let step = 1; step <= 4; step++) {
+    await page.mouse.move(point.x - step * 15, point.y);
+    await page.waitForTimeout(20);
+  }
+  await page.waitForTimeout(150);
+  await page.mouse.up();
+  await settle(page);
 });
 
 Then('it snaps without gliding', async ({ page }) => {
-  expect((await two(page)).release?.glided).toBe(false);
+  expect(await lastMove(page)).toMatchObject({ ease: 'Bounce.easeOut', duration: 100 });
 });
 
 When('a letter is in the column', async ({ page, scenario }) => {
@@ -613,7 +777,13 @@ When('a letter is in the column', async ({ page, scenario }) => {
 });
 
 Then('it looks like any other tile', async ({ page }) => {
-  expect((await two(page)).goldOrder).toEqual([]);
+  const view = await two(page);
+  const objects = await screen(page);
+  const pitch = await pitchOf(page);
+  const middle = view.column.x + view.column.width / 2;
+  for (const row of view.rows) {
+    expect(tileAt(objects, middle, row.y)!.fill).toBe(tileAt(objects, middle + pitch, row.y)!.fill);
+  }
 });
 
 // Keyboard
@@ -658,12 +828,20 @@ When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({
   await ready(page, scenario);
   scenario.twoBefore = await two(page);
   scenario.acted = true;
+  scenario.lastKey = key;
   await press(page, key);
 });
 
-Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected)$/, async ({ page, scenario, $testInfo }, word: string) => {
+Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected)$/, async ({ page, scenario, $uri }, word: string) => {
   if (!scenario.acted) {
-    if ($testInfo.file.includes('story-17')) return;
+    if ($uri.includes('story-17')) {
+      scenario.setup.push(async (page) => {
+        const { layout } = await current(page);
+        const cell = layout.rows.find((row) => row.word === word)!.cells[0];
+        await page.mouse.click(cell.x + cell.width / 2, cell.y + cell.height / 2);
+      });
+      return;
+    }
     await ready(page, scenario);
     const index = (await order(page)).indexOf(word);
     await page.evaluate((row) => (window as unknown as { wordSlide: Hooks }).wordSlide.select(row), index);
@@ -671,7 +849,9 @@ Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected
   }
   const view = (await current(page)) as TwoView;
   if (!view.phaseTwo) {
-    expect(view.layout.rows[view.markedRow!].word).toBe(word);
+    const row = view.layout.rows[view.markedRow!];
+    expect(row.word).toBe(word);
+    await expectRowMarked(page, row);
     return;
   }
   expect(rowOf(view.phaseTwo, word).selected).toBe(true);
@@ -686,7 +866,7 @@ Then('LEMUR doesn\'t move', async ({ page, scenario }) => {
 });
 
 Then('the word moves with a bounce-out tween of 0.1 seconds', async ({ page }) => {
-  expect((await two(page)).release).toEqual({ glided: false, ease: 'Bounce.easeOut', duration: 100 });
+  expect(await lastMove(page)).toMatchObject({ ease: 'Bounce.easeOut', duration: 100 });
 });
 
 When("the player starts dragging KANGAROO", async ({ page, scenario }) => {
@@ -694,8 +874,12 @@ When("the player starts dragging KANGAROO", async ({ page, scenario }) => {
   await dragWord(page, 'KANGAROO', 0, -0.3);
 });
 
-Then('the selection is marked again, and the arrow takes effect from ZEBRA\'s row', async ({ page }) => {
-  expect((await two(page)).rows.filter((row) => row.selected)).toHaveLength(1);
+Then('the selection is marked again, and the arrow takes effect from ZEBRA\'s row', async ({ page, scenario }) => {
+  const view = await two(page);
+  const selected = { Up: 'LEMUR', Down: 'KANGAROO', Left: 'ZEBRA', Right: 'ZEBRA' }[scenario.lastKey!];
+  expect(view.rows.filter((row) => row.selected).map((row) => row.word)).toEqual([selected]);
+  const moved = rowOf(view, 'ZEBRA').columnCell - rowOf(scenario.twoBefore!, 'ZEBRA').columnCell;
+  expect(moved).toBe(scenario.lastKey === 'Left' ? 1 : 0);
 });
 
 // Story 9
@@ -753,6 +937,8 @@ When('a row makes way', async ({ page, scenario }) => {
 });
 
 Then('it slides to its new slot in about 0.1 seconds', async ({ page }) => {
+  const makingWay = (await tweens(page)).filter((tween) => tween.props.includes('y'));
+  expect(makingWay[makingWay.length - 1].duration).toBe(100);
   await page.waitForTimeout(160);
   const { rows } = await two(page);
   const { layout } = await current(page);
@@ -851,10 +1037,31 @@ Then("its word doesn't slide", async ({ page, scenario }) => {
 
 Then('each handle is at least as large as a tile', async ({ page }) => {
   const tile = await tileSize(page);
-  (await two(page)).handles.forEach((handle) => expect(handle.width).toBeGreaterThanOrEqual(tile));
+  const objects = await screen(page);
+  for (const handle of (await two(page)).handles) {
+    const drawn = tileAt(objects, handle.x + handle.width / 2, handle.y + handle.height / 2)!;
+    expect(drawn.width).toBeGreaterThanOrEqual(tile);
+    expect(drawn.height).toBeGreaterThanOrEqual(tile);
+  }
 });
 
-Then('each handle shows three short horizontal lines', async () => {});
+Then('each handle shows three short horizontal lines', async ({ page }) => {
+  const objects = await screen(page);
+  const grips = objects.filter((object) => object.depth === 3 && object.kind === 'graphics');
+  const { handles } = await two(page);
+  expect(grips).toHaveLength(handles.length);
+  grips.forEach((grip, index) => {
+    const handle = handles[index];
+    expect(grip.lines).toHaveLength(3);
+    for (const line of grip.lines) {
+      expect(line.y1).toBe(line.y2);
+      expect(Math.abs(line.x2 - line.x1)).toBeLessThan(handle.width);
+      expect(line.y1).toBeGreaterThan(handle.y);
+      expect(line.y1).toBeLessThan(handle.y + handle.height);
+    }
+    expect(new Set(grip.lines.map((line) => line.y1)).size).toBe(3);
+  });
+});
 
 When('a finger presses a handle', async ({ page, scenario }) => {
   await ready(page, scenario);
@@ -1015,13 +1222,17 @@ Given("ZEBRA's row is selected in the top row, with its Z in the column", async 
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.select(0));
 });
 
-Given('the rest of the column reads L, K', async () => {});
+Given('the rest of the column reads L, K', async ({ page }) => {
+  expect((await two(page)).columnText.slice(1)).toBe('LK');
+});
 
 Given('a flicked word glides through the winning position and stops elsewhere', async ({ page, scenario }) => {
   await ready(page, scenario);
   await arrange(page, ['ZEBRA', 'LEMUR', 'KANGAROO'], { ZEBRA: 0, LEMUR: 0, KANGAROO: 0 });
   await flick(page, 'ZEBRA', 0, -170);
+  expect((await lastMove(page)).duration).toBeGreaterThan(100);
   await settle(page);
+  expect(rowOf(await two(page), 'ZEBRA').columnCell).toBeGreaterThan(1);
 });
 
 Given(/^the final word (?:is )?(.+)$/, async ({ scenario }, word: string) => {
@@ -1034,10 +1245,16 @@ function plan(scenario: Scenario, text: string, rows: string[], cells: Record<st
   scenario.columnPlan[text] = { order: rows, cells };
 }
 
-When(/^the column (?:reads|spells) (.+?)(?: from top to bottom)?$/, async ({ page, scenario }, text: string) => {
+When(/^the column (?:reads|spells) (.+?)(?: from top to bottom)?$/, async ({ page, scenario, $uri }, text: string) => {
   await ready(page, scenario);
   const key = text === 'the final word' ? 'ELK' : text.split(', ').join('');
+  // Only story 10 uses this as an action. Everywhere else it's a check, and must never arrange anything.
+  if (!$uri.includes('story-10')) {
+    expect((await two(page)).columnText).toBe(key);
+    return;
+  }
   if ((await two(page)).columnText === key) return;
+  if (text === 'the final word') await startRecording(page);
   scenario.columnPlan ??= {};
   scenario.columnPlan.ELK ??= { order: ['ZEBRA', 'LEMUR', 'KANGAROO'], cells: { ZEBRA: 1, LEMUR: 0, KANGAROO: 0 } };
   scenario.columnPlan.KLE ??= { order: ['KANGAROO', 'LEMUR', 'ZEBRA'], cells: { ZEBRA: 1, LEMUR: 0, KANGAROO: 0 } };
@@ -1052,30 +1269,65 @@ When(/^the column (?:reads|spells) (.+?)(?: from top to bottom)?$/, async ({ pag
   await settle(page);
 });
 
-Then('the E pulses and turns gold first', async ({ page }) => {
-  await expect.poll(async () => (await two(page)).goldOrder).toEqual(['E', 'L', 'K']);
+Then('the E pulses and turns gold first', async ({ page, scenario }) => {
+  await expect.poll(async () => (await two(page)).won).toBe(true);
+  await page.waitForTimeout(900);
+  scenario.goldLetters = goldLetters(await stopRecording(page), (await current(page)).colours.tileGold);
+  expect(scenario.goldLetters[0]).toMatchObject({ letter: 'E', pulsed: true });
 });
 
-Then('then the L does', async () => {});
+Then('then the L does', async ({ scenario }) => {
+  const [first, second] = scenario.goldLetters!;
+  expect(second).toMatchObject({ letter: 'L', pulsed: true });
+  expect(second.t).toBeGreaterThan(first.t + 100);
+});
 
-Then('then the K does', async () => {});
+Then('then the K does', async ({ scenario }) => {
+  const [, second, third] = scenario.goldLetters!;
+  expect(third).toMatchObject({ letter: 'K', pulsed: true });
+  expect(third.t).toBeGreaterThan(second.t + 100);
+});
 
 When('the top letter of the column turns gold', async ({ page, scenario }) => {
   await ready(page, scenario);
   await arrange(page, ['ZEBRA', 'LEMUR', 'KANGAROO'], { ZEBRA: 0, LEMUR: 0, KANGAROO: 0 });
+  await startRecording(page);
   await dragSlowlyAndRelease(page, 'ZEBRA', 0, -1);
+  await page.waitForTimeout(600);
+  scenario.frames = await stopRecording(page);
 });
 
-Then('the tiles outside the column start to fade away', async ({ page }) => {
-  await expect.poll(async () => (await two(page)).faded).toBe(true);
+/** Whether a set of tiles starts fading as the top letter turns gold. */
+async function expectFadeFromFirstGold(page: Page, scenario: Scenario, tilesIn: (frame: Frame, colours: GameView['colours']) => Drawn[]) {
+  const { colours } = await current(page);
+  const frames = scenario.frames!;
+  const gold = frames.findIndex((frame) => boardTiles(frame, colours.tileGold).length > 0);
+  expect(gold).toBeGreaterThan(0);
+  const alpha = (frame: Frame) => Math.max(...tilesIn(frame, colours).map((tile) => tile.alpha));
+  expect(alpha(frames[gold - 1])).toBe(1);
+  const soon = frames.find((frame) => frame.t - frames[gold].t >= 150)!;
+  expect(alpha(soon)).toBeLessThan(1);
+}
+
+Then('the tiles outside the column start to fade away', async ({ page, scenario }) => {
+  const view = await two(page);
+  const middle = view.column.x + view.column.width / 2;
+  await expectFadeFromFirstGold(page, scenario, (frame, colours) =>
+    boardTiles(frame, colours.tileLocked).filter((tile) => Math.abs(tile.x - middle) > 2),
+  );
 });
 
-Then('the handles start to fade away', async ({ page }) => {
-  expect((await two(page)).faded).toBe(true);
+Then('the handles start to fade away', async ({ page, scenario }) => {
+  await expectFadeFromFirstGold(page, scenario, (frame, colours) => handleTiles(frame, colours.tile));
 });
 
-Then('the gold word ends up alone in the column', async ({ page }) => {
-  expect((await two(page)).popup).toBeNull();
+Then('the gold word ends up alone in the column', async ({ page, scenario }) => {
+  const { colours, layout } = await current(page);
+  const last = scenario.frames![scenario.frames!.length - 1];
+  const board = last.screen.filter((object) => object.y > layout.top.height && object.kind !== 'graphics' && object.alpha > 0.01);
+  expect(board.filter((object) => object.kind === 'text').map((object) => object.text).sort()).toEqual(['E', 'K', 'L']);
+  expect(board.filter((object) => object.kind === 'rect' && object.stroke === null).map((object) => object.fill)).toEqual([colours.tileGold, colours.tileGold, colours.tileGold]);
+  expect(last.two!.popup).toBeNull();
 });
 
 async function win(page: Page, scenario: Scenario) {
@@ -1094,51 +1346,72 @@ When('the popup appears', async ({ page, scenario }) => {
 });
 
 Then('the gold word and the column fade away', async ({ page }) => {
-  await expect.poll(async () => (await two(page)).columnVisible).toBe(false);
+  const { colours } = await current(page);
+  await expect
+    .poll(async () => {
+      const objects = await screen(page);
+      const gold = objects.filter((object) => object.fill === colours.tileGold && object.depth !== POPUP_DEPTH);
+      return Math.max(columnGraphics(objects)?.alpha ?? 0, ...gold.map((object) => object.alpha));
+    })
+    .toBeLessThan(0.01);
 });
 
 Then('the top of the screen stays', async ({ page, scenario }) => {
-  expect((await current(page)).layout.topItems).toEqual(scenario.views[0].layout.topItems);
+  const { layout } = await current(page);
+  expect(layout.topItems).toEqual(scenario.views[0].layout.topItems);
+  const objects = await screen(page);
+  for (const item of layout.topItems) {
+    expect(textAt(objects, item.x + item.width / 2, item.y + item.height / 2)?.alpha).toBe(1);
+  }
 });
 
-When(/^the player (presses an arrow key|tries to drag a word)$/, async ({ page }, action: string) => {
+When(/^the player (presses an arrow key|tries to drag a word)$/, async ({ page, scenario }, action: string) => {
   if (action.includes('arrow')) {
     await page.keyboard.press('ArrowRight');
   } else {
-    await page.mouse.move(400, 250);
-    await page.mouse.down();
-    await page.mouse.move(300, 250, { steps: 3 });
+    const point = await pointOnWord(page, 'LEMUR', 0);
+    await grab(page, point);
+    await page.mouse.move(point.x - 100, point.y, { steps: 3 });
+    scenario.heldWord = (await two(page)).dragging;
     await page.mouse.up();
   }
+  await settle(page);
 });
 
 Then('nothing moves', async ({ page, scenario }) => {
   const now = await two(page);
-  expect(now.rows.map((row) => row.columnCell)).toEqual(scenario.twoBefore!.rows.map((row) => row.columnCell));
+  const positions = (view: PhaseTwoTestView) => view.rows.map((row) => [row.columnCell, row.x]);
+  expect(positions(now)).toEqual(positions(scenario.twoBefore!));
 });
 
 Then('the popup appears about 1.5 seconds later', async ({ page }) => {
-  expect((await two(page)).popup).toBeNull();
-  await page.waitForTimeout(1000);
-  expect((await two(page)).popup).toBeNull();
   await waitForPopup(page);
+  const frames = await stopRecording(page);
+  const won = frames.find((frame) => frame.two!.won)!;
+  const shown = frames.find((frame) => frame.two!.popup !== null)!;
+  expect(shown.t - won.t).toBeGreaterThan(1350);
+  expect(shown.t - won.t).toBeLessThan(1750);
 });
 
 Then("it's in the centre of the screen", async ({ page }) => {
-  const { popup } = await two(page);
-  expect(popup).toMatchObject({ x: 400, y: 225 });
+  const [panel] = await popupParts(page);
+  const { layout } = await current(page);
+  expect(panel).toMatchObject({ x: layout.width / 2, y: layout.height / 2 });
 });
 
 Then('it shows {string}', async ({ page }, text: string) => {
-  expect((await two(page)).popup!.title).toBe(text);
+  expect((await popupParts(page)).map((object) => object.text)).toContain(text);
 });
 
 Then('it shows ELK in gold', async ({ page }) => {
-  expect((await two(page)).popup!.word).toBe('ELK');
+  const { colours } = await current(page);
+  const parts = await popupParts(page);
+  const gold = parts.filter((object) => object.fill === colours.tileGold).sort((a, b) => a.x - b.x);
+  expect(gold.map((tile) => textAt(parts, tile.x, tile.y)?.text)).toEqual(['E', 'L', 'K']);
 });
 
 Then('its button says {string}', async ({ page }, text: string) => {
-  expect((await two(page)).popup!.button).toBe(text);
+  expect((await popupParts(page)).map((object) => object.text)).toContain(text);
 });
 
 Given('the popup is showing', async ({ page, scenario }) => {
@@ -1147,8 +1420,8 @@ Given('the popup is showing', async ({ page, scenario }) => {
 });
 
 When('the player presses its button', async ({ page }) => {
-  const { buttonRect } = (await two(page)).popup!;
-  await page.mouse.click(buttonRect.x + buttonRect.width / 2, buttonRect.y + buttonRect.height / 2);
+  const button = (await popupParts(page)).find((object) => object.text?.startsWith('Play Level'))!;
+  await page.mouse.click(button.x, button.y);
 });
 
 When(/^the player presses (Enter|Space)$/, async ({ page }, key: string) => {
@@ -1157,6 +1430,8 @@ When(/^the player presses (Enter|Space)$/, async ({ page }, key: string) => {
 
 Then('the next level starts', async ({ page }) => {
   await expect.poll(async () => ((await current(page)) as TwoView).levelNumber).toBe(2);
+  expect((await current(page)).phaseTwo).toBeNull();
+  expect(await popupParts(page)).toEqual([]);
 });
 
 Given("the popup hasn't appeared yet", async ({ page }) => {
@@ -1173,5 +1448,6 @@ Given('the celebration is playing', async ({ page, scenario }) => {
 
 Then('the popup appears for the new orientation', async ({ page }) => {
   await waitForPopup(page);
-  expect((await two(page)).popup!.x).toBe(225);
+  const [panel] = await popupParts(page);
+  expect(panel.x).toBe(225);
 });
