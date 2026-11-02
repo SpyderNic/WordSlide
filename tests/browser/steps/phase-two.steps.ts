@@ -1507,3 +1507,41 @@ Then('the popup appears for the new orientation', async ({ page }) => {
   const [panel] = await popupParts(page);
   expect(panel.x).toBe(225);
 });
+
+// The gold wave pulses like a lock (story 10, R6)
+
+/** Each column tile, frame by frame, grouped by row. */
+function columnPulses(frames: Frame[]) {
+  const rows = new Map<number, { t: number; scale: number; fill: number | null }[]>();
+  for (const frame of frames) {
+    if (!frame.two) continue;
+    const x = frame.two.column.x + frame.two.column.width / 2;
+    for (const tile of frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && object.depth === 1 && Math.abs(object.x - x) < 3)) {
+      const key = Math.round(tile.y);
+      rows.set(key, [...(rows.get(key) ?? []), { t: frame.t, scale: tile.scale, fill: tile.fill }]);
+    }
+  }
+  return [...rows.values()].filter((samples) => samples.some((sample) => sample.scale > 1.05));
+}
+
+Then('each letter keeps its colour while it grows', async ({ page, scenario }) => {
+  await page.waitForTimeout(900);
+  scenario.frames = await stopRecording(page);
+  const { colours } = await current(page);
+  const rows = columnPulses(scenario.frames);
+  expect(rows.length).toBe(3);
+  for (const samples of rows) {
+    const peak = samples.reduce((best, sample, index) => (sample.scale > samples[best].scale ? index : best), 0);
+    const growing = samples.slice(0, peak).filter((sample) => sample.scale > 1.001 && sample.scale < 1.12);
+    expect(growing.length).toBeGreaterThan(1);
+    growing.forEach((sample) => expect(sample.fill).not.toBe(colours.tileGold));
+  }
+});
+
+Then('turns gold at its biggest', async ({ page, scenario }) => {
+  const { colours } = await current(page);
+  for (const samples of columnPulses(scenario.frames!)) {
+    const peak = samples.reduce((best, sample, index) => (sample.scale > samples[best].scale ? index : best), 0);
+    samples.slice(peak).forEach((sample) => expect(sample.fill).toBe(colours.tileGold));
+  }
+});

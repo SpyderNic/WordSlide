@@ -84,6 +84,11 @@ Feature: Win check and celebration
       And then the L does
       And then the K does
 
+    Scenario: Each letter turns gold at the biggest point of its pulse
+      When the column spells the final word
+      Then each letter keeps its colour while it grows
+      And turns gold at its biggest
+
   Rule: The board fades away
 
     Scenario: The other tiles and handles fade as the top letter turns gold

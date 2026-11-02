@@ -15,9 +15,11 @@ export const woodAndBrass: Style = {
     highlight: 0xf5e6c8,
     column: 0xb08d3c,
   },
+  pulseScale: 1.15,
   timings: {
     letterTravel: 150,
-    lockPulse: 300,
+    lockPulseGrow: 150,
+    lockPulseShrink: 200,
     wrongShake: 300,
     alreadyFound: 1400,
     snap: 100,

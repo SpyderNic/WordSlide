@@ -110,6 +110,13 @@ Feature: Check and lock a word
       And the row still reads Z E B R E
       And the pool hasn't changed
 
+    @browser
+    Scenario: In a split word, only the wrong part shakes
+      Given a level containing the answer HOT DOG
+      When the player fills HOT DOG's row with HON DOG
+      Then DOG locks
+      And only HON's tiles shake
+
     Scenario: A wrong word can be fixed
       Given ZEBRA's row reads Z E B R E
       When the player drags A from the pool onto the last E
@@ -240,6 +247,30 @@ Feature: Check and lock a word
       When LEMUR locks
       Then its row pulses briefly
       And all 5 tiles take the locked colour
+
+    @browser
+    Scenario: The colour changes at the biggest point of the pulse
+      When LEMUR locks
+      Then its tiles keep their colour while they grow
+      And they take the locked colour at their biggest
+
+    @browser
+    Scenario: The pulse is quick and grows 15%
+      When LEMUR locks
+      Then its tiles grow 15% in about 0.15 seconds
+      And they shrink back in about 0.2 seconds
+
+    @browser
+    Scenario: Tiles grow from their centre
+      When LEMUR locks
+      Then each tile and its letter keep their centre while they pulse
+
+    @browser
+    Scenario: A part pulses the same way
+      Given a level containing the answer HOT DOG
+      When the player places H, O and T in the first three cells of HOT DOG's row
+      Then its tiles keep their colour while they grow
+      And they take the locked colour at their biggest
 
     @browser
     Scenario: Revealed letters change too

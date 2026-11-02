@@ -612,6 +612,7 @@ Then('it gently rises and fades out', async ({ page, scenario }) => {
 
 When('LEMUR locks', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
+  scenario.pulse = { row: rowOf(layout, 'LEMUR'), cells: layout.rows[rowOf(layout, 'LEMUR')].cells.map((_, cell) => cell) };
   await startRecording(page);
   await fillRow(rowOf(layout, 'LEMUR'), 'LEMUR')(page);
 });
@@ -623,11 +624,13 @@ Then('its row pulses briefly', async ({ page, scenario }) => {
   expect(scales[scales.length - 1]).toBe(1);
 });
 
-Then(/^all 5 tiles take the locked colour$/, async ({ page }) => {
+Then(/^all 5 tiles take the locked colour$/, async ({ page, scenario }) => {
+  await recorded(page, scenario);
   await recordedColours(page);
 });
 
-Then('the L takes the locked colour', async ({ page }) => {
+Then('the L takes the locked colour', async ({ page, scenario }) => {
+  await recorded(page, scenario);
   const { layout } = await current(page);
   expect(layout.rows[0].cells[0].cell.kind).toBe('revealed');
   await recordedColours(page);
@@ -711,6 +714,8 @@ function placeFirstPart(word: string, part: string) {
 
 When('the player places H, O and T in the first three cells of HOT DOG\'s row', async ({ page, scenario }) => {
   await ready(page, scenario);
+  const { layout } = await current(page);
+  scenario.pulse = { row: rowOf(layout, 'HOT DOG'), cells: firstPart(layout, rowOf(layout, 'HOT DOG')) };
   await startRecording(page);
   await placeFirstPart('HOT DOG', 'HOT')(page);
   await page.waitForTimeout(600);
@@ -753,4 +758,120 @@ Then("HOT is still locked in HOT DOG's row", async ({ page }) => {
     const { x, y } = centreOf(layout.rows[row].cells[cell]);
     expect(tileAt(objects, x, y)?.fill).toBe(colours.tileLocked);
   }
+});
+
+// The lock pulse (story 6, R14) and the split-word shake (R6)
+
+interface PulseSample {
+  t: number;
+  scale: number;
+  fill: number | null;
+  x: number;
+  y: number;
+  letter?: { x: number; y: number };
+}
+
+/** Each pulsing cell's tile, frame by frame, found at the cell's resting centre. */
+function pulseSamples(frames: Frame[], layout: LevelLayout, row: number, cells: number[]): PulseSample[][] {
+  return cells.map((cell) => {
+    const { x, y } = centreOf(layout.rows[row].cells[cell]);
+    return frames.flatMap((frame) => {
+      const near = frame.screen.filter((object) => Math.abs(object.x - x) < 3 && Math.abs(object.y - y) < 3);
+      const tile = near.find((object) => object.kind === 'rect' && object.fill !== null);
+      if (!tile) return [];
+      const letter = near.find((object) => object.kind === 'text');
+      return [{ t: frame.t, scale: tile.scale, fill: tile.fill, x: tile.x, y: tile.y, letter: letter && { x: letter.x, y: letter.y } }];
+    });
+  });
+}
+
+async function pulses(page: Page, scenario: Scenario) {
+  const frames = await recorded(page, scenario);
+  const { layout } = await current(page);
+  return pulseSamples(frames, layout, scenario.pulse!.row, scenario.pulse!.cells);
+}
+
+function peakOf(samples: PulseSample[]) {
+  return samples.reduce((peak, sample, index) => (sample.scale > samples[peak].scale ? index : peak), 0);
+}
+
+Then('its tiles keep their colour while they grow', async ({ page, scenario }) => {
+  const { colours } = await current(page);
+  for (const samples of await pulses(page, scenario)) {
+    const growing = samples.slice(0, peakOf(samples)).filter((sample) => sample.scale > 1.001 && sample.scale < 1.12);
+    expect(growing.length).toBeGreaterThan(1);
+    growing.forEach((sample) => expect(sample.fill).not.toBe(colours.tileLocked));
+  }
+});
+
+Then('they take the locked colour at their biggest', async ({ page, scenario }) => {
+  const { colours } = await current(page);
+  for (const samples of await pulses(page, scenario)) {
+    const peak = peakOf(samples);
+    samples.slice(peak).forEach((sample) => expect(sample.fill).toBe(colours.tileLocked));
+  }
+});
+
+Then(/^its tiles grow 15% in about 0\.15 seconds$/, async ({ page, scenario }) => {
+  for (const samples of await pulses(page, scenario)) {
+    const peak = peakOf(samples);
+    const start = samples.findIndex((sample) => sample.scale > 1.001);
+    expect(samples[peak].scale).toBeGreaterThan(1.13);
+    expect(samples[peak].scale).toBeLessThan(1.16);
+    expect(samples[peak].t - samples[start].t).toBeGreaterThan(90);
+    expect(samples[peak].t - samples[start].t).toBeLessThan(230);
+  }
+});
+
+Then(/^they shrink back in about 0\.2 seconds$/, async ({ page, scenario }) => {
+  for (const samples of await pulses(page, scenario)) {
+    const peak = peakOf(samples);
+    const end = samples.findIndex((sample, index) => index > peak && sample.scale <= 1.001);
+    expect(end).toBeGreaterThan(peak);
+    expect(samples[end].t - samples[peak].t).toBeGreaterThan(140);
+    expect(samples[end].t - samples[peak].t).toBeLessThan(300);
+  }
+});
+
+Then('each tile and its letter keep their centre while they pulse', async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const all = await pulses(page, scenario);
+  all.forEach((samples, index) => {
+    const { x, y } = centreOf(layout.rows[scenario.pulse!.row].cells[scenario.pulse!.cells[index]]);
+    expect(samples.some((sample) => sample.scale > 1.1)).toBe(true);
+    for (const sample of samples) {
+      expect(Math.abs(sample.x - x)).toBeLessThan(0.5);
+      expect(Math.abs(sample.y - y)).toBeLessThan(0.5);
+      expect(Math.abs(sample.letter!.x - x)).toBeLessThan(0.5);
+      expect(Math.abs(sample.letter!.y - y)).toBeLessThan(0.5);
+    }
+  });
+});
+
+When("the player fills HOT DOG's row with HON DOG", async ({ page, scenario }) => {
+  const layout = await layoutNow(page, scenario);
+  await startRecording(page);
+  await fillRow(rowOf(layout, 'HOT DOG'), 'HON DOG')(page);
+});
+
+Then('DOG locks', async ({ page }) => {
+  const { layout } = await current(page);
+  const row = layout.rows[rowOf(layout, 'HOT DOG')];
+  expect(row.cells.slice(4).map((cell) => cell.cell)).toEqual([...'DOG'].map((character) => ({ kind: 'locked', character })));
+});
+
+Then("only HON's tiles shake", async ({ page, scenario }) => {
+  const frames = await recorded(page, scenario);
+  const { layout } = await current(page);
+  const row = rowOf(layout, 'HOT DOG');
+  const movement = (cell: number) => {
+    const { x, y } = centreOf(layout.rows[row].cells[cell]);
+    const xs = frames.flatMap((frame) => frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && Math.abs(object.y - y) < 3 && Math.abs(object.x - x) < layout.tileSize / 2).map((object) => object.x));
+    return Math.max(...xs) - Math.min(...xs);
+  };
+  for (const cell of [0, 1, 2]) expect(movement(cell)).toBeGreaterThan(2);
+  for (const cell of [4, 5, 6]) expect(movement(cell)).toBeLessThan(0.5);
+  const space = centreOf(layout.rows[row].cells[3]);
+  const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
+  expect(atSpace.every((object) => Math.abs(object.x - space.x) < 0.5)).toBe(true);
 });

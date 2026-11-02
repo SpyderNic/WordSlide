@@ -47,6 +47,8 @@ export interface Scenario {
   slideDistance?: number;
   stretchWord?: string;
   stretchCell?: number;
+  /** The cells a lock is about to pulse, by row. */
+  pulse?: { row: number; cells: number[] };
   finalWordGiven?: boolean;
   columnPlan?: Record<string, { order: string[]; cells: Record<string, number> }>;
   /** What the screen showed, frame by frame, during the scenario's action. */

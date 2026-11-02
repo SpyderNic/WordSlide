@@ -14,10 +14,14 @@ export interface Style {
     highlight: number;
     column: number;
   };
+  /** How much bigger a pulsing tile gets: 1.15 is 15% (D37). */
+  pulseScale: number;
   /** Milliseconds. */
   timings: {
     letterTravel: number;
-    lockPulse: number;
+    /** A locking tile grows, takes its new colour at its biggest, then shrinks back (D37). */
+    lockPulseGrow: number;
+    lockPulseShrink: number;
     wrongShake: number;
     alreadyFound: number;
     snap: number;

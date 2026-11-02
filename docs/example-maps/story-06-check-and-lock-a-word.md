@@ -66,6 +66,7 @@ The letters already left the pool when they were placed.
 The row shakes a little sideways. Its letters stay in place, so the player can fix a single letter (Q1, Q2). There's no limit on tries, and no penalty.
 
 - 🟩 ZEBRE in ZEBRA's row shakes, and the letters stay
+- 🟩 In a split word, only the parts that didn't lock shake (Q12): HON DOG in HOT DOG's row locks DOG, and only HON shakes
 - 🟩 Replacing the last E with an A locks ZEBRA
 - 🟩 The player can get it wrong any number of times
 
@@ -130,9 +131,11 @@ What that looks like is story 7.
 
 ### 🟦 R14. A locking word pulses briefly, then all its tiles take a new colour
 
-*From Q3.* Revealed letters in that word take the locked colour too. The sound effect is parked with story 18.
+*From Q3 and Q11.* Each tile grows 15% from its centre in 0.15 seconds, takes the locked colour at its biggest, then shrinks back in 0.2 seconds. A locking part (R16) pulses the same way. Revealed letters in that word take the locked colour too. The sound effect is parked with story 18.
 
 - 🟩 When LEMUR locks, its row pulses, and all 5 tiles turn the locked colour
+- 🟩 LEMUR's tiles keep their colour while they grow, and take the locked colour at their biggest
+- 🟩 Each tile and its letter keep their centre while they pulse
 
 **Confirmed:** ☑
 
@@ -205,3 +208,11 @@ What that looks like is story 7.
 ### 🟥 Q10. What happens to a locked part whose row can no longer fit any remaining answer?
 
 **Answer:** Its letters go back to the pool, like stranded hints. If the row can still fit a remaining answer, the part stays (R16).
+
+### 🟥 Q11. Can the lock pulse feel better?
+
+*Asked by the designer after playing milestone 5.* **Answer:** Each tile grows 15% from its centre in 0.15 seconds, turns the locked colour at its biggest, then shrinks back in 0.2 seconds (R14).
+
+### 🟥 Q12. In a split word, what shakes when the row is wrong?
+
+*Asked by the designer after playing milestone 5.* **Answer:** Only the parts that didn't lock. Locked parts and special characters stay still (R6).

@@ -15,7 +15,7 @@ export type BoardEvent =
   | { type: 'hintsReturned'; row: number; letters: string[] }
   | { type: 'phaseOneOver' }
   /** A part of a split word locked on its own (D48). */
-  | { type: 'partLocked'; row: number; cells: number[] };
+  | { type: 'partLocked'; row: number; cells: number[]; before: Cell['kind'][] };
 
 /** The board after the last change that settled. A drag is never part of it (story 11, R10). */
 export interface BoardSnapshot {
@@ -247,10 +247,11 @@ export class Board {
         return this.fits(word, state) && part.every((index, position) => answer[index] === letters[position]);
       });
       if (!matches) continue;
+      const before = cells.map((cell) => cell.kind);
       part.forEach((index, position) => {
         state.cells[index] = { kind: 'locked', character: letters[position]! };
       });
-      events.push({ type: 'partLocked', row, cells: part });
+      events.push({ type: 'partLocked', row, cells: part, before });
     }
     return events;
   }

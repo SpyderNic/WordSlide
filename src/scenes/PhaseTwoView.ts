@@ -10,7 +10,6 @@ const timings = currentStyle.timings;
 
 const GAP = 0.08;
 const RAISED_SCALE = 1.05;
-const PULSE_SCALE = 1.15;
 /** How far past the end of its range a word or row stretches, in cells, and how much it resists. */
 const STRETCH_LIMIT = 0.4;
 const STRETCH_RESISTANCE = 0.25;
@@ -506,12 +505,21 @@ export class PhaseTwoView {
       const cell = row.columnCell;
       const letter = view.letters[cell];
       const tile = this.tileAtCell(view, row.cells, cell);
+      // Each letter pulses like a locking tile, turning gold at its biggest (D41).
       this.scene.time.delayedCall(index * GOLD_STAGGER, () => {
-        tile.setFillStyle(colours.tileGold);
-        this.scene.tweens.add({ targets: [tile, letter], scale: PULSE_SCALE, duration: timings.lockPulse / 2, yoyo: true });
+        this.scene.tweens.add({
+          targets: [tile, letter],
+          scale: currentStyle.pulseScale,
+          duration: timings.lockPulseGrow,
+          ease: 'Sine.easeOut',
+          onComplete: () => {
+            tile.setFillStyle(colours.tileGold);
+            if (index === 0) this.fadeOthers();
+            this.scene.tweens.add({ targets: [tile, letter], scale: 1, duration: timings.lockPulseShrink, ease: 'Sine.easeIn' });
+          },
+        });
       });
     });
-    this.fadeOthers();
     this.celebrating = this.scene.time.delayedCall(timings.popupDelay, () => this.showPopup());
   }
 

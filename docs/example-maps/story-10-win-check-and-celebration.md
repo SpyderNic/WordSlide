@@ -52,7 +52,10 @@ That means after a snap, a keyboard move or a row drop. It's never checked durin
 
 *From Q1, clarified by the designer.* It's staggered like a Mexican wave. They look ordinary until then (story 8, R13).
 
+Each letter pulses like a locking tile (story 6, R14), and turns gold at its biggest. *From playing milestone 5.*
+
 - 🟩 When E, L, K is spelled, the E pulses and turns gold first, then the L, then the K
+- 🟩 Each letter keeps its colour while it grows, and turns gold at its biggest
 
 **Confirmed:** ☑
 

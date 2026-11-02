@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Board, type BoardEvent } from '../game/board';
 import { PhaseTwo, type PhaseTwoSnapshot } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
-import type { Level } from '../game/level';
+import type { Cell, Level } from '../game/level';
 import { NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
 import { pickedLevel, resetAsked } from '../game/startingLevel';
 import { testLevels } from '../levels/testLevels';
@@ -14,7 +14,6 @@ import { buildPopup } from './popup';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
-const PULSE_SCALE = 1.08;
 const SHAKE_DISTANCE = 6;
 const POINTS_PULSE = 1.2;
 
@@ -470,13 +469,13 @@ export class GameScene extends Phaser.Scene {
     this.saveLevel();
     this.feedback.push(...events);
     for (const event of events) {
-      if (event.type === 'locked') this.pulse(event.row);
-      if (event.type === 'partLocked') this.pulse(event.row, event.cells);
+      if (event.type === 'locked') this.pulse(event.row, this.board.rows[event.row].cells.map((_, cell) => cell), this.board.rows[event.row].cells.map((cell) => cell.kind));
+      if (event.type === 'partLocked') this.pulse(event.row, event.cells, event.before);
       if (event.type === 'wrong') this.shake(event.row);
       if (event.type === 'alreadyFound') this.showAlreadyFound(event.lockedRow);
       if (event.type === 'phaseOneOver') {
         const board = this.board;
-        this.time.delayedCall(timings.lockPulse, () => {
+        this.time.delayedCall(timings.lockPulseGrow + timings.lockPulseShrink, () => {
           if (this.board === board) this.startCeremony();
         });
       }
@@ -543,7 +542,7 @@ export class GameScene extends Phaser.Scene {
     this.points = this.progress.points;
     this.redraw();
     if (this.pointsText) {
-      this.tweens.add({ targets: this.pointsText, scale: POINTS_PULSE, duration: timings.lockPulse / 2, yoyo: true });
+      this.tweens.add({ targets: this.pointsText, scale: POINTS_PULSE, duration: timings.lockPulseGrow, yoyo: true });
     }
   }
 
@@ -551,20 +550,47 @@ export class GameScene extends Phaser.Scene {
     this.startLevel(undefined, true);
   }
 
-  /** The whole row, or only a locking part's cells (D48). */
-  private pulse(row: number, cells?: number[]) {
-    const targets = cells ? cells.flatMap((cell) => this.cellObjects.get(`${row}:${cell}`) ?? []) : this.rowObjects.get(row);
+  /**
+   * A locking word or part (D48): its tiles grow from their centre, take the locked colour at their biggest,
+   * then shrink back (D37). They're drawn locked already, so they show their old colours while they grow.
+   */
+  private pulse(row: number, cells: number[], before: Cell['kind'][]) {
+    const targets: (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[] = [];
+    const finish: (() => void)[] = [];
+    cells.forEach((cell, index) => {
+      const parts = this.cellObjects.get(`${row}:${cell}`) ?? [];
+      targets.push(...parts);
+      for (const part of parts) {
+        if (part instanceof Phaser.GameObjects.Rectangle) {
+          const locked = part.fillColor;
+          part.setFillStyle(before[index] === 'revealed' ? colours.tileRevealed : colours.tilePlaced);
+          finish.push(() => part.setFillStyle(locked));
+        } else {
+          const locked = part.style.color;
+          if (before[index] === 'revealed' || before[index] === 'special') part.setColor(hex(colours.highlight));
+          finish.push(() => part.setColor(locked));
+        }
+      }
+    });
     this.tweens.add({
       targets,
-      scale: PULSE_SCALE,
-      duration: timings.lockPulse / 2,
-      yoyo: true,
+      scale: currentStyle.pulseScale,
+      duration: timings.lockPulseGrow,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        finish.forEach((step) => step());
+        this.tweens.add({ targets, scale: 1, duration: timings.lockPulseShrink, ease: 'Sine.easeIn' });
+      },
     });
   }
 
+  /** Only the letters that didn't lock move. Locked parts and special characters stay still (D37). */
   private shake(row: number) {
+    const moving = this.board.rows[row].cells.flatMap((cell, index) =>
+      cell.kind === 'locked' || cell.kind === 'special' ? [] : (this.cellObjects.get(`${row}:${index}`) ?? []),
+    );
     this.tweens.add({
-      targets: this.rowObjects.get(row),
+      targets: moving,
       x: `+=${SHAKE_DISTANCE}`,
       duration: timings.wrongShake / 4,
       yoyo: true,
@@ -576,7 +602,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.rowObjects.get(lockedRow)?.filter((part) => part instanceof Phaser.GameObjects.Rectangle),
       alpha: 0.5,
-      duration: timings.lockPulse / 2,
+      duration: timings.lockPulseGrow,
       yoyo: true,
     });
 
