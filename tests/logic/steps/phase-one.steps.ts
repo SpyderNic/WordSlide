@@ -166,6 +166,17 @@ function hasLock(world: World, word: string) {
   return world.events.some((event) => event.type === 'locked' && event.word === word);
 }
 
+/** A part of a split word locked (D48), and its cells now hold these letters, locked. */
+function hasPartLock(world: World, part: string) {
+  const board = boardOf(world);
+  return world.events.some(
+    (event) =>
+      event.type === 'partLocked' &&
+      event.cells.map((cell) => board.rows[event.row].cells[cell]).every((cell) => cell.kind === 'locked') &&
+      event.cells.map((cell) => (board.rows[event.row].cells[cell] as { character: string }).character).join('') === part,
+  );
+}
+
 const isLocked = (world: World, word: string) =>
   boardOf(world).rows.some((row) => row.locked && row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join('') === word);
 
@@ -567,12 +578,12 @@ When('the player spells the right word', function (this: World) {
   act(this, () => fillRow(this, 0, 'LEMUR'));
 });
 
-Then(/^(?!an input|the word locks$)(.+?) locks(?: in row (\d+))?$/, function (this: World, word: string, row?: string) {
+Then(/^(?!an input|the word locks$|nothing locks$)(.+?) locks(?: in row (\d+))?$/, function (this: World, word: string, row?: string) {
   if (this.stepType === 'Action') {
     act(this, () => fillRow(this, rowIndex(this, `${word}'s row`), word));
     return;
   }
-  assert.ok(hasLock(this, word), JSON.stringify(this.events));
+  assert.ok(hasLock(this, word) || hasPartLock(this, word), JSON.stringify(this.events));
   if (row) assert.ok(boardOf(this).rows[Number(row) - 1].locked);
 });
 
@@ -786,4 +797,94 @@ Then('only the drag carries on', function (this: World) {
 
 Then('its rightmost placed letter goes back to the pool', function (this: World) {
   assert.equal(boardOf(this).countOf('L'), JSON.parse(this.before!).pool.find((tile: { character: string }) => tile.character === 'L').count + 1);
+});
+
+// Split words (D48)
+
+/** The cells of each part of a row: runs of letters between special characters. */
+function partsOf(world: World, row: number): number[][] {
+  const parts: number[][] = [[]];
+  boardOf(world).rows[row].cells.forEach((cell, index) => {
+    if (cell.kind === 'special') parts.push([]);
+    else parts[parts.length - 1].push(index);
+  });
+  return parts.filter((part) => part.length > 0);
+}
+
+/** The cells of the part of a row's designed answer that spells this text. */
+function partCells(world: World, row: number, text: string): number[] {
+  const letters = cellsOf(boardOf(world).rows[row].word);
+  const part = partsOf(world, row).find((cells) => cells.map((cell) => letters[cell]).join('') === text);
+  assert.ok(part, `No part ${text} in row ${row + 1}`);
+  return part;
+}
+
+function partIsLocked(world: World, row: number, text: string) {
+  const { cells } = boardOf(world).rows[row];
+  return partCells(world, row, text).every((cell) => cells[cell].kind === 'locked');
+}
+
+function placeAll(world: World, row: number, cells: number[], characters: string[]): BoardEvent[] {
+  return cells.flatMap((cell, index) => place(world, row, cell, characters[index]));
+}
+
+When(/^the player places (.+?) in the (first|last) (?:(\w+) cells|cell) of (.+)'s row$/, function (this: World, list: string, end: string, count: string | undefined, word: string) {
+  const row = rowIndex(this, `${word}'s row`);
+  const letters = partsOf(this, row).flat();
+  const size = count ? ['one', 'two', 'three', 'four', 'five'].indexOf(count) + 1 : 1;
+  const cells = end === 'first' ? letters.slice(0, size) : letters.slice(-size);
+  this.rowRef = row;
+  act(this, () => placeAll(this, row, cells, list.split(/, | and /)));
+});
+
+When(/^the player fills (HOT DOG|T-REX)'s row with (.+)$/, function (this: World, word: string, filling: string) {
+  const row = rowIndex(this, `${word}'s row`);
+  this.rowRef = row;
+  act(this, () => fillRow(this, row, filling));
+});
+
+Given(/^the player has filled (.+)'s row with (.+), so (\S+) locked$/, function (this: World, word: string, filling: string, part: string) {
+  const row = rowIndex(this, `${word}'s row`);
+  quietly(this, () => fillRow(this, row, filling));
+  assert.ok(partIsLocked(this, row, part), rowText(this, row));
+});
+
+Given(/^(\S+) is locked in (.+)'s row$/, function (this: World, part: string, word: string) {
+  const row = rowIndex(this, `${word}'s row`);
+  this.rowRef = row;
+  quietly(this, () => placeAll(this, row, partCells(this, row, part), [...part]));
+  assert.ok(partIsLocked(this, row, part), rowText(this, row));
+});
+
+Then(/^(\S+) is still locked in (.+)'s row$/, function (this: World, part: string, word: string) {
+  assert.ok(partIsLocked(this, rowIndex(this, `${word}'s row`), part));
+});
+
+When('the player tries to drag its H', function (this: World) {
+  const row = this.rowRef!;
+  const cell = boardOf(this).rows[row].cells.findIndex((candidate) => candidate.kind !== 'empty' && candidate.character === 'H');
+  act(this, (board) => void board.pickUpFromCell(row, cell));
+});
+
+When(/^the player builds (.+) in (.+)'s row$/, function (this: World, word: string, target: string) {
+  act(this, () => fillRow(this, rowIndex(this, `${target}'s row`), word));
+});
+
+Then(/^(.+) locks in (.+)'s row$/, function (this: World, word: string, target: string) {
+  assert.ok(hasLock(this, word), JSON.stringify(this.events));
+  assert.ok(boardOf(this).rows[rowIndex(this, `${target}'s row`)].locked);
+});
+
+Then(/^(\S+)'s cells? stays? empty$/, function (this: World, part: string) {
+  const { cells } = boardOf(this).rows[this.rowRef!];
+  assert.ok(partCells(this, this.rowRef!, part).every((cell) => cells[cell].kind === 'empty'), rowText(this, this.rowRef!));
+});
+
+Then('the D stays placed', function (this: World) {
+  assert.ok(boardOf(this).rows[this.rowRef!].cells.some((cell) => cell.kind === 'placed' && cell.character === 'D'));
+});
+
+Then('nothing locks', function (this: World) {
+  assert.ok(!this.events.some((event) => event.type === 'locked' || event.type === 'partLocked'), JSON.stringify(this.events));
+  assert.ok(boardOf(this).rows.every((row) => !row.locked && row.cells.every((cell) => cell.kind !== 'locked')));
 });

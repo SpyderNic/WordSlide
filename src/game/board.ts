@@ -13,7 +13,9 @@ export type BoardEvent =
   | { type: 'wrong'; row: number }
   | { type: 'alreadyFound'; row: number; lockedRow: number }
   | { type: 'hintsReturned'; row: number; letters: string[] }
-  | { type: 'phaseOneOver' };
+  | { type: 'phaseOneOver' }
+  /** A part of a split word locked on its own (D48). */
+  | { type: 'partLocked'; row: number; cells: number[] };
 
 /** The board after the last change that settled. A drag is never part of it (story 11, R10). */
 export interface BoardSnapshot {
@@ -30,7 +32,7 @@ export interface Drag {
   source: DragSource;
 }
 
-const isFixedCell = (cell: Cell) => cell.kind === 'revealed' || cell.kind === 'special';
+const isFixedCell = (cell: Cell) => cell.kind === 'revealed' || cell.kind === 'special' || cell.kind === 'locked';
 const cellCharacter = (cell: Cell) => (cell.kind === 'empty' ? null : cell.character);
 
 function baseOf(character: string): string {
@@ -200,16 +202,55 @@ export class Board {
   private check(rows: number[]): BoardEvent[] {
     const events: BoardEvent[] = [];
     for (const row of [...new Set(rows)].sort((a, b) => a - b)) {
-      if (this.rows[row].locked || !this.isFull(row)) continue;
+      if (this.rows[row].locked) continue;
+      if (!this.isFull(row)) {
+        events.push(...this.lockParts(row));
+        continue;
+      }
       const word = this.wordIn(row);
       const lockedRow = this.lockedIn.get(word);
       if (this.unlocked.includes(word)) {
         events.push(...this.lock(row, word));
-      } else if (lockedRow !== undefined) {
+        continue;
+      }
+      // A full row that isn't an answer can still have a right part (D48).
+      events.push(...this.lockParts(row));
+      if (lockedRow !== undefined) {
         events.push({ type: 'alreadyFound', row, lockedRow });
       } else {
         events.push({ type: 'wrong', row });
       }
+    }
+    return events;
+  }
+
+  /** Runs of letter cells between special characters. A word with none inside it has one part. */
+  private partsOf(row: number): number[][] {
+    const parts: number[][] = [[]];
+    this.rows[row].cells.forEach((cell, index) => {
+      if (cell.kind === 'special') parts.push([]);
+      else parts[parts.length - 1].push(index);
+    });
+    return parts.filter((part) => part.length > 0);
+  }
+
+  /** D48: a filled part locks if it matches that part of any not-yet-locked answer that fits the row. */
+  private lockParts(row: number): BoardEvent[] {
+    const state = this.rows[row];
+    const events: BoardEvent[] = [];
+    for (const part of this.partsOf(row)) {
+      const cells = part.map((index) => state.cells[index]);
+      if (cells.some((cell) => cell.kind === 'empty') || !cells.some((cell) => cell.kind === 'placed')) continue;
+      const letters = cells.map(cellCharacter);
+      const matches = this.unlocked.some((word) => {
+        const answer = cellsOf(word);
+        return this.fits(word, state) && part.every((index, position) => answer[index] === letters[position]);
+      });
+      if (!matches) continue;
+      part.forEach((index, position) => {
+        state.cells[index] = { kind: 'locked', character: letters[position]! };
+      });
+      events.push({ type: 'partLocked', row, cells: part });
     }
     return events;
   }
@@ -234,7 +275,8 @@ export class Board {
       if (row.locked || this.unlocked.some((word) => this.fits(word, row))) return;
       const letters: string[] = [];
       row.cells = row.cells.map((cell) => {
-        if (cell.kind !== 'revealed') return cell;
+        // Locked parts go back too, so the row can't be left with no way to finish it (D48).
+        if (cell.kind !== 'revealed' && cell.kind !== 'locked') return cell;
         letters.push(cell.character);
         this.changeCount(cell.character, 1);
         return { kind: 'empty' };

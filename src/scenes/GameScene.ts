@@ -44,6 +44,8 @@ export class GameScene extends Phaser.Scene {
   private layoutNow!: LevelLayout;
   private drawn: Phaser.GameObjects.GameObject[] = [];
   private rowObjects = new Map<number, (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[]>();
+  /** Each cell's objects, by "row:cell", so a locking part can pulse alone (D48). */
+  private cellObjects = new Map<string, (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[]>();
   private press: Press | null = null;
   private dragTile: Phaser.GameObjects.Container | null = null;
   private highlight: Phaser.GameObjects.Rectangle | null = null;
@@ -223,6 +225,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.drawn = [];
     this.rowObjects.clear();
+    this.cellObjects.clear();
     this.layoutNow = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board);
 
     this.pointsText = null;
@@ -237,7 +240,7 @@ export class GameScene extends Phaser.Scene {
 
     this.fadePoolNow();
     this.drawSelection();
-    this.layoutNow.rows.forEach((row, index) => row.cells.forEach((cell) => this.drawCell(cell, index, row.locked)));
+    this.layoutNow.rows.forEach((row, index) => row.cells.forEach((cell, cellIndex) => this.drawCell(cell, index, cellIndex, row.locked)));
     this.layoutNow.poolTiles.forEach((tile) => this.drawPoolTile(tile));
     this.drawRecall();
   }
@@ -282,7 +285,8 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
-  private drawCell({ cell, x, y, width, height }: CellView, row: number, locked: boolean) {
+  private drawCell({ cell, x, y, width, height }: CellView, row: number, cellIndex: number, rowLocked: boolean) {
+    const locked = rowLocked || cell.kind === 'locked';
     const cellCentre = centre({ x, y, width, height });
     const parts: (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[] = [];
     if (cell.kind === 'special') {
@@ -296,6 +300,7 @@ export class GameScene extends Phaser.Scene {
       parts.push(this.drawText(cell.character, cellCentre.x, cellCentre.y, height * 0.6, text));
     }
     this.rowObjects.set(row, [...(this.rowObjects.get(row) ?? []), ...parts]);
+    this.cellObjects.set(`${row}:${cellIndex}`, parts);
   }
 
   private drawPoolTile({ character, count, x, y, width, height }: PoolTileView) {
@@ -466,6 +471,7 @@ export class GameScene extends Phaser.Scene {
     this.feedback.push(...events);
     for (const event of events) {
       if (event.type === 'locked') this.pulse(event.row);
+      if (event.type === 'partLocked') this.pulse(event.row, event.cells);
       if (event.type === 'wrong') this.shake(event.row);
       if (event.type === 'alreadyFound') this.showAlreadyFound(event.lockedRow);
       if (event.type === 'phaseOneOver') {
@@ -545,9 +551,11 @@ export class GameScene extends Phaser.Scene {
     this.startLevel(undefined, true);
   }
 
-  private pulse(row: number) {
+  /** The whole row, or only a locking part's cells (D48). */
+  private pulse(row: number, cells?: number[]) {
+    const targets = cells ? cells.flatMap((cell) => this.cellObjects.get(`${row}:${cell}`) ?? []) : this.rowObjects.get(row);
     this.tweens.add({
-      targets: this.rowObjects.get(row),
+      targets,
       scale: PULSE_SCALE,
       duration: timings.lockPulse / 2,
       yoyo: true,

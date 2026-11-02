@@ -247,6 +247,85 @@ Feature: Check and lock a word
       When LEMUR locks
       Then the L takes the locked colour
 
+  Rule: A split word's parts lock on their own
+
+    Scenario: The first part locks
+      Given a level containing the answer HOT DOG
+      When the player places H, O and T in the first three cells of HOT DOG's row
+      Then HOT locks
+      And DOG's cells stay empty
+
+    Scenario: The last part locks
+      Given a level containing the answer T-REX
+      When the player places R, E and X in the last three cells of T-REX's row
+      Then REX locks
+      And T's cell stays empty
+
+    Scenario: A part of another answer that fits the row locks
+      Given the answers HOT DOG and HOT POT
+      When the player places D, O and G in the last three cells of HOT POT's row
+      Then DOG locks
+
+    Scenario: A part of one letter locks
+      Given a level containing the answer T-REX
+      When the player places T in the first cell of T-REX's row
+      Then T locks
+
+    @browser
+    Scenario: Only the part pulses
+      Given a level containing the answer HOT DOG
+      When the player places H, O and T in the first three cells of HOT DOG's row
+      Then only HOT's tiles pulse
+      And HOT's tiles take the locked colour
+
+    Scenario: A wrong part doesn't lock
+      Given the answers HOT DOG, CAT and PEA
+      When the player places C, A and T in the first three cells of HOT DOG's row
+      Then nothing locks and no feedback appears
+
+    Scenario: A full row with one right part
+      Given a level containing the answer T-REX
+      When the player fills T-REX's row with D-REX
+      Then REX locks
+      And the D stays placed
+      And the row gets the wrong-word feedback
+
+    Scenario: A full row with no right part
+      Given the answers HOT DOG, CAT and PEA
+      When the player fills HOT DOG's row with CAT DOP
+      Then nothing locks
+      And the row gets the wrong-word feedback
+
+    Scenario: A locked part's letter can't be dragged
+      Given a level containing the answer HOT DOG
+      And HOT is locked in HOT DOG's row
+      When the player tries to drag its H
+      Then nothing is picked up
+
+    Scenario: Recall All leaves a locked part
+      Given a level containing the answer HOT DOG
+      And HOT is locked in HOT DOG's row
+      And a D placed in cell 5 of HOT DOG's row
+      When the player presses Recall All
+      Then HOT DOG's row reads H O T ␣ _ _ _
+
+    Scenario: A part goes back to the pool when its row can't fit any remaining answer
+      Given the answers HOT DOG, DOG TAG and CAT
+      And the player has filled HOT DOG's row with CAT DOG, so DOG locked
+      When the player builds HOT DOG in DOG TAG's row
+      Then HOT DOG locks in DOG TAG's row
+      And HOT DOG's row reads C A T ␣ _ _ _
+      And the pool holds D, O, G, T, A, G
+
+    Scenario: A part stays while its row can still fit a remaining answer
+      Given the answers HOT DOG and HOT POT
+      And the player has filled HOT DOG's row with HOT POG, so HOT locked
+      When the player presses Recall All
+      And the player builds HOT DOG in HOT POT's row
+      Then HOT DOG locks in HOT POT's row
+      And HOT DOG's row reads H O T ␣ _ _ _
+      And HOT is still locked in HOT DOG's row
+
   # Needs story 17.
   Rule: Filling a row moves the selection on in every case
 

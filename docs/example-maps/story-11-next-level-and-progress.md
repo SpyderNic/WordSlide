@@ -87,7 +87,7 @@ There's no home menu or level list yet.
 
 *From Q1.* The game saves after every change that settles: a letter placed or removed, a word locking, a word snapping, a row dropping.
 
-Saved: placed letters, locked words, hinted letters that went back to the pool (D9), the phase, each word's position and the row order.
+Saved: placed letters, locked words and locked parts (D48), hinted letters that went back to the pool (D9), the phase, each word's position and the row order.
 
 Not saved: the selected row, a drag in progress, and feedback that was playing.
 
@@ -96,6 +96,7 @@ Not saved: the selected row, a drag in progress, and feedback that was playing.
 - 🟩 Closing during a drag restores the board from before the drag
 - 🟩 Closing during the phase-two ceremony reopens on the finished phase-two layout
 - 🟩 Reopening has no row selected
+- 🟩 With HOT locked in HOT DOG's row, reopening shows HOT still locked
 
 **Confirmed:** ☑
 

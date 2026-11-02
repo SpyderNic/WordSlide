@@ -79,10 +79,10 @@ Feature: Place a letter
 
     Scenario: A placed letter goes to the pool
       Given a level containing the answer T-REX
-      And a T placed in cell 1 of T-REX's row
-      When the player drags the T onto the hyphen
+      And a D placed in cell 1 of T-REX's row
+      When the player drags the D onto the hyphen
       Then cell 1 of T-REX's row is empty
-      And the T count goes up by one
+      And the D count goes up by one
 
   Rule: A pool letter dropped away from any cell goes back to the pool
 

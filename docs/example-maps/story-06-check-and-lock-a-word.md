@@ -1,6 +1,6 @@
 # Story 6: Check and lock a word
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-06-check-and-lock-a-word.feature](../../features/story-06-check-and-lock-a-word.feature). Built on 2026-10-31.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-06-check-and-lock-a-word.feature](../../features/story-06-check-and-lock-a-word.feature). Built on 2026-10-31. R16 (split words) added after playing milestone 5, and built on 2026-11-02.
 
 *As a player, I want the game to check each word I complete, so that correct words lock in and wrong ones can be fixed without penalty.*
 
@@ -10,7 +10,7 @@ All examples use the answers ZEBRA, LEMUR and KANGAROO, with nothing revealed, u
 
 **Terms:** a *full* row has no empty cell. A row's *hints* are its revealed letters, not counting special characters. A *fixed cell* holds a revealed letter, a special character or a locked word's letter.
 
-This story brings together D8, D9, D10 and D18. The switch to phase two is story 7.
+This story brings together D8, D9, D10, D18 and D48. The switch to phase two is story 7.
 
 ---
 
@@ -144,6 +144,24 @@ What that looks like is story 7.
 
 **Confirmed:** ☑
 
+### 🟦 R16. A split word's parts lock on their own (D48)
+
+*Added by the designer after playing milestone 5, on 2026-11-02, with Q7 to Q10.* A *part* is a run of letters between special characters, or between a special character and the end of the word. Once all of a part's cells are filled, it locks if it matches the same part of any not-yet-locked answer that fits the row. A full row is still checked as a whole. A word with no special character inside it has one part, so nothing changes for it.
+
+- 🟩 Placing H, O, T in the first three letter cells of HOT DOG locks HOT, and DOG's cells stay empty
+- 🟩 Placing R, E, X in the last three cells of T-REX locks REX, and T's cell stays empty
+- 🟩 Placing T in T-REX's first cell locks T
+- 🟩 With the answers HOT DOG and HOT POT, placing DOG in HOT POT's row locks it, because HOT DOG fits that row too
+- 🟩 When HOT locks, only HOT's tiles pulse and take the locked colour
+- 🟩 Placing C, A, T in HOT DOG's first three cells locks nothing, with no feedback, because the row isn't full
+- 🟩 Placing D and REX in T-REX locks REX, the D stays placed, and the wrong-word feedback plays
+- 🟩 Placing CAT DOP in HOT DOG's cells locks nothing, and the wrong-word feedback plays
+- 🟩 A locked part's letters can't be dragged, and Recall All leaves them
+- 🟩 With the rows HOT DOG, DOG TAG and CAT: CAT DOG in HOT DOG's row locks DOG. Then HOT DOG built in DOG TAG's row locks in full, and the DOG in HOT DOG's row goes back to the pool
+- 🟩 With the rows HOT DOG and HOT POT: HOT POG in HOT DOG's row locks HOT. After Recall All, HOT DOG built in HOT POT's row locks in full, and HOT stays, because HOT POT can still go there
+
+**Confirmed:** ☑
+
 ---
 
 ## Answered questions
@@ -171,3 +189,19 @@ What that looks like is story 7.
 ### 🟥 Q6. Where does the selection go after "already found" (story 17)?
 
 **Answer:** It moves on as usual, because the row doesn't empty itself (R15).
+
+### 🟥 Q7. Which answers can a part match?
+
+**Answer:** Any not-yet-locked answer that fits the row, as for whole words (R16).
+
+### 🟥 Q8. Does a part of one letter lock on its own?
+
+**Answer:** Yes, any part does, like the T in T-REX (R16).
+
+### 🟥 Q9. What feedback does a locking part get?
+
+**Answer:** Only the part's tiles pulse and take the locked colour (R16).
+
+### 🟥 Q10. What happens to a locked part whose row can no longer fit any remaining answer?
+
+**Answer:** Its letters go back to the pool, like stranded hints. If the row can still fit a remaining answer, the part stays (R16).

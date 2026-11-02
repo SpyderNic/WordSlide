@@ -134,6 +134,13 @@ Feature: Unlock the next level and save progress
       And the column and handles are showing
 
     @browser
+    Scenario: A locked part comes back
+      Given a level containing the answer HOT DOG
+      And HOT is locked in HOT DOG's row
+      When the game closes and opens again
+      Then HOT is still locked in HOT DOG's row
+
+    @browser
     Scenario: Closing during a drag restores the board from before it
       Given the player is dragging a Z from the pool
       When the game closes and opens again

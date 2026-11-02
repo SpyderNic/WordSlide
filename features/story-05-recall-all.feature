@@ -38,7 +38,7 @@ Feature: Recall All
 
     Scenario: A special character stays
       Given a level containing the answer T-REX
-      And T-REX's row reads T - R _ _
+      And T-REX's row reads D - R _ _
       When the player presses Recall All
       Then T-REX's row reads _ - _ _ _
 

@@ -26,7 +26,9 @@ export type Cell =
   | { kind: 'empty' }
   | { kind: 'placed'; character: string }
   | { kind: 'revealed'; character: string }
-  | { kind: 'special'; character: string };
+  | { kind: 'special'; character: string }
+  /** A letter in a locked part of a split word, in a row that isn't locked yet (D48). */
+  | { kind: 'locked'; character: string };
 
 /** Ascending length, then alphabetical (D5). */
 export function rowOrder(answers: Answer[]): Answer[] {

@@ -690,3 +690,67 @@ When('the player presses the Z and moves it', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
   await hold(page, cellPoint(layout, 'LEMUR', 1), themePoint(layout));
 });
+
+// Split words (D48)
+
+/** The first part's cells in a row: its letters before the first special character. */
+function firstPart(layout: LevelLayout, row: number): number[] {
+  const cells = layout.rows[row].cells;
+  const end = cells.findIndex((cell) => cell.cell.kind === 'special');
+  return cells.slice(0, end === -1 ? cells.length : end).map((_, index) => index);
+}
+
+function placeFirstPart(word: string, part: string) {
+  return async (page: Page) => {
+    const { layout } = await current(page);
+    const row = rowOf(layout, word);
+    const cells = firstPart(layout, row);
+    for (const [index, cell] of cells.entries()) await placeLetter(row, cell, part[index])(page);
+  };
+}
+
+When('the player places H, O and T in the first three cells of HOT DOG\'s row', async ({ page, scenario }) => {
+  await ready(page, scenario);
+  await startRecording(page);
+  await placeFirstPart('HOT DOG', 'HOT')(page);
+  await page.waitForTimeout(600);
+  scenario.frames = await stopRecording(page);
+});
+
+Then("only HOT's tiles pulse", async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const row = rowOf(layout, 'HOT DOG');
+  const part = firstPart(layout, row);
+  const rest = layout.rows[row].cells.map((_, index) => index).filter((index) => !part.includes(index));
+  const scaleAt = (frame: Frame, cell: number) => {
+    const { x, y } = centreOf(layout.rows[row].cells[cell]);
+    return Math.max(1, ...frame.screen.filter((object) => Math.abs(object.x - x) < 3 && Math.abs(object.y - y) < 3).map((object) => object.scale));
+  };
+  for (const cell of part) expect(Math.max(...scenario.frames!.map((frame) => scaleAt(frame, cell)))).toBeGreaterThan(1.02);
+  for (const cell of rest) expect(Math.max(...scenario.frames!.map((frame) => scaleAt(frame, cell)))).toBeLessThan(1.001);
+});
+
+Then("HOT's tiles take the locked colour", async ({ page }) => {
+  const { layout, colours } = await current(page);
+  const row = rowOf(layout, 'HOT DOG');
+  const objects = await screen(page);
+  for (const cell of firstPart(layout, row)) {
+    const { x, y } = centreOf(layout.rows[row].cells[cell]);
+    expect(tileAt(objects, x, y)?.fill).toBe(colours.tileLocked);
+  }
+});
+
+Given("HOT is locked in HOT DOG's row", async ({ scenario }) => {
+  scenario.setup.push(placeFirstPart('HOT DOG', 'HOT'));
+});
+
+Then("HOT is still locked in HOT DOG's row", async ({ page }) => {
+  const { layout, colours } = await current(page);
+  const row = rowOf(layout, 'HOT DOG');
+  const objects = await screen(page);
+  for (const cell of firstPart(layout, row)) {
+    expect(layout.rows[row].cells[cell].cell).toEqual({ kind: 'locked', character: 'HOT'[cell] });
+    const { x, y } = centreOf(layout.rows[row].cells[cell]);
+    expect(tileAt(objects, x, y)?.fill).toBe(colours.tileLocked);
+  }
+});
