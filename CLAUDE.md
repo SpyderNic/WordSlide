@@ -39,6 +39,7 @@ Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find i
 - `npm run test:logic` runs scenarios without a browser, using Cucumber. Steps are in `tests/logic/steps`.
 - `npm run test:browser` runs scenarios tagged `@browser` in a real browser. Steps are in `tests/browser/steps`.
 - `npm test` runs both. Reports go to `reports/`.
+- `npm run test:other-style` runs every browser scenario again with a recoloured style, to show a style never changes the rules (story 16, R1). Development builds pick a style with `window.wordSlideStyle`.
 - When a story is built, add it to the `built` list in `cucumber.mjs` and/or `playwright.config.ts`.
 - Tag a scenario `@browser` if it needs the screen, and `@touch` if it needs fingers.
 - In the browser tests, Given and Then share one step registry, so one step can't be defined twice for both uses.

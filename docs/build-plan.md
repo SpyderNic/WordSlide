@@ -8,7 +8,7 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 | 2 | **Levels and screen** | 1, 2 | Done |
 | 3 | **Phase one** | 3, 4, 5, 6, 17 | Done |
 | 4 | **Phase two** | 7, 8, 9, 10 | Done |
-| 5 | **The whole game**, including the tutorial (FTUE) | 11, 16, 12 | In progress: 11 built |
+| 5 | **The whole game**, including the tutorial (FTUE) | 11, 16, 12 | In progress: 11 and 16 built |
 | 6 | **Content**: generator and the 40 levels | 14, 15 | Not started |
 
 ## How we work
@@ -22,7 +22,7 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 
 ## Where we are
 
-Milestones 1 to 4 are done, and the designer has been told how to play milestone 4. The test audit below is done and reported in `docs/test-audit.md`. Milestone 5 has started, and story 11 is built. After playing it, the designer added split-word locking (D48, story 6 R16), which is built too. **Next is story 16, then story 12.**
+Milestones 1 to 4 are done, and the designer has been told how to play milestone 4. The test audit below is done and reported in `docs/test-audit.md`. Milestone 5 has started, and story 11 is built. After playing it, the designer added split-word locking (D48, story 6 R16), which is built too, and so is story 16, the visual style. **Next is story 12.**
 
 Known placeholders for milestone 5: the handles' link to the tutorial (D45) is only a `canReorder` setting in `src/game/phaseTwo.ts` until story 12.
 

@@ -4,6 +4,7 @@ import type { Level } from '../game/level';
 import type { PhaseTwo, PhaseTwoSnapshot } from '../game/phaseTwo';
 import { currentStyle } from '../style';
 import { buildPopup } from './popup';
+import { makeTile, paintTile, sizeTile } from './tiles';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
@@ -26,7 +27,7 @@ function hex(colour: number): string {
 
 interface RowView {
   container: Phaser.GameObjects.Container;
-  tiles: Phaser.GameObjects.Rectangle[];
+  tiles: Phaser.GameObjects.Container[];
   letters: Phaser.GameObjects.Text[];
   selection: Phaser.GameObjects.Rectangle;
   handle: Phaser.GameObjects.Container;
@@ -170,12 +171,15 @@ export class PhaseTwoView {
       .strokeRect(left, top, right - left, bottom - top)
       .fillStyle(colours.column)
       .fillTriangle(this.columnX - notch, top - notch, this.columnX + notch, top - notch, this.columnX, top)
-      .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom);
+      .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom)
+      // A sheen down the strip, so it reads as brass (story 16, R8).
+      .fillStyle(0xffffff, 0.18)
+      .fillRect(left + pad, top + pad, Math.max(2, this.tile * 0.06), bottom - top - pad * 2);
   }
 
   private buildRow(index: number, from: { x: number; y: number }) {
     const { cells } = this.phase.rows[index];
-    const tiles: Phaser.GameObjects.Rectangle[] = [];
+    const tiles: Phaser.GameObjects.Container[] = [];
     const letters: Phaser.GameObjects.Text[] = [];
     const children: Phaser.GameObjects.GameObject[] = [];
     const size = this.tile;
@@ -189,7 +193,7 @@ export class PhaseTwoView {
       const x = position * this.pitch;
       const isLetter = cell !== ' ' && /[\p{L}\p{Nd}]/u.test(cell);
       if (isLetter) {
-        const tile = this.scene.add.rectangle(x, 0, size, size, colours.tileLocked);
+        const tile = makeTile(this.scene, x, 0, size, colours.tileLocked);
         tiles.push(tile);
         children.push(tile);
       }
@@ -260,7 +264,7 @@ export class PhaseTwoView {
       const x = position * this.pitch;
       view.letters[position].setPosition(x, 0).setFontSize(fontSize);
       if (/[\p{L}\p{Nd}]/u.test(cell)) {
-        view.tiles[tile].setPosition(x, 0).setSize(size, size);
+        sizeTile(view.tiles[tile].setPosition(x, 0), size);
         tile++;
       }
     });
@@ -513,7 +517,7 @@ export class PhaseTwoView {
           duration: timings.lockPulseGrow,
           ease: 'Sine.easeOut',
           onComplete: () => {
-            tile.setFillStyle(colours.tileGold);
+            paintTile(tile, colours.tileGold);
             if (index === 0) this.fadeOthers();
             this.scene.tweens.add({ targets: [tile, letter], scale: 1, duration: timings.lockPulseShrink, ease: 'Sine.easeIn' });
           },

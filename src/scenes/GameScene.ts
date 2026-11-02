@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Board, type BoardEvent } from '../game/board';
+import { Board, type BoardEvent, type BoardSnapshot } from '../game/board';
 import { PhaseTwo, type PhaseTwoSnapshot } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Cell, Level } from '../game/level';
@@ -11,11 +11,26 @@ import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
 import { PhaseTwoView } from './PhaseTwoView';
 import { buildPopup } from './popup';
+import { makeTile, paintTile } from './tiles';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
 const SHAKE_DISTANCE = 6;
 const POINTS_PULSE = 1.2;
+/** Letters flying between the pool and the cells are drawn above the board, below a dragged tile. */
+const TRAVEL_DEPTH = 8;
+/** Several letters going back to the pool leave this far apart, in milliseconds (story 16, R7). */
+const TRAVEL_STAGGER = 30;
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+/** The letter in a cell, if it holds one. */
+function letterIn(cell: Cell): string | null {
+  return cell.kind === 'placed' || cell.kind === 'revealed' || cell.kind === 'locked' ? cell.character : null;
+}
 
 interface Press {
   pointerId: number;
@@ -26,6 +41,9 @@ interface Press {
   /** Nothing to pick up here, so moving doesn't start a drag. */
   dead: boolean;
 }
+
+/** What a cell is drawn with: an outline, a bevelled tile, or a letter. */
+type CellPart = Phaser.GameObjects.Rectangle | Phaser.GameObjects.Container | Phaser.GameObjects.Text;
 
 function hex(colour: number): string {
   return `#${colour.toString(16).padStart(6, '0')}`;
@@ -42,9 +60,9 @@ export class GameScene extends Phaser.Scene {
   private points = 0;
   private layoutNow!: LevelLayout;
   private drawn: Phaser.GameObjects.GameObject[] = [];
-  private rowObjects = new Map<number, (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[]>();
+  private rowObjects = new Map<number, CellPart[]>();
   /** Each cell's objects, by "row:cell", so a locking part can pulse alone (D48). */
-  private cellObjects = new Map<string, (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[]>();
+  private cellObjects = new Map<string, CellPart[]>();
   private press: Press | null = null;
   private dragTile: Phaser.GameObjects.Container | null = null;
   private highlight: Phaser.GameObjects.Rectangle | null = null;
@@ -61,6 +79,8 @@ export class GameScene extends Phaser.Scene {
   /** After the last level, only the top of the screen and a popup show (story 11, R11). */
   private allDone = false;
   private allComplete: Phaser.GameObjects.Container | null = null;
+  /** Cells waiting for a travelling letter, by "row:cell", and when it lands (story 16, R6). */
+  private arriving = new Map<string, number>();
   private pointsText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
@@ -107,10 +127,11 @@ export class GameScene extends Phaser.Scene {
           scene: this,
           show: (level: Level, levelNumber = 1, points = 0) => this.show(level, levelNumber, points),
           view: () => this.testView(),
-          place: (row: number, cell: number, character: string) => {
-            this.board.pickUpFromPool(character);
-            this.applied(this.board.dropOnCell(row, cell));
-          },
+          place: (row: number, cell: number, character: string) =>
+            this.act(() => {
+              this.board.pickUpFromPool(character);
+              return this.board.dropOnCell(row, cell);
+            }),
           solve: () => this.solveForTests(),
           skipCeremony: () => this.phaseTwo?.skipCeremony(),
           arrange: (order: string[], cells: Record<string, number>) => this.phaseTwo?.arrange(order, cells),
@@ -287,7 +308,7 @@ export class GameScene extends Phaser.Scene {
   private drawCell({ cell, x, y, width, height }: CellView, row: number, cellIndex: number, rowLocked: boolean) {
     const locked = rowLocked || cell.kind === 'locked';
     const cellCentre = centre({ x, y, width, height });
-    const parts: (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[] = [];
+    const parts: CellPart[] = [];
     if (cell.kind === 'special') {
       parts.push(this.drawText(cell.character, cellCentre.x, cellCentre.y, height * 0.6, locked ? colours.tileLocked : colours.highlight));
     } else if (cell.kind === 'empty') {
@@ -295,18 +316,28 @@ export class GameScene extends Phaser.Scene {
     } else {
       const fill = locked ? colours.tileLocked : cell.kind === 'revealed' ? colours.tileRevealed : colours.tilePlaced;
       const text = cell.kind === 'revealed' && !locked ? colours.highlight : colours.text;
-      parts.push(this.keep(this.add.rectangle(cellCentre.x, cellCentre.y, width, height, fill)));
+      parts.push(this.keep(makeTile(this, cellCentre.x, cellCentre.y, width, fill)));
       parts.push(this.drawText(cell.character, cellCentre.x, cellCentre.y, height * 0.6, text));
     }
     this.rowObjects.set(row, [...(this.rowObjects.get(row) ?? []), ...parts]);
     this.cellObjects.set(`${row}:${cellIndex}`, parts);
+    // A letter still flying to this cell shows up when it lands.
+    const key = `${row}:${cellIndex}`;
+    const landing = this.arriving.get(key) ?? 0;
+    if (landing > this.time.now) {
+      parts.forEach((part) => part.setAlpha(0));
+      this.time.delayedCall(landing - this.time.now, () => parts.forEach((part) => part.active && part.setAlpha(1)));
+    } else {
+      this.arriving.delete(key);
+    }
   }
 
   private drawPoolTile({ character, count, x, y, width, height }: PoolTileView) {
     const colour = count === 0 ? colours.tileGrey : colours.tile;
-    this.poolObjects.push(this.add.rectangle(x + width / 2, y + height / 2, width, height, colour));
+    this.poolObjects.push(makeTile(this, x + width / 2, y + height / 2, width, colour));
     this.poolObjects.push(this.drawPoolText(character, x + width / 2, y + height * 0.45, height * 0.55));
-    this.poolObjects.push(this.drawPoolText(`x${count}`, x + width * 0.78, y + height * 0.82, height * 0.26));
+    // Never smaller than the style's minimum, so counts stay readable on small screens (story 16, R4).
+    this.poolObjects.push(this.drawPoolText(`x${count}`, x + width * 0.78, y + height * 0.8, Math.max(height * 0.26, currentStyle.minText)));
   }
 
   private drawPoolText(text: string, x: number, y: number, size: number) {
@@ -375,7 +406,7 @@ export class GameScene extends Phaser.Scene {
 
   private createDragTile(character: string) {
     const size = this.layoutNow.tileSize;
-    const tile = this.add.rectangle(0, 0, size, size, colours.tilePlaced);
+    const tile = makeTile(this, 0, 0, size, colours.tilePlaced);
     const text = this.add
       .text(0, 0, character, { fontFamily: currentStyle.font, fontSize: `${Math.round(size * 0.6)}px`, color: hex(colours.text) })
       .setOrigin(0.5);
@@ -427,13 +458,10 @@ export class GameScene extends Phaser.Scene {
     if (press.dragging) {
       const hit = hitTest(this.layoutNow, pointer.x, pointer.y);
       this.endDragVisuals();
-      if (hit.kind === 'cell') {
-        this.applied(this.board.dropOnCell(hit.row, hit.cell));
-      } else {
-        this.board.dropAway();
-        this.redraw();
-        this.saveLevel();
-      }
+      // A dropped letter travels on from where it was released (story 16, R6).
+      const origin = { character: this.board.drag!.character, x: pointer.x, y: pointer.y };
+      if (hit.kind === 'cell') this.act(() => this.board.dropOnCell(hit.row, hit.cell), origin);
+      else this.act(() => this.board.dropAway(), origin);
     } else if (!press.dead) {
       this.tap(press.hit);
     }
@@ -441,14 +469,12 @@ export class GameScene extends Phaser.Scene {
 
   private tap(hit: Hit) {
     if (hit.kind === 'pool' && hit.character) {
-      this.applied(this.board.input(hit.character));
+      this.act(() => this.board.input(hit.character!));
     } else if (hit.kind === 'cell') {
       this.board.selectRow(hit.row);
       this.redraw();
     } else if (hit.kind === 'recall') {
-      this.board.recallAll();
-      this.redraw();
-      this.saveLevel();
+      this.act(() => void this.board.recallAll());
     }
   }
 
@@ -459,27 +485,88 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (event.key === 'Backspace' || event.key.startsWith('Arrow')) event.preventDefault();
-    this.applied(this.board.key(event.key));
+    this.act(() => this.board.key(event.key));
+  }
+
+  // Letters travelling (story 16, R6 and R7)
+
+  /** Runs a change to the board, then flies each letter that moved from where it was to where it went. */
+  private act(change: () => BoardEvent[] | void, origin?: { character: string } & Point) {
+    const before = this.board.snapshot();
+    const events = change() ?? [];
+    const flights = this.flightsSince(before, origin);
+    const landing = this.time.now + timings.letterTravel;
+    flights.forEach((flight) => flight.cell && this.arriving.set(flight.cell, landing));
+    this.applied(events, flights.some((flight) => flight.cell));
+    flights.forEach((flight) => this.fly(flight));
+  }
+
+  /** Which letters left which cells, and which arrived, and where each one comes from and goes to. */
+  private flightsSince(before: BoardSnapshot, origin?: { character: string } & Point) {
+    const cellAt = (row: number, cell: number) => centre(this.layoutNow.rows[row].cells[cell]);
+    const poolAt = (character: string) => {
+      const tile = this.layoutNow.poolTiles.find((candidate) => candidate.character === character);
+      return tile ? centre(tile) : null;
+    };
+    const left: { character: string; from: Point }[] = [];
+    const arrived: { character: string; to: Point; cell: string }[] = [];
+    this.board.rows.forEach((row, rowIndex) =>
+      row.cells.forEach((cell, cellIndex) => {
+        const was = letterIn(before.rows[rowIndex].cells[cellIndex]);
+        const now = letterIn(cell);
+        if (was === now) return;
+        if (was) left.push({ character: was, from: cellAt(rowIndex, cellIndex) });
+        if (now) arrived.push({ character: now, to: cellAt(rowIndex, cellIndex), cell: `${rowIndex}:${cellIndex}` });
+      }),
+    );
+    let fromHand = origin;
+    const flights: { character: string; from: Point; to: Point; cell?: string; delay: number }[] = [];
+    for (const arrival of arrived) {
+      // A dropped letter comes from the pointer, a swapped one from the cell it left, and the rest from the pool.
+      let from: Point | null = null;
+      if (fromHand && fromHand.character === arrival.character) {
+        from = fromHand;
+        fromHand = undefined;
+      } else {
+        const swapped = left.findIndex((departure) => departure.character === arrival.character);
+        if (swapped !== -1) from = left.splice(swapped, 1)[0].from;
+        else from = poolAt(arrival.character);
+      }
+      if (from) flights.push({ character: arrival.character, from, to: arrival.to, cell: arrival.cell, delay: 0 });
+    }
+    const home = [...left, ...(fromHand ? [{ character: fromHand.character, from: fromHand as Point }] : [])];
+    home.forEach((departure, index) => {
+      const to = poolAt(departure.character);
+      if (to) flights.push({ character: departure.character, from: departure.from, to, delay: home.length > 1 ? index * TRAVEL_STAGGER : 0 });
+    });
+    return flights;
+  }
+
+  private fly({ character, from, to, delay }: { character: string; from: Point; to: Point; delay: number }) {
+    const tile = makeTile(this, from.x, from.y, this.layoutNow.tileSize, colours.tilePlaced, { text: character, colour: colours.text }).setDepth(TRAVEL_DEPTH);
+    this.tweens.add({ targets: tile, x: to.x, y: to.y, delay, duration: timings.letterTravel, ease: 'Sine.easeOut', onComplete: () => tile.destroy(true) });
   }
 
   // Feedback
 
-  private applied(events: BoardEvent[]) {
+  /** Feedback waits until a travelling letter has landed, so it plays where the player is looking. */
+  private applied(events: BoardEvent[], travelled = false) {
     this.redraw();
     this.saveLevel();
     this.feedback.push(...events);
+    const wait = travelled ? timings.letterTravel : 0;
     for (const event of events) {
       if (event.type === 'locked') {
         // Parts that had already locked don't celebrate again (D48).
         const fresh = this.board.rows[event.row].cells.flatMap((cell, index) => (cell.kind === 'locked' ? [] : [index]));
-        this.pulse(event.row, fresh, fresh.map((cell) => this.board.rows[event.row].cells[cell].kind));
+        this.pulse(event.row, fresh, fresh.map((cell) => this.board.rows[event.row].cells[cell].kind), wait);
       }
-      if (event.type === 'partLocked') this.pulse(event.row, event.cells, event.before);
-      if (event.type === 'wrong') this.shake(event.row);
-      if (event.type === 'alreadyFound') this.showAlreadyFound(event.lockedRow);
+      if (event.type === 'partLocked') this.pulse(event.row, event.cells, event.before, wait);
+      if (event.type === 'wrong') this.shake(event.row, wait);
+      if (event.type === 'alreadyFound') this.time.delayedCall(wait, () => this.showAlreadyFound(event.lockedRow));
       if (event.type === 'phaseOneOver') {
         const board = this.board;
-        this.time.delayedCall(timings.lockPulseGrow + timings.lockPulseShrink, () => {
+        this.time.delayedCall(wait + timings.lockPulseGrow + timings.lockPulseShrink, () => {
           if (this.board === board) this.startCeremony();
         });
       }
@@ -558,18 +645,18 @@ export class GameScene extends Phaser.Scene {
    * A locking word or part (D48): its tiles grow from their centre, take the locked colour at their biggest,
    * then shrink back (D37). They're drawn locked already, so they show their old colours while they grow.
    */
-  private pulse(row: number, cells: number[], before: Cell['kind'][]) {
-    const targets: (Phaser.GameObjects.Rectangle | Phaser.GameObjects.Text)[] = [];
+  private pulse(row: number, cells: number[], before: Cell['kind'][], wait = 0) {
+    const targets: CellPart[] = [];
     const finish: (() => void)[] = [];
     cells.forEach((cell, index) => {
       const parts = this.cellObjects.get(`${row}:${cell}`) ?? [];
       targets.push(...parts);
       for (const part of parts) {
-        if (part instanceof Phaser.GameObjects.Rectangle) {
-          const locked = part.fillColor;
-          part.setFillStyle(before[index] === 'revealed' ? colours.tileRevealed : colours.tilePlaced);
-          finish.push(() => part.setFillStyle(locked));
-        } else {
+        if (part instanceof Phaser.GameObjects.Container) {
+          const locked = (part.list[0] as Phaser.GameObjects.Rectangle).fillColor;
+          paintTile(part, before[index] === 'revealed' ? colours.tileRevealed : colours.tilePlaced);
+          finish.push(() => paintTile(part, locked));
+        } else if (part instanceof Phaser.GameObjects.Text) {
           const locked = part.style.color;
           if (before[index] === 'revealed' || before[index] === 'special') part.setColor(hex(colours.highlight));
           finish.push(() => part.setColor(locked));
@@ -579,6 +666,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({
       targets,
       scale: currentStyle.pulseScale,
+      delay: wait,
       duration: timings.lockPulseGrow,
       ease: 'Sine.easeOut',
       onComplete: () => {
@@ -589,13 +677,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Only the letters that didn't lock move. Locked parts and special characters stay still (D37). */
-  private shake(row: number) {
+  private shake(row: number, wait = 0) {
     const moving = this.board.rows[row].cells.flatMap((cell, index) =>
       cell.kind === 'locked' || cell.kind === 'special' ? [] : (this.cellObjects.get(`${row}:${index}`) ?? []),
     );
     this.tweens.add({
       targets: moving,
       x: `+=${SHAKE_DISTANCE}`,
+      delay: wait,
       duration: timings.wrongShake / 4,
       yoyo: true,
       repeat: 1,
@@ -604,7 +693,7 @@ export class GameScene extends Phaser.Scene {
 
   private showAlreadyFound(lockedRow: number) {
     this.tweens.add({
-      targets: this.rowObjects.get(lockedRow)?.filter((part) => part instanceof Phaser.GameObjects.Rectangle),
+      targets: this.rowObjects.get(lockedRow)?.filter((part) => part instanceof Phaser.GameObjects.Container),
       alpha: 0.5,
       duration: timings.lockPulseGrow,
       yoyo: true,

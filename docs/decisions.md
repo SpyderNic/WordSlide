@@ -143,7 +143,7 @@ Revealed letters use a different tile colour from letters the player places.
 *Changed 2026-10-31.* On a given screen, tiles are the same size in every level. They're sized for 9 cells across, and only a level with a longer row that wouldn't fit shrinks them. The pool uses more rows on narrow screens. On a portrait screen, the top of the screen has two lines, with the theme on the second.
 
 ### D27. The prototype's look
-*Changed 2026-10-31.* The prototype has a clean, simple look: warm wood and brass, like a cryptex, drawn in code, with gold for the win and a rounded open-licence font. The full art style waits until the game proves fun, and will probably use an asset pack, or an artist or AI image tool. The game is built so that several styles can exist, though the prototype has one.
+*Changed 2026-10-31, detailed 2026-11-02.* The prototype has a clean, simple look: warm wood and brass, like a cryptex, drawn in code, with gold for the win and a rounded open-licence font: the "honey oak" palette, Nunito, and tiles with a soft bevel. Letters fly between the pool and the cells in about 0.15 seconds, and several letters going back leave one after another, 0.03 seconds apart. The full art style waits until the game proves fun, and will probably use an asset pack, or an artist or AI image tool. The game is built so that several styles can exist, though the prototype has one.
 
 ### D28. Layouts leave room for portrait
 Landscape stays the orientation for the CrazyGames launch (D2), but layouts must be able to support portrait later, for a possible Google Play release. Positions and sizes come from the screen size, not fixed coordinates.

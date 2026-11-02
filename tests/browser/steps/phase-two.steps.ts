@@ -850,8 +850,8 @@ When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({
 
 Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected)$/, async ({ page, scenario, $uri }, word: string) => {
   if (!scenario.acted) {
-    // Stories 17 and 11 select a row in phase one, by tapping it.
-    if ($uri.includes('story-17') || $uri.includes('story-11')) {
+    // Stories 17, 11 and 16 select a row in phase one, by tapping it.
+    if (['story-17', 'story-11', 'story-16'].some((story) => $uri.includes(story))) {
       scenario.setup.push(async (page) => {
         const { layout } = await current(page);
         const cell = layout.rows.find((row) => row.word === word)!.cells[0];

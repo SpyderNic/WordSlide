@@ -30,6 +30,9 @@ export interface Drawn {
   fill: number | null;
   stroke: number | null;
   text: string | null;
+  /** A text's font family, and its size on screen in pixels. */
+  font: string | null;
+  fontSize: number | null;
   lines: Line[];
   triangles: Triangle[];
 }
@@ -81,6 +84,8 @@ export async function installProbe(page: Page) {
       width: number;
       height: number;
       list: GameObject[];
+      name: string;
+      style: { fontFamily: string; fontSize: string };
       isFilled: boolean;
       fillColor: number;
       isStroked: boolean;
@@ -122,6 +127,8 @@ export async function installProbe(page: Page) {
       const found: Drawn[] = [];
       const visit = (object: GameObject, parent: Parent) => {
         if (!object.visible) return;
+        // A tile's bevel edges are part of its look, not tiles of their own (story 16, R8).
+        if (object.name === 'bevel') return;
         const at: Parent = {
           x: parent.x + object.x * parent.scale,
           y: parent.y + object.y * parent.scale,
@@ -133,7 +140,7 @@ export async function installProbe(page: Page) {
           object.list.forEach((child) => visit(child, at));
           return;
         }
-        const base = { x: at.x, y: at.y, scale: at.scale, alpha: at.alpha, depth: at.depth!, fill: null, stroke: null, text: null, lines: [], triangles: [] };
+        const base = { x: at.x, y: at.y, scale: at.scale, alpha: at.alpha, depth: at.depth!, fill: null, stroke: null, text: null, font: null, fontSize: null, lines: [], triangles: [] };
         if (object.type === 'Rectangle') {
           found.push({
             ...base,
@@ -144,7 +151,7 @@ export async function installProbe(page: Page) {
             stroke: object.isStroked ? object.strokeColor : null,
           });
         } else if (object.type === 'Text') {
-          found.push({ ...base, kind: 'text', width: object.width, height: object.height, text: object.text });
+          found.push({ ...base, kind: 'text', width: object.width, height: object.height, text: object.text, font: object.style.fontFamily, fontSize: parseFloat(object.style.fontSize) * at.scale });
         } else if (object.type === 'Graphics') {
           found.push({ ...base, kind: 'graphics', width: 0, height: 0, ...parseGraphics(object.commandBuffer, at) });
         }

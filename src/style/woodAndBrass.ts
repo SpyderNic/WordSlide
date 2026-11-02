@@ -2,19 +2,22 @@ import type { Style } from './Style';
 
 export const woodAndBrass: Style = {
   name: 'Wood and brass',
-  font: 'sans-serif',
+  // Nunito, bundled under the SIL Open Font License (story 16, R9).
+  font: 'Nunito',
   colours: {
     background: 0x3b2a1e,
     tile: 0xc99a62,
     tileGrey: 0x7a7168,
-    tilePlaced: 0xe0bb85,
+    tilePlaced: 0xe8c48e,
     tileRevealed: 0x9c7043,
-    tileLocked: 0x8a9a5b,
+    tileLocked: 0x7f9a4f,
     tileGold: 0xf2c230,
     text: 0x2a1c12,
     highlight: 0xf5e6c8,
     column: 0xb08d3c,
   },
+  bevel: { edge: 0.09, light: 14, dark: 16 },
+  minText: 12,
   pulseScale: 1.15,
   timings: {
     letterTravel: 150,

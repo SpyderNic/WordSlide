@@ -47,6 +47,10 @@ export interface Scenario {
   slideDistance?: number;
   stretchWord?: string;
   stretchCell?: number;
+  /** A letter's expected journey (story 16). */
+  travel?: { letter: string; from: { x: number; y: number }; to: { x: number; y: number } };
+  placedAtOnce?: string;
+  setting?: string;
   /** The cells a lock is about to pulse, by row. */
   pulse?: { row: number; cells: number[] };
   finalWordGiven?: boolean;
@@ -60,6 +64,12 @@ export interface Scenario {
 }
 
 export const test = base.extend<{ scenario: Scenario }>({
+  // "npm run test:other-style" runs every scenario again with another style (story 16, R1).
+  page: async ({ page }, use) => {
+    const style = process.env.WORD_SLIDE_STYLE;
+    if (style) await page.addInitScript((name) => Object.assign(window, { wordSlideStyle: name }), style);
+    await use(page);
+  },
   scenario: async ({}, use) => {
     await use({ level: makeLevel(DEFAULT_WORDS), levels: [], levelCount: 12, levelNumber: 1, points: 0, views: [], setup: [] });
   },

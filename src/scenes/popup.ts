@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Rect } from '../game/layout';
 import { currentStyle } from '../style';
+import { makeTile } from './tiles';
 
 const colours = currentStyle.colours;
 export const POPUP_DEPTH = 30;
@@ -34,7 +35,7 @@ export function buildPopup(scene: Phaser.Scene, tile: number, content: PopupCont
   addText(content.title, -size * 1.9, size * 0.7, colours.text);
   word.forEach((letter, index) => {
     const x = (index - (word.length - 1) / 2) * size * 1.1;
-    children.push(scene.add.rectangle(x, -size * 0.4, size, size, colours.tileGold));
+    children.push(makeTile(scene, x, -size * 0.4, size, colours.tileGold));
     children.push(
       scene.add
         .text(x, -size * 0.4, letter, { fontFamily: currentStyle.font, fontSize: `${Math.round(size * 0.6)}px`, color: hex(colours.text) })

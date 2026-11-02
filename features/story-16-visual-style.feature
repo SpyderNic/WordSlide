@@ -17,6 +17,7 @@ Feature: Visual style
 
   Rule: Colours, fonts, sizes and timings live in one style
 
+    @browser
     Scenario Outline: One change applies everywhere
       When the <setting> is changed in the style file
       Then every use of it changes
@@ -27,6 +28,7 @@ Feature: Visual style
         | tile font           |
         | letter travel time  |
 
+    @browser
     Scenario: A second style can be added
       When a second style file is added
       Then the game can use it with no change to its rules or code
@@ -41,6 +43,7 @@ Feature: Visual style
 
   Rule: Text stays readable on the smallest screen
 
+    @browser
     Scenario: Counts can be read at 800×450
       Given a screen of 800×450
       When a level opens
@@ -48,18 +51,21 @@ Feature: Visual style
 
   Rule: Colour isn't the only signal
 
+    @browser
     Scenario: A grey tile still shows its count
       When a letter has no copies left
       Then its tile shows x0
 
   Rule: Letters travel between the pool and the cells
 
+    @browser
     # Needs story 17.
     Scenario: A tapped letter travels to its cell
       Given a row is selected
       When the player taps a letter in the pool
       Then the letter travels to its cell in about 0.15 seconds
 
+    @browser
     # Needs story 17.
     Scenario: Fast typing doesn't wait for the animation
       Given ZEBRA's row is selected
@@ -67,6 +73,7 @@ Feature: Visual style
       Then every letter counts as placed straight away
       And the letters arrive in order
 
+    @browser
     Scenario Outline: Letters travel back to the pool
       When a letter goes back to the pool through <cause>
       Then it travels back to its tile
@@ -78,10 +85,18 @@ Feature: Visual style
         | a hint leaving its row     |
         | a drop on a fixed cell     |
 
+    @browser
+    Scenario: Several letters go back one after another
+      Given letters placed in three cells
+      When the player presses Recall All
+      Then they leave one after another, 0.03 seconds apart, from the top row down
+
+    @browser
     Scenario: A dragged letter travels from where it was dropped
       When the player releases a letter with its centre over a cell
       Then it travels from there into the cell
 
+    @browser
     Scenario: A letter dropped away from a cell travels to the pool
       When the player releases a letter away from any cell
       Then it travels from there to its tile in the pool

@@ -1,6 +1,6 @@
 # Story 16: Visual style
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-16-visual-style.feature](../../features/story-16-visual-style.feature). Not implemented yet. Two scenarios need story 17.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-16-visual-style.feature](../../features/story-16-visual-style.feature). Built on 2026-11-02.
 
 *As a player, I want the game to look calm, clear and satisfying, so that it's pleasant to spend time with.*
 
@@ -40,7 +40,7 @@ The states are: pool tile, grey x0 tile, placed letter, revealed letter, locked 
 
 ### 🟦 R4. Text stays readable on the smallest screen (800×450)
 
-CrazyGames asks for this.
+CrazyGames asks for this. No text is smaller than 12 pixels at 800×450 (Q8).
 
 - 🟩 Pool counts such as x2 can be read at 800×450
 
@@ -66,9 +66,10 @@ Some players can't tell certain colours apart, so grey x0 tiles also show x0, an
 
 ### 🟦 R7. Letters travel back to the pool the same way
 
-This covers Recall All, Backspace and hinted letters going back (D9).
+This covers Recall All, Backspace and hinted letters going back (D9). When several letters go back at once, they leave one after another, 0.03 seconds apart, from the top row down and left to right (Q10).
 
 - 🟩 Recall All sends each letter back along a short path
+- 🟩 Recall All with three placed letters sends them back one after another
 
 **Confirmed:** ☑
 
@@ -79,11 +80,13 @@ This covers Recall All, Backspace and hinted letters going back (D9).
 
 - 🟩 The column's strip and notches look like brass
 
+The palette is "honey oak": today's colours, refined, with green for locked letters and gold for the win. Each tile has a soft bevel, a lighter top edge and a darker bottom edge, like a carved wooden block, and the column has a sheen line (Q7, Q9).
+
 **Confirmed:** ☑
 
 ### 🟦 R9. The font is a rounded, friendly sans serif with an open licence
 
-*From Q3 and Q5.* It's bundled with the game.
+*From Q3, Q5 and Q7.* It's Nunito, under the SIL Open Font License, bundled with the game.
 
 - 🟩 The font's licence is kept with the game's files
 
@@ -116,3 +119,19 @@ This covers Recall All, Backspace and hinted letters going back (D9).
 ### 🟥 Q6. How fast do letters travel?
 
 **Answer:** About 0.15 seconds, and it should be easily tweakable (R6, R2).
+
+### 🟥 Q7. Which palette and font?
+
+*Asked with previews on 2026-11-02.* **Answer:** Palette A, "honey oak", and Nunito (R8, R9).
+
+### 🟥 Q8. What's the smallest readable text size?
+
+**Answer:** 12 pixels at 800×450, Claude's recommendation, which the designer approved with the plan (R4).
+
+### 🟥 Q9. How are the wood and brass drawn?
+
+**Answer:** A soft bevel on each tile, and a sheen line on the column (R8).
+
+### 🟥 Q10. When several letters go back at once, do they travel together?
+
+**Answer:** One after another, 0.03 seconds apart, top row first (R7).

@@ -8,22 +8,22 @@ import { current, open } from './story-02.steps';
 
 const { Given, When, Then } = createBdd(test);
 
-function centreOf(rect: Rect) {
+export function centreOf(rect: Rect) {
   return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
 }
 
 /** Opens the level and applies the set-up steps, once. */
-async function ready(page: Page, scenario: Scenario) {
+export async function ready(page: Page, scenario: Scenario) {
   if (scenario.views.length === 0) scenario.views.push(await open(page, scenario.level, 1, 0));
   for (const step of scenario.setup.splice(0)) await step(page);
 }
 
-async function layoutNow(page: Page, scenario: Scenario): Promise<LevelLayout> {
+export async function layoutNow(page: Page, scenario: Scenario): Promise<LevelLayout> {
   await ready(page, scenario);
   return (await current(page)).layout;
 }
 
-function placeLetter(row: number, cell: number, character: string) {
+export function placeLetter(row: number, cell: number, character: string) {
   return async (page: Page) => {
     await page.evaluate(
       ({ row, cell, character }) => {
@@ -34,13 +34,13 @@ function placeLetter(row: number, cell: number, character: string) {
   };
 }
 
-function rowOf(layout: LevelLayout, word: string): number {
+export function rowOf(layout: LevelLayout, word: string): number {
   const row = layout.rows.findIndex((candidate) => candidate.word === word);
   if (row === -1) throw new Error(`No row for ${word}`);
   return row;
 }
 
-function poolTile(layout: LevelLayout, character: string) {
+export function poolTile(layout: LevelLayout, character: string) {
   return layout.poolTiles.find((tile) => tile.character === character)!;
 }
 
@@ -57,7 +57,7 @@ async function moveTo(page: Page, point: { x: number; y: number }) {
 }
 
 /** Picks a tile up and leaves it held, with a move big enough to start the drag. */
-async function hold(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {
+export async function hold(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
   await moveTo(page, to);
@@ -83,7 +83,7 @@ function gapBetweenRows(layout: LevelLayout) {
   return { x: centreOf(top).x, y: (top.y + top.height + bottom.y) / 2 };
 }
 
-function themePoint(layout: LevelLayout) {
+export function themePoint(layout: LevelLayout) {
   return centreOf(layout.topItems.find((item) => item.name === 'theme')!);
 }
 
@@ -98,7 +98,8 @@ async function touch(page: Page, scenario: Scenario, type: 'touchStart' | 'touch
 /** The frames recorded so far, once the feedback has had time to play. */
 async function recorded(page: Page, scenario: Scenario): Promise<Frame[]> {
   if (!scenario.frames) {
-    await page.waitForTimeout(450);
+    // Long enough for a letter to land (story 16) and its feedback to finish.
+    await page.waitForTimeout(700);
     scenario.frames = await stopRecording(page);
   }
   return scenario.frames;
@@ -592,6 +593,8 @@ Then('row 2 still reads T E A M', async ({ page }) => {
 When('"Already found" appears', async ({ page, scenario }) => {
   await ready(page, scenario);
   await fillRow(1, 'TEAM')(page);
+  // The message appears once the last letter has landed (story 16).
+  await expect.poll(async () => (await current(page)).foundText).not.toBeNull();
   scenario.before = await current(page);
 });
 
@@ -885,12 +888,13 @@ Then("only HON's tiles shake", async ({ page, scenario }) => {
   const row = rowOf(layout, 'HOT DOG');
   const movement = (cell: number) => {
     const { x, y } = centreOf(layout.rows[row].cells[cell]);
-    const xs = frames.flatMap((frame) => frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && Math.abs(object.y - y) < 3 && Math.abs(object.x - x) < layout.tileSize / 2).map((object) => object.x));
+    // Letters still flying in (story 16) aren't the row's tiles: they're drawn at depth 8.
+    const xs = frames.flatMap((frame) => frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && object.depth !== 8 && Math.abs(object.y - y) < 3 && Math.abs(object.x - x) < layout.tileSize / 2).map((object) => object.x));
     return Math.max(...xs) - Math.min(...xs);
   };
   for (const cell of [0, 1, 2]) expect(movement(cell)).toBeGreaterThan(2);
   for (const cell of [4, 5, 6]) expect(movement(cell)).toBeLessThan(0.5);
   const space = centreOf(layout.rows[row].cells[3]);
-  const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
+  const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => object.depth !== 8 && Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
   expect(atSpace.every((object) => Math.abs(object.x - space.x) < 0.5)).toBe(true);
 });

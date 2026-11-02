@@ -9,9 +9,11 @@
     "preview": "vite preview",
     "test": "npm run test:logic && npm run test:browser",
     "test:logic": "node --import tsx node_modules/@cucumber/cucumber/bin/cucumber.js",
-    "test:browser": "bddgen && playwright test"
+    "test:browser": "bddgen && playwright test",
+    "test:other-style": "node scripts/other-style.mjs"
   },
   "dependencies": {
+    "@fontsource/nunito": "^5.3.0",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
