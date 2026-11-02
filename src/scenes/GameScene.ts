@@ -469,7 +469,11 @@ export class GameScene extends Phaser.Scene {
     this.saveLevel();
     this.feedback.push(...events);
     for (const event of events) {
-      if (event.type === 'locked') this.pulse(event.row, this.board.rows[event.row].cells.map((_, cell) => cell), this.board.rows[event.row].cells.map((cell) => cell.kind));
+      if (event.type === 'locked') {
+        // Parts that had already locked don't celebrate again (D48).
+        const fresh = this.board.rows[event.row].cells.flatMap((cell, index) => (cell.kind === 'locked' ? [] : [index]));
+        this.pulse(event.row, fresh, fresh.map((cell) => this.board.rows[event.row].cells[cell].kind));
+      }
       if (event.type === 'partLocked') this.pulse(event.row, event.cells, event.before);
       if (event.type === 'wrong') this.shake(event.row);
       if (event.type === 'alreadyFound') this.showAlreadyFound(event.lockedRow);

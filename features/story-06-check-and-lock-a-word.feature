@@ -309,6 +309,13 @@ Feature: Check and lock a word
       Then only HOT's tiles pulse
       And HOT's tiles take the locked colour
 
+    @browser
+    Scenario: A part that's already locked doesn't pulse again
+      Given a level containing the answer HOT DOG
+      And HOT is locked in HOT DOG's row
+      When the player places D, O and G in the last three cells of HOT DOG's row
+      Then only DOG's tiles pulse
+
     Scenario: A wrong part doesn't lock
       Given the answers HOT DOG, CAT and PEA
       When the player places C, A and T in the first three cells of HOT DOG's row

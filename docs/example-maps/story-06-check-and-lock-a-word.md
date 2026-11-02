@@ -156,6 +156,7 @@ What that looks like is story 7.
 - 🟩 Placing T in T-REX's first cell locks T
 - 🟩 With the answers HOT DOG and HOT POT, placing DOG in HOT POT's row locks it, because HOT DOG fits that row too
 - 🟩 When HOT locks, only HOT's tiles pulse and take the locked colour
+- 🟩 With HOT already locked, finding DOG locks HOT DOG, and only DOG's tiles pulse: HOT doesn't celebrate again (from playing milestone 5)
 - 🟩 Placing C, A, T in HOT DOG's first three cells locks nothing, with no feedback, because the row isn't full
 - 🟩 Placing D and REX in T-REX locks REX, the D stays placed, and the wrong-word feedback plays
 - 🟩 Placing CAT DOP in HOT DOG's cells locks nothing, and the wrong-word feedback plays

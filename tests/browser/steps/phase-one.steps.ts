@@ -722,11 +722,30 @@ When('the player places H, O and T in the first three cells of HOT DOG\'s row', 
   scenario.frames = await stopRecording(page);
 });
 
-Then("only HOT's tiles pulse", async ({ page, scenario }) => {
+/** The cells after the first special character: DOG in HOT DOG. */
+function lastPart(layout: LevelLayout, row: number): number[] {
+  const cells = layout.rows[row].cells;
+  const start = cells.findIndex((cell) => cell.cell.kind === 'special');
+  return cells.map((_, index) => index).slice(start + 1);
+}
+
+When("the player places D, O and G in the last three cells of HOT DOG's row", async ({ page, scenario }) => {
+  await ready(page, scenario);
   const { layout } = await current(page);
   const row = rowOf(layout, 'HOT DOG');
-  const part = firstPart(layout, row);
-  const rest = layout.rows[row].cells.map((_, index) => index).filter((index) => !part.includes(index));
+  scenario.pulse = { row, cells: lastPart(layout, row) };
+  await startRecording(page);
+  for (const [index, cell] of lastPart(layout, row).entries()) await placeLetter(row, cell, 'DOG'[index])(page);
+  await page.waitForTimeout(600);
+  scenario.frames = await stopRecording(page);
+});
+
+Then(/^only (HOT|DOG)'s tiles pulse$/, async ({ page, scenario }, word: string) => {
+  const { layout } = await current(page);
+  const row = rowOf(layout, 'HOT DOG');
+  const part = word === 'HOT' ? firstPart(layout, row) : lastPart(layout, row);
+  // The space between the parts isn't a tile: it's left out of both checks.
+  const rest = layout.rows[row].cells.flatMap((cell, index) => (part.includes(index) || cell.cell.kind === 'special' ? [] : [index]));
   const scaleAt = (frame: Frame, cell: number) => {
     const { x, y } = centreOf(layout.rows[row].cells[cell]);
     return Math.max(1, ...frame.screen.filter((object) => Math.abs(object.x - x) < 3 && Math.abs(object.y - y) < 3).map((object) => object.scale));
