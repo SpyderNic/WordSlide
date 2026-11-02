@@ -2,14 +2,20 @@ import { expect, type Page } from '@playwright/test';
 import { createBdd, type DataTable } from 'playwright-bdd';
 import { rowText, type CellView, type LevelLayout, type PoolTileView, type Rect, type RowView } from '../../../src/game/layout';
 import type { Level } from '../../../src/game/level';
-import { startingPool } from '../../../src/game/level';
+import { rowOrder, startingPool } from '../../../src/game/level';
 import { levelContaining, levelWithRows, makeLevel, parseWords, reveal } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
 import { drawnIn, installProbe, screen, textAt, tileAt } from './probe';
 
 const { Given, When, Then } = createBdd(test);
 
-export async function open(page: Page, level: Level, levelNumber: number, points: number): Promise<GameView> {
+/** Gives the game a list of copies of one level, from the next page load on. Development builds only. */
+export async function useLevels(page: Page, level: Level, count: number) {
+  await page.addInitScript((levels) => Object.assign(window, { wordSlideTestLevels: levels }), Array.from({ length: count }, () => level));
+}
+
+export async function open(page: Page, level: Level, levelNumber: number, points: number, levelCount = 12): Promise<GameView> {
+  await useLevels(page, level, Math.max(levelCount, levelNumber));
   await page.goto('/');
   await page.waitForFunction(() => (window as unknown as { wordSlideReady?: boolean }).wordSlideReady === true);
   await installProbe(page);
@@ -108,7 +114,8 @@ Given('nothing revealed', async ({ scenario }) => {
 });
 
 Given(/^(\S+) revealed at position (\d+) of (.+)$/, async ({ scenario }, letter: string, position: string, word: string) => {
-  reveal(scenario.level, word, letter, Number(position));
+  const row = /^row (\d+)$/.exec(word);
+  reveal(scenario.level, row ? rowOrder(scenario.level.answers)[Number(row[1]) - 1].word : word, letter, Number(position));
 });
 
 Given(/^(\S+) at position (\d+) revealed$/, async ({ scenario }, letter: string, position: string) => {

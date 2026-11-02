@@ -1,20 +1,20 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { createBdd } from 'playwright-bdd';
 
 const { When, Then } = createBdd();
 
 const errors = new WeakMap<object, string[]>();
 
-When('the game opens', async ({ page }) => {
+/** Records errors from now on. "The game opens" (in story-11.steps.ts) calls this. */
+export function watchErrors(page: Page) {
+  if (errors.has(page)) return;
   const seen: string[] = [];
   errors.set(page, seen);
   page.on('pageerror', (error) => seen.push(error.message));
   page.on('console', (message) => {
     if (message.type() === 'error') seen.push(message.text());
   });
-  await page.goto('/');
-  await page.waitForFunction(() => (window as unknown as { wordSlideReady?: boolean }).wordSlideReady === true);
-});
+}
 
 When('the player types L on the keyboard', async ({ page }) => {
   await page.keyboard.press('l');

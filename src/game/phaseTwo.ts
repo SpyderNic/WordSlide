@@ -8,6 +8,12 @@ export interface SlidingRow {
   columnCell: number;
 }
 
+/** Each word in row order, and which of its cells is in the column (story 11, R10). */
+export interface PhaseTwoSnapshot {
+  words: string[];
+  cells: number[];
+}
+
 /** The state of phase two. Pure logic: nothing here knows about the screen. */
 export class PhaseTwo {
   readonly rows: SlidingRow[];
@@ -25,6 +31,22 @@ export class PhaseTwo {
       const cells = cellsOf(word);
       return { word, cells, columnCell: cells.findIndex(isCharacter) };
     });
+  }
+
+  snapshot(): PhaseTwoSnapshot {
+    return { words: this.rows.map((row) => row.word), cells: this.rows.map((row) => row.columnCell) };
+  }
+
+  /** Saved positions for these words, or null if they don't match. */
+  static restore(snapshot: PhaseTwoSnapshot, words: string[], finalWord: string, canReorder = true): PhaseTwo | null {
+    const saved = snapshot?.words;
+    if (!Array.isArray(saved) || saved.length !== words.length || [...saved].sort().join() !== [...words].sort().join()) return null;
+    const phase = new PhaseTwo(saved, finalWord, canReorder);
+    const cells = snapshot.cells ?? [];
+    phase.rows.forEach((row, index) => {
+      if (phase.letterCells(index).includes(cells[index])) row.columnCell = cells[index];
+    });
+    return phase;
   }
 
   private letterCells(row: number): number[] {

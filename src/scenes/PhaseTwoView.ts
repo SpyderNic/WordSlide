@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { layoutLevel, type LevelLayout, type Rect } from '../game/layout';
 import type { Level } from '../game/level';
-import type { PhaseTwo } from '../game/phaseTwo';
+import type { PhaseTwo, PhaseTwoSnapshot } from '../game/phaseTwo';
 import { currentStyle } from '../style';
+import { buildPopup } from './popup';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
@@ -37,8 +38,12 @@ type Press =
   | { kind: 'reorder'; pointerId: number; row: number; startY: number; startRowY: number; moved: boolean; startOrder: number };
 
 export interface PhaseTwoCallbacks {
-  /** The ceremony has finished, or a word or row has settled. */
+  /** The ceremony has finished, or a word or row has settled, and the column spells the word. */
   onWon: () => void;
+  /** A word or row has settled without winning (story 11, R10). */
+  onSettled: () => void;
+  /** The popup has just appeared after a win (story 11, R12). */
+  onPopup: () => void;
   onNextLevel: () => void;
 }
 
@@ -50,7 +55,7 @@ export interface PhaseTwoTestView {
   columnText: string;
   won: boolean;
   dragging: boolean;
-  popup: { buttonRect: Rect } | null;
+  popup: { buttonRect: Rect | null } | null;
 }
 
 export class PhaseTwoView {
@@ -71,7 +76,8 @@ export class PhaseTwoView {
     private readonly scene: Phaser.Scene,
     private readonly phase: PhaseTwo,
     private readonly level: Level,
-    private readonly nextLevelNumber: number,
+    /** Null after the last level (story 11, R11). */
+    private readonly nextLevelNumber: number | null,
     private readonly callbacks: PhaseTwoCallbacks,
     private layout: LevelLayout,
   ) {}
@@ -243,7 +249,7 @@ export class PhaseTwoView {
     this.drawColumn();
     this.placeEverything();
     if (this.celebrating) this.jumpToPopup();
-    else if (this.popup) this.showPopup();
+    else if (this.popup) this.showPopup(false);
   }
 
   private rebuildForSize(view: RowView, index: number) {
@@ -298,7 +304,7 @@ export class PhaseTwoView {
   }
 
   onPointerDown(pointer: Phaser.Input.Pointer) {
-    if (this.popupInfo && this.isInside(this.popupInfo.buttonRect, pointer.x, pointer.y)) {
+    if (this.popupInfo?.buttonRect && this.isInside(this.popupInfo.buttonRect, pointer.x, pointer.y)) {
       this.callbacks.onNextLevel();
       return;
     }
@@ -444,7 +450,7 @@ export class PhaseTwoView {
   }
 
   onKey(event: KeyboardEvent) {
-    if (this.popupInfo && (event.key === 'Enter' || event.key === ' ')) {
+    if (this.popupInfo?.buttonRect && (event.key === 'Enter' || event.key === ' ')) {
       this.callbacks.onNextLevel();
       return;
     }
@@ -476,7 +482,13 @@ export class PhaseTwoView {
   }
 
   private checkWin() {
-    if (!this.phase.won && this.phase.checkWin()) this.callbacks.onWon();
+    if (this.phase.won) return;
+    if (this.phase.checkWin()) this.callbacks.onWon();
+    else this.callbacks.onSettled();
+  }
+
+  snapshot(): PhaseTwoSnapshot {
+    return this.phase.snapshot();
   }
 
   /** The instant win (D7): the column spelled the word before any move. */
@@ -524,51 +536,22 @@ export class PhaseTwoView {
     this.showPopup();
   }
 
-  private showPopup() {
+  private showPopup(justWon = true) {
     this.celebrating = null;
     this.popup?.destroy(true);
     const targets: Phaser.GameObjects.GameObject[] = [this.column];
     this.rowViews.forEach((view) => targets.push(view.container));
     this.scene.tweens.add({ targets, alpha: 0, duration: WIN_FADE });
 
-    const { width, height } = this.scene.scale;
-    const size = Math.min(this.tile, 46);
-    const word = this.phase.rows.map((row) => row.cells[row.columnCell]);
-    const panelWidth = Math.max(word.length * size * 1.1 + size * 2, size * 8);
-    const panelHeight = size * 5.6;
-    const children: Phaser.GameObjects.GameObject[] = [this.scene.add.rectangle(0, 0, panelWidth, panelHeight, colours.tile)];
-    const title = 'Level complete';
-    const addText = (text: string, y: number, fontSize: number, colour: number) =>
-      children.push(
-        this.scene.add
-          .text(0, y, text, { fontFamily: currentStyle.font, fontSize: `${Math.round(fontSize)}px`, color: hex(colour) })
-          .setOrigin(0.5),
-      );
-    addText(title, -size * 1.9, size * 0.7, colours.text);
-    word.forEach((letter, index) => {
-      const x = (index - (word.length - 1) / 2) * size * 1.1;
-      children.push(this.scene.add.rectangle(x, -size * 0.4, size, size, colours.tileGold));
-      children.push(
-        this.scene.add
-          .text(x, -size * 0.4, letter, { fontFamily: currentStyle.font, fontSize: `${Math.round(size * 0.6)}px`, color: hex(colours.text) })
-          .setOrigin(0.5),
-      );
+    const last = this.nextLevelNumber === null;
+    const { container, buttonRect } = buildPopup(this.scene, this.tile, {
+      title: last ? 'All levels complete!' : 'Level complete',
+      word: last ? [] : this.phase.rows.map((row) => row.cells[row.columnCell]),
+      button: last ? null : `Play Level ${this.nextLevelNumber}`,
     });
-    const button = `Play Level ${this.nextLevelNumber}`;
-    const buttonWidth = size * 5.2;
-    const buttonHeight = size * 1.2;
-    children.push(this.scene.add.rectangle(0, size * 1.6, buttonWidth, buttonHeight, colours.background));
-    addText(button, size * 1.6, size * 0.55, colours.highlight);
-
-    this.popup = this.scene.add.container(width / 2, height / 2, children).setDepth(30);
-    this.popupInfo = {
-      buttonRect: {
-        x: width / 2 - buttonWidth / 2,
-        y: height / 2 + size * 1.6 - buttonHeight / 2,
-        width: buttonWidth,
-        height: buttonHeight,
-      },
-    };
+    this.popup = container;
+    this.popupInfo = { buttonRect };
+    if (justWon) this.callbacks.onPopup();
   }
 
   destroy() {

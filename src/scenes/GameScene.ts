@@ -1,17 +1,22 @@
 import Phaser from 'phaser';
 import { Board, type BoardEvent } from '../game/board';
-import { PhaseTwo } from '../game/phaseTwo';
+import { PhaseTwo, type PhaseTwoSnapshot } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Level } from '../game/level';
-import { startingLevelNumber } from '../game/startingLevel';
+import { NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
+import { pickedLevel, resetAsked } from '../game/startingLevel';
 import { testLevels } from '../levels/testLevels';
+import { createPlatform } from '../platform';
+import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
 import { PhaseTwoView } from './PhaseTwoView';
+import { buildPopup } from './popup';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
 const PULSE_SCALE = 1.08;
 const SHAKE_DISTANCE = 6;
+const POINTS_PULSE = 1.2;
 
 interface Press {
   pointerId: number;
@@ -47,14 +52,44 @@ export class GameScene extends Phaser.Scene {
   private foundText: Phaser.GameObjects.Container | null = null;
   private poolObjects: Phaser.GameObjects.GameObject[] = [];
   private phaseTwo: PhaseTwoView | null = null;
+  private levels: Level[] = testLevels;
+  private progress: Progress = NEW_PLAYER;
+  private platform!: Platform;
+  /** False while the designer peeks at a level picked in the address (story 11, R13). */
+  private saving = true;
+  /** After the last level, only the top of the screen and a popup show (story 11, R11). */
+  private allDone = false;
+  private allComplete: Phaser.GameObjects.Container | null = null;
+  private pointsText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
     super('GameScene');
   }
 
   create() {
-    this.levelNumber = startingLevelNumber(window.location.search, testLevels.length, import.meta.env.DEV);
-    this.show(testLevels[this.levelNumber - 1], this.levelNumber, 0);
+    const development = import.meta.env.DEV;
+    const testList = (window as unknown as { wordSlideTestLevels?: Level[] }).wordSlideTestLevels;
+    if (development && testList) this.levels = testList;
+    this.platform = createPlatform();
+    const search = window.location.search;
+    void this.platform.load(SAVE_KEY).then((text) => {
+      let progress = readProgress(text);
+      if (resetAsked(search, development)) {
+        progress = NEW_PLAYER;
+        this.save(progress);
+      }
+      const picked = pickedLevel(search, this.levels.length, development);
+      if (picked !== null) {
+        this.saving = false;
+        progress = { level: picked, points: progress.points, inLevel: null };
+      }
+      this.progress = progress;
+      this.startLevel();
+      this.listen();
+    });
+  }
+
+  private listen() {
     this.scale.on(Phaser.Scale.Events.RESIZE, () => this.onResize());
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => this.onPointerDown(pointer));
@@ -98,22 +133,68 @@ export class GameScene extends Phaser.Scene {
       feedback: this.feedback,
       foundText: this.foundText ? { y: this.foundText.y, alpha: this.foundText.alpha } : null,
       levelNumber: this.levelNumber,
+      points: this.points,
       phaseTwo: this.phaseTwo?.testView() ?? null,
     };
   }
 
+  /** For tests: opens a level as if the player had reached it. */
   private show(level: Level, levelNumber: number, points: number) {
+    this.progress = { level: levelNumber, points, inLevel: null };
+    this.startLevel(level);
+  }
+
+  /** Opens the player's current level, as they left it (story 11, R6 and R10). */
+  private startLevel(level: Level | undefined = this.levels[this.progress.level - 1], fade = false) {
     this.phaseTwo?.destroy();
     this.phaseTwo = null;
-    this.level = level;
-    this.board = new Board(level);
-    this.levelNumber = levelNumber;
-    this.points = points;
+    this.allComplete?.destroy(true);
+    this.allComplete = null;
+    this.allDone = false;
+    this.press = null;
+    this.endDragVisuals();
+    this.levelNumber = this.progress.level;
+    this.points = this.progress.points;
     this.feedback = [];
+    if (!level) {
+      this.showAllComplete();
+      return;
+    }
+    this.level = level;
+    const saved = this.progress.inLevel;
+    this.board = (saved && Board.restore(level, saved.board)) || new Board(level);
+    this.redraw();
+    if (this.board.phaseOneOver) this.startCeremony(saved?.phaseTwo ?? null, true);
+    if (fade) {
+      const colour = Phaser.Display.Color.IntegerToColor(colours.background);
+      this.cameras.main.fadeIn(timings.levelFade, colour.red, colour.green, colour.blue);
+    }
+  }
+
+  /** Reopening after the last level shows its popup again (story 11, R11). */
+  private showAllComplete() {
+    this.level = this.levels[this.levels.length - 1];
+    this.levelNumber = this.levels.length;
+    this.board = new Board(this.level);
+    this.allDone = true;
     this.redraw();
   }
 
+  // Saving
+
+  private save(progress: Progress = this.progress) {
+    if (this.saving) void this.platform.save(SAVE_KEY, writeProgress(progress));
+  }
+
+  /** After every change that settles (story 11, R10). */
+  private saveLevel() {
+    if (this.allDone || this.board.drag) return;
+    this.progress = { ...this.progress, inLevel: { board: this.board.snapshot(), phaseTwo: this.phaseTwo?.snapshot() ?? null } };
+    this.save();
+  }
+
   private onResize() {
+    if (!this.board) return;
     this.board.cancelDrag();
     this.endDragVisuals();
     this.press = null;
@@ -144,7 +225,14 @@ export class GameScene extends Phaser.Scene {
     this.rowObjects.clear();
     this.layoutNow = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board);
 
+    this.pointsText = null;
     this.layoutNow.topItems.forEach((item) => this.drawTopItem(item));
+    if (this.allDone) {
+      this.fadePoolNow();
+      this.allComplete?.destroy(true);
+      this.allComplete = buildPopup(this, this.layoutNow.tileSize, { title: 'All levels complete!', word: [], button: null }).container;
+      return;
+    }
     if (this.phaseTwo) return;
 
     this.fadePoolNow();
@@ -174,7 +262,8 @@ export class GameScene extends Phaser.Scene {
       // The buttons do nothing yet (D30).
       this.keep(this.add.rectangle(x, y, item.width, item.height, colours.tile));
     }
-    this.drawText(item.text, x, y, size, item.isButton ? colours.text : colours.highlight);
+    const text = this.drawText(item.text, x, y, size, item.isButton ? colours.text : colours.highlight);
+    if (item.name === 'points') this.pointsText = text;
   }
 
   private drawSelection() {
@@ -239,6 +328,7 @@ export class GameScene extends Phaser.Scene {
   // Input
 
   private onPointerDown(pointer: Phaser.Input.Pointer) {
+    if (this.allDone) return;
     if (this.phaseTwo) {
       this.phaseTwo.onPointerDown(pointer);
       return;
@@ -338,6 +428,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         this.board.dropAway();
         this.redraw();
+        this.saveLevel();
       }
     } else if (!press.dead) {
       this.tap(press.hit);
@@ -353,10 +444,12 @@ export class GameScene extends Phaser.Scene {
     } else if (hit.kind === 'recall') {
       this.board.recallAll();
       this.redraw();
+      this.saveLevel();
     }
   }
 
   private onKey(event: KeyboardEvent) {
+    if (this.allDone) return;
     if (this.phaseTwo) {
       this.phaseTwo.onKey(event);
       return;
@@ -369,12 +462,18 @@ export class GameScene extends Phaser.Scene {
 
   private applied(events: BoardEvent[]) {
     this.redraw();
+    this.saveLevel();
     this.feedback.push(...events);
     for (const event of events) {
       if (event.type === 'locked') this.pulse(event.row);
       if (event.type === 'wrong') this.shake(event.row);
       if (event.type === 'alreadyFound') this.showAlreadyFound(event.lockedRow);
-      if (event.type === 'phaseOneOver') this.time.delayedCall(timings.lockPulse, () => this.startCeremony());
+      if (event.type === 'phaseOneOver') {
+        const board = this.board;
+        this.time.delayedCall(timings.lockPulse, () => {
+          if (this.board === board) this.startCeremony();
+        });
+      }
     }
   }
 
@@ -392,18 +491,22 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private startCeremony() {
+  /** Reopening goes straight to the finished layout, with any saved positions (story 11, R10). */
+  private startCeremony(saved: PhaseTwoSnapshot | null = null, reopening = false) {
     if (this.phaseTwo) return;
     const from = this.layoutNow.rows.map((row) => ({ x: row.cells[0].x + row.cells[0].width / 2, y: row.cells[0].y + row.cells[0].height / 2 }));
     const words = this.board.rows.map((row) => row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join(''));
-    const phase = new PhaseTwo(words, this.level.finalWord);
+    const phase = (saved && PhaseTwo.restore(saved, words, this.level.finalWord)) || new PhaseTwo(words, this.level.finalWord);
+    const next = this.levelNumber < this.levels.length ? this.levelNumber + 1 : null;
     const view = new PhaseTwoView(
       this,
       phase,
       this.level,
-      this.levelNumber + 1,
+      next,
       {
-        onWon: () => view.celebrate(),
+        onWon: () => this.won(view),
+        onSettled: () => this.saveLevel(),
+        onPopup: () => this.showNewPoints(),
         onNextLevel: () => this.nextLevel(),
       },
       this.layoutNow,
@@ -412,17 +515,34 @@ export class GameScene extends Phaser.Scene {
 
     const pool = this.poolObjects;
     this.poolObjects = [];
-    this.tweens.add({ targets: pool, alpha: 0, duration: timings.ceremony, onComplete: () => pool.forEach((object) => object.destroy()) });
+    if (reopening) pool.forEach((object) => object.destroy());
+    else this.tweens.add({ targets: pool, alpha: 0, duration: timings.ceremony, onComplete: () => pool.forEach((object) => object.destroy()) });
 
     this.redraw();
     const finished = () => view.checkInstantWin();
     view.setPendingFinish(finished);
     view.playCeremony(from, finished);
+    if (reopening) view.skipCeremony();
+  }
+
+  /** Saved before the celebration, so closing during it loses nothing (story 11, R5). */
+  private won(view: PhaseTwoView) {
+    this.progress = winLevel(this.progress);
+    this.save();
+    view.celebrate();
+  }
+
+  /** The points go up with a small pulse as the popup appears (story 11, R12). */
+  private showNewPoints() {
+    this.points = this.progress.points;
+    this.redraw();
+    if (this.pointsText) {
+      this.tweens.add({ targets: this.pointsText, scale: POINTS_PULSE, duration: timings.lockPulse / 2, yoyo: true });
+    }
   }
 
   private nextLevel() {
-    const next = this.levelNumber + 1;
-    this.show(testLevels[(next - 1) % testLevels.length], next, this.points);
+    this.startLevel(undefined, true);
   }
 
   private pulse(row: number) {

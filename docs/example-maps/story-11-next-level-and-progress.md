@@ -1,6 +1,6 @@
 # Story 11: Unlock the next level and save progress
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-11-next-level-and-progress.feature](../../features/story-11-next-level-and-progress.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-11-next-level-and-progress.feature](../../features/story-11-next-level-and-progress.feature). Built on 2026-11-02.
 
 *As a player, I want to move on to the next level and keep my progress, so that I can come back later and carry on where I stopped.*
 
@@ -32,7 +32,7 @@ An instant win (D7) counts the same.
 
 ### 🟦 R3. The popup's button opens the next level from the start
 
-The level appears with a quick fade of about 0.3 seconds (Q5).
+The level appears with a quick fade of about 0.3 seconds (Q5). The popup and the old level go at once, and the new level fades in from the background (Q7).
 
 - 🟩 Pressing "Play Level 5" opens level 5 in phase one, with nothing placed
 - 🟩 The level number shows 5
@@ -117,7 +117,7 @@ Not saved: the selected row, a drag in progress, and feedback that was playing.
 
 ### 🟦 R13. Development builds have a level picker and a progress reset
 
-*From Q6.* They never reach players.
+*From Q6 and Q8.* They never reach players. They're in the address: `?level=12` jumps to level 12, and `?reset` clears progress. A picked level is only a peek: nothing is saved while playing it, so reopening without `?level` returns to the real progress, and the top of the screen shows the saved points.
 
 - 🟩 In a development build, the designer can jump to level 12
 - 🟩 In a release build, neither exists
@@ -151,3 +151,11 @@ Not saved: the selected row, a drag in progress, and feedback that was playing.
 ### 🟥 Q6. How do you test levels without playing through them all?
 
 **Answer:** A level picker and a progress reset, in development builds only (R13).
+
+### 🟥 Q7. Does the old level fade out before the new one fades in?
+
+**Answer:** No. The popup and the old level go at once, and the new level fades in over 0.3 seconds (R3).
+
+### 🟥 Q8. How do the picker and reset work, and does a picked level save?
+
+**Answer:** Through the address, `?level=N` and `?reset`. A picked level is a peek and never saves (R13).

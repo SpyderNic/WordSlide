@@ -13,6 +13,7 @@ Feature: Unlock the next level and save progress
       When the player wins the level
       Then level 5 is unlocked
 
+    @browser
     Scenario: A later level can't be reached early
       Given the player is on level 5
       Then there's no way to reach level 6
@@ -24,6 +25,7 @@ Feature: Unlock the next level and save progress
       When the player wins a level
       Then the player has 4 points in total
 
+    @browser
     Scenario: An instant win counts the same
       Given the player has 3 points in total
       And a level that starts phase two already solved
@@ -32,6 +34,7 @@ Feature: Unlock the next level and save progress
 
   Rule: The popup's button opens the next level from the start
 
+    @browser
     Scenario: The next level starts fresh
       Given the player has won level 4
       When the player presses "Play Level 5"
@@ -39,12 +42,14 @@ Feature: Unlock the next level and save progress
       And no letters are placed
       And the level number shows 5
 
+    @browser
     Scenario: The next level fades in
       When the player presses "Play Level 5"
       Then level 5 appears with a fade of about 0.3 seconds
 
   Rule: A new player starts at the beginning
 
+    @browser
     Scenario: First time
       Given the game has never been played on this device
       When the game opens
@@ -53,6 +58,7 @@ Feature: Unlock the next level and save progress
 
   Rule: Progress is saved as soon as a level is won
 
+    @browser
     Scenario: Closing during the celebration loses nothing
       Given the player has 3 points in total
       When the player wins level 4
@@ -63,12 +69,14 @@ Feature: Unlock the next level and save progress
 
   Rule: Reopening the game continues from the saved level
 
+    @browser
     Scenario: The game opens where the player left off
       Given level 5 reached and 4 points saved
       When the game opens
       Then the level number shows 5
       And the points show 4
 
+    @browser
     Scenario: Reloading the page keeps progress
       Given level 5 reached and 4 points saved
       When the page reloads
@@ -76,11 +84,13 @@ Feature: Unlock the next level and save progress
 
   Rule: If saving isn't possible, the game still plays
 
+    @browser
     Scenario: Blocked saving doesn't stop the game
       Given saving is blocked
       When the player wins level 1
       Then level 2 opens as usual
 
+    @browser
     Scenario: Blocked saving loses progress on closing
       Given saving is blocked
       And the player has reached level 2
@@ -89,12 +99,14 @@ Feature: Unlock the next level and save progress
 
   Rule: A won level can't be replayed
 
+    @browser
     Scenario: There's no way back
       Given the player has won level 4
       Then there's no way to open level 4
 
   Rule: Progress within a level is saved
 
+    @browser
     Scenario: Phase-one progress comes back
       Given a Z placed in a cell
       And LEMUR is locked
@@ -103,6 +115,7 @@ Feature: Unlock the next level and save progress
       And LEMUR is still locked
       And the pool counts are the same
 
+    @browser
     Scenario: A hinted letter that went to the pool stays there
       Given the answers TART and TREE
       And R revealed at position 3 of row 1
@@ -111,6 +124,7 @@ Feature: Unlock the next level and save progress
       Then row 1 reads _ _ _ _
       And the pool holds T, R, E, E
 
+    @browser
     Scenario: Phase-two progress comes back
       Given phase two has started
       And KANGAROO has its N in the column, in the top row
@@ -119,21 +133,32 @@ Feature: Unlock the next level and save progress
       And KANGAROO has its N in the column, in the top row
       And the column and handles are showing
 
+    @browser
     Scenario: Closing during a drag restores the board from before it
       Given the player is dragging a Z from the pool
       When the game closes and opens again
       Then the Z is back in the pool
 
+    @browser
     Scenario: Closing during the ceremony opens on the finished layout
       Given the phase-two ceremony is playing
       When the game closes and opens again
       Then the finished phase-two layout appears
 
+    @browser
     Scenario: No row is selected after reopening
       Given ZEBRA's row is selected
       When the game closes and opens again
       Then no row is marked as selected
 
+    @browser
+    Scenario: No row is selected after reopening, even with letters placed
+      Given a Z placed in cell 1 of ZEBRA's row
+      And ZEBRA's row is selected
+      When the game closes and opens again
+      Then no row is marked as selected
+
+    @browser
     Scenario: Winning clears the level's saved progress
       Given the player has won level 4
       When the game closes and opens again
@@ -142,12 +167,14 @@ Feature: Unlock the next level and save progress
 
   Rule: After the last level, the popup has no button
 
+    @browser
     Scenario: All levels complete
       Given the player is on the last level
       When the popup appears after the win
       Then it shows "All levels complete!"
       And it has no button
 
+    @browser
     Scenario: Reopening shows the same popup
       Given the player has won the last level
       When the game closes and opens again
@@ -155,23 +182,37 @@ Feature: Unlock the next level and save progress
 
   Rule: The new point shows when the popup appears
 
+    @browser
     Scenario: The points go up with the popup
       Given the player has 3 points in total
       When the player wins a level
       Then the points still show 3 until the popup appears
       And the points show 4 with a small pulse as it appears
 
+    @browser
     Scenario: The popup doesn't mention the point
       When the popup appears
       Then it doesn't mention points
 
   Rule: Development builds have a level picker and a progress reset
 
+    @browser
     Scenario: The designer can jump to a level
       Given a development build
       When the designer picks level 12
       Then level 12 opens
 
+    @browser
+    Scenario: A picked level isn't saved
+      Given a development build
+      And level 5 reached and 4 points saved
+      When the designer picks level 12
+      And the player wins the level
+      And the game opens
+      Then the level number shows 5
+      And the points show 4
+
+    @browser
     Scenario: The designer can reset progress
       Given a development build
       And level 5 reached and 4 points saved

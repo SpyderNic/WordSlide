@@ -25,6 +25,12 @@ export interface GameView {
 export interface Scenario {
   level: Level;
   levels: Level[];
+  /** How many levels the game is given: copies of the scenario's level. */
+  levelCount: number;
+  levelsGiven?: boolean;
+  /** Set once the game has closed and opened again. */
+  reopened?: boolean;
+  fadeSamples?: { t: number; alpha: number; running: boolean }[];
   levelNumber: number;
   points: number;
   views: GameView[];
@@ -53,6 +59,6 @@ export interface Scenario {
 
 export const test = base.extend<{ scenario: Scenario }>({
   scenario: async ({}, use) => {
-    await use({ level: makeLevel(DEFAULT_WORDS), levels: [], levelNumber: 1, points: 0, views: [], setup: [] });
+    await use({ level: makeLevel(DEFAULT_WORDS), levels: [], levelCount: 12, levelNumber: 1, points: 0, views: [], setup: [] });
   },
 });

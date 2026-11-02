@@ -29,7 +29,7 @@ function hooks(page: Page, action: (game: Hooks) => void, arg?: unknown) {
   );
 }
 
-async function two(page: Page): Promise<PhaseTwoTestView> {
+export async function two(page: Page): Promise<PhaseTwoTestView> {
   return ((await current(page)) as TwoView).phaseTwo;
 }
 
@@ -38,7 +38,7 @@ function unsolvedFinalWord(words: string[]) {
 }
 
 /** Opens the level and applies the set-up steps, once. */
-async function openLevel(page: Page, scenario: Scenario) {
+export async function openLevel(page: Page, scenario: Scenario) {
   if (scenario.views.length === 0) {
     if (!scenario.finalWordGiven) {
       scenario.level.finalWord = 'ELK';
@@ -46,20 +46,20 @@ async function openLevel(page: Page, scenario: Scenario) {
         scenario.level.finalWord = unsolvedFinalWord(scenario.level.answers.map((answer) => answer.word));
       }
     }
-    scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points));
+    scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points, scenario.levelCount));
   }
   for (const step of scenario.setup.splice(0)) await step(page);
 }
 
 /** Solves the rows, starting the ceremony. */
-async function solve(page: Page, scenario: Scenario) {
+export async function solve(page: Page, scenario: Scenario) {
   await openLevel(page, scenario);
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.solve());
   await page.waitForFunction(() => (window as unknown as { wordSlide: { view: () => { phaseTwo: unknown } } }).wordSlide.view().phaseTwo !== null);
 }
 
 /** Gets to phase two, past the ceremony. */
-async function ready(page: Page, scenario: Scenario) {
+export async function ready(page: Page, scenario: Scenario) {
   if (scenario.views.length > 0 && ((await current(page)) as TwoView).phaseTwo?.handlesVisible) return;
   await solve(page, scenario);
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.skipCeremony());
@@ -87,7 +87,7 @@ function fillRow(row: number, word: string) {
 }
 
 /** Where the word's first cell is when one of its letters is in the column. */
-function restingX(view: PhaseTwoTestView, cell: number, pitch: number) {
+export function restingX(view: PhaseTwoTestView, cell: number, pitch: number) {
   return view.column.x + view.column.width / 2 - cell * pitch;
 }
 
@@ -96,11 +96,11 @@ function ceremonyFrames(scenario: Scenario): (Frame & { two: PhaseTwoTestView })
   return scenario.frames!.filter((frame): frame is Frame & { two: PhaseTwoTestView } => frame.two !== null);
 }
 
-function columnGraphics(objects: Drawn[]) {
+export function columnGraphics(objects: Drawn[]) {
   return objects.find((object) => object.kind === 'graphics' && object.triangles.length === 2);
 }
 
-async function popupParts(page: Page) {
+export async function popupParts(page: Page) {
   return (await screen(page)).filter((object) => object.depth === POPUP_DEPTH);
 }
 
@@ -131,7 +131,7 @@ async function arrange(page: Page, order: string[], cells: Record<string, number
   await page.evaluate(({ order, cells }) => (window as unknown as { wordSlide: Hooks }).wordSlide.arrange(order, cells), { order, cells });
 }
 
-function rowOf(view: PhaseTwoTestView, word: string) {
+export function rowOf(view: PhaseTwoTestView, word: string) {
   const row = view.rows.find((candidate) => candidate.word === word);
   if (!row) throw new Error(`No row for ${word}`);
   return row;
@@ -146,7 +146,7 @@ async function tileSize(page: Page) {
   return (await current(page)).layout.tileSize;
 }
 
-async function pitchOf(page: Page) {
+export async function pitchOf(page: Page) {
   return (await tileSize(page)) * 1.08;
 }
 
@@ -221,10 +221,6 @@ async function expectRowMarked(page: Page, row: GameView['layout']['rows'][numbe
 
 Given('LEMUR and ZEBRA are locked', async ({ scenario }) => {
   scenario.setup.push(fillRow(0, 'LEMUR'), fillRow(1, 'ZEBRA'));
-});
-
-Given(/^the player has won level (\d+)$/, async ({ scenario }, level: string) => {
-  scenario.levelNumber = Number(level);
 });
 
 Given('a small screen', async ({ page }) => {
@@ -429,7 +425,14 @@ Then("there's no Recall All button", async ({ page }) => {
 });
 
 Then('no row is marked as selected', async ({ page }) => {
-  expect((await two(page)).rows.filter((row) => row.selected)).toEqual([]);
+  const now = await current(page);
+  if (now.phaseTwo) {
+    expect(now.phaseTwo.rows.filter((row) => row.selected)).toEqual([]);
+    return;
+  }
+  expect(now.markedRow).toBeNull();
+  const wide = (await screen(page)).filter((object) => object.kind === 'rect' && object.stroke === now.colours.highlight && object.width > now.layout.tileSize * 1.5);
+  expect(wide).toEqual([]);
 });
 
 When('the player presses a letter key', async ({ page, scenario }) => {
@@ -847,7 +850,8 @@ When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({
 
 Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected)$/, async ({ page, scenario, $uri }, word: string) => {
   if (!scenario.acted) {
-    if ($uri.includes('story-17')) {
+    // Stories 17 and 11 select a row in phase one, by tapping it.
+    if ($uri.includes('story-17') || $uri.includes('story-11')) {
       scenario.setup.push(async (page) => {
         const { layout } = await current(page);
         const cell = layout.rows.find((row) => row.word === word)!.cells[0];
@@ -1343,18 +1347,19 @@ Then('the gold word ends up alone in the column', async ({ page, scenario }) => 
   expect(last.two!.popup).toBeNull();
 });
 
-async function win(page: Page, scenario: Scenario) {
+export async function win(page: Page, scenario: Scenario) {
   await ready(page, scenario);
   await arrange(page, ['ZEBRA', 'LEMUR', 'KANGAROO'], { ZEBRA: 0, LEMUR: 0, KANGAROO: 0 });
   await dragSlowlyAndRelease(page, 'ZEBRA', 0, -1);
 }
 
-async function waitForPopup(page: Page) {
+export async function waitForPopup(page: Page) {
   await expect.poll(async () => (await two(page)).popup !== null, { timeout: 4000 }).toBe(true);
 }
 
 When('the popup appears', async ({ page, scenario }) => {
-  await win(page, scenario);
+  // "The player has won level N" may have won already.
+  if (scenario.views.length === 0 || !(await two(page)).won) await win(page, scenario);
   await waitForPopup(page);
 });
 
@@ -1371,7 +1376,9 @@ Then('the gold word and the column fade away', async ({ page }) => {
 
 Then('the top of the screen stays', async ({ page, scenario }) => {
   const { layout } = await current(page);
-  expect(layout.topItems).toEqual(scenario.views[0].layout.topItems);
+  // "Stays" means it stays on screen: story 11 (R12) raises the points as the popup appears.
+  const withoutPoints = (items: typeof layout.topItems) => items.map((item) => (item.name === 'points' ? { ...item, text: '' } : item));
+  expect(withoutPoints(layout.topItems)).toEqual(withoutPoints(scenario.views[0].layout.topItems));
   const objects = await screen(page);
   for (const item of layout.topItems) {
     expect(textAt(objects, item.x + item.width / 2, item.y + item.height / 2)?.alpha).toBe(1);

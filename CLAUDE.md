@@ -33,7 +33,8 @@ A themed word puzzle, built with Phaser 3, Vite and TypeScript, aiming at CrazyG
 
 Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find it.
 
-- `npm run dev` serves the game at http://localhost:5173. `?level=N` picks a test level.
+- `npm run dev` serves the game at http://localhost:5173. In development builds only, `?level=N` opens level N as a peek that saves nothing, and `?reset` clears saved progress.
+- Browser tests give the game its levels through `window.wordSlideTestLevels` (see `useLevels` in `tests/browser/steps/story-02.steps.ts`), so they never depend on the prototype's levels.
 - `npm run build` type-checks and builds.
 - `npm run test:logic` runs scenarios without a browser, using Cucumber. Steps are in `tests/logic/steps`.
 - `npm run test:browser` runs scenarios tagged `@browser` in a real browser. Steps are in `tests/browser/steps`.

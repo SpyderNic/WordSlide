@@ -15,7 +15,15 @@ export type BoardEvent =
   | { type: 'hintsReturned'; row: number; letters: string[] }
   | { type: 'phaseOneOver' };
 
-export type DragSource = 'pool' | { row: number; cell: number };
+/** The board after the last change that settled. A drag is never part of it (story 11, R10). */
+export interface BoardSnapshot {
+  rows: { cells: Cell[]; locked: boolean }[];
+  pool: PoolTile[];
+  unlocked: string[];
+  lockedIn: [string, number][];
+}
+
+export type DragSource ='pool' | { row: number; cell: number };
 
 export interface Drag {
   character: string;
@@ -46,6 +54,33 @@ export class Board {
     this.rows = answers.map((answer) => ({ word: answer.word, cells: startingCells(answer), locked: false }));
     this.pool = startingPool(level.answers);
     this.unlocked = answers.map((answer) => answer.word);
+  }
+
+  snapshot(): BoardSnapshot {
+    return structuredClone({
+      rows: this.rows.map((row) => ({ cells: row.cells, locked: row.locked })),
+      pool: this.pool,
+      unlocked: this.unlocked,
+      lockedIn: [...this.lockedIn],
+    });
+  }
+
+  /** A saved board for this level, or null if it doesn't match the level. */
+  static restore(level: Level, snapshot: BoardSnapshot): Board | null {
+    const board = new Board(level);
+    const rows = snapshot?.rows;
+    if (!Array.isArray(rows) || rows.length !== board.rows.length) return null;
+    if (rows.some((row, index) => !Array.isArray(row?.cells) || row.cells.length !== board.rows[index].cells.length)) return null;
+    const saved = structuredClone(snapshot);
+    saved.rows.forEach((row, index) => {
+      board.rows[index].cells = row.cells;
+      board.rows[index].locked = row.locked;
+    });
+    board.pool.splice(0, board.pool.length, ...saved.pool);
+    board.unlocked.splice(0, board.unlocked.length, ...saved.unlocked);
+    saved.lockedIn.forEach(([word, row]) => board.lockedIn.set(word, row));
+    board.phaseOneOver = board.unlocked.length === 0;
+    return board;
   }
 
   countOf(character: string): number {
