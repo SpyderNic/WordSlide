@@ -37,6 +37,17 @@ type Press =
   | { kind: 'slide'; pointerId: number; row: number; startX: number; startPosition: number; position: number; moved: boolean; lastX: number; lastTime: number; speed: number; before: number }
   | { kind: 'reorder'; pointerId: number; row: number; startY: number; startRowY: number; moved: boolean; startOrder: number };
 
+/** What the player may do in phase two. Outside the tutorial, everything (story 12, R2). */
+export interface PhaseTwoRules {
+  handle: (word: string) => boolean;
+  slide: (word: string) => boolean;
+  /** Whether a row lifted by its handle may go to this slot. */
+  slot: (word: string, slot: number) => boolean;
+  keys: () => boolean;
+}
+
+const FREE: PhaseTwoRules = { handle: () => true, slide: () => true, slot: () => true, keys: () => true };
+
 export interface PhaseTwoCallbacks {
   /** The ceremony has finished, or a word or row has settled, and the column spells the word. */
   onWon: () => void;
@@ -85,7 +96,42 @@ export class PhaseTwoView {
     private readonly nextLevelNumber: number | null,
     private readonly callbacks: PhaseTwoCallbacks,
     private layout: LevelLayout,
+    private readonly rules: PhaseTwoRules = FREE,
   ) {}
+
+  // Where the tutorial's hand goes (story 12)
+
+  get ready(): boolean {
+    return this.ceremonyDone;
+  }
+
+  handleCentre(word: string) {
+    const row = this.phase.rows.findIndex((candidate) => candidate.word === word);
+    return { x: this.handleRect().x, y: this.rowY(row) };
+  }
+
+  /** Where one of a word's letters is now, and the column's middle, on the same line. */
+  letterCentre(word: string, cell: number) {
+    const row = this.phase.rows.findIndex((candidate) => candidate.word === word);
+    return { x: this.rowViews[row].container.x + cell * this.pitch, y: this.rowY(row) };
+  }
+
+  get columnCentre() {
+    return this.columnX;
+  }
+
+  get rowPitch() {
+    return this.pitch;
+  }
+
+  /** The top of the column's strip, for the tutorial's text to sit above. */
+  get rowsTopEdge() {
+    return this.rowsTop - this.tile / 2;
+  }
+
+  get phaseState() {
+    return this.phase;
+  }
 
   private measure() {
     const { width, height } = this.scene.scale;
@@ -332,12 +378,13 @@ export class PhaseTwoView {
     }
     if (this.press || !this.ceremonyDone || this.phase.won) return;
     const handle = this.hitHandle(pointer.x, pointer.y);
+    if (handle !== null && !this.rules.handle(this.phase.rows[handle].word)) return;
     if (handle !== null) {
       this.press = { kind: 'reorder', pointerId: pointer.id, row: handle, startY: pointer.y, startRowY: this.rowY(handle), moved: false, startOrder: handle };
       return;
     }
     const row = this.hitRow(pointer.x, pointer.y);
-    if (row === null) return;
+    if (row === null || !this.rules.slide(this.phase.rows[row].word)) return;
     const position = this.phase.rows[row].columnCell;
     this.press = {
       kind: 'slide',
@@ -413,7 +460,7 @@ export class PhaseTwoView {
     view.handle.y = view.container.y;
 
     const slot = Phaser.Math.Clamp(Math.round(position), 0, lastRow);
-    if (slot !== press.row) {
+    if (slot !== press.row && this.rules.slot(this.phase.rows[press.row].word, slot)) {
       this.moveRowView(press.row, slot);
       press.row = slot;
       this.rowViews.forEach((other, index) => {
@@ -476,7 +523,7 @@ export class PhaseTwoView {
       this.callbacks.onNextLevel();
       return;
     }
-    if (!this.ceremonyDone || this.press || this.phase.won) return;
+    if (!this.ceremonyDone || this.press || this.phase.won || !this.rules.keys()) return;
     if (!event.key.startsWith('Arrow')) return;
     event.preventDefault();
 

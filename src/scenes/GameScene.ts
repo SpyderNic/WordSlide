@@ -9,7 +9,9 @@ import { testLevels } from '../levels/testLevels';
 import { createPlatform } from '../platform';
 import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
-import { PhaseTwoView } from './PhaseTwoView';
+import { PhaseTwoView, type PhaseTwoRules } from './PhaseTwoView';
+import { makeGuideText, makeHand, moveHand } from './guide';
+import { tutorialPlan, tutorialStep, type TutorialPlan, type TutorialStep } from '../game/tutorial';
 import { buildPopup } from './popup';
 import { makeTile, paintTile } from './tiles';
 
@@ -21,6 +23,8 @@ const POINTS_PULSE = 1.2;
 const TRAVEL_DEPTH = 8;
 /** Several letters going back to the pool leave this far apart, in milliseconds (story 16, R7). */
 const TRAVEL_STAGGER = 30;
+/** Level 2's outline around the theme sits just above the top of the screen's items (story 12, R12). */
+const TOP_GLOW_DEPTH = 21;
 
 interface Point {
   x: number;
@@ -88,6 +92,13 @@ export class GameScene extends Phaser.Scene {
   private arriving = new Map<string, number>();
   /** Letters flying back to the pool, by letter: their tile's count goes up when they land (story 16, R7). */
   private incoming = new Map<string, number>();
+  /** The tutorial, on a level marked as one (story 12). */
+  private tutorial: TutorialPlan | null = null;
+  private guideText: Phaser.GameObjects.Text | null = null;
+  private hand: Phaser.GameObjects.Container | null = null;
+  private themeGlow: Phaser.GameObjects.Rectangle | null = null;
+  /** What the guide shows now, so a redraw only rebuilds it when it changes. */
+  private guideShown = '';
   /** Pulses and shakes still playing: moving on never cuts them short (D37). */
   private effects: Effect[] = [];
   private pointsText: Phaser.GameObjects.Text | null = null;
@@ -185,6 +196,8 @@ export class GameScene extends Phaser.Scene {
     this.incoming.clear();
     this.arriving.clear();
     this.effects = [];
+    this.clearGuide();
+    this.tutorial = level?.tutorial ? tutorialPlan(level) : null;
     this.press = null;
     this.endDragVisuals();
     this.levelNumber = this.progress.level;
@@ -262,6 +275,7 @@ export class GameScene extends Phaser.Scene {
 
     this.pointsText = null;
     this.layoutNow.topItems.forEach((item) => this.drawTopItem(item));
+    this.updateGuide();
     if (this.allDone) {
       this.fadePoolNow();
       this.allComplete?.destroy(true);
@@ -361,6 +375,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private drawRecall() {
+    // Each tutorial step is dragging only, so there's no Recall All in it (story 12, R10).
+    if (this.tutorial) return;
     const { recall } = this.layoutNow;
     const active = this.board.hasPlacedLetters();
     const { x, y } = centre(recall);
@@ -378,6 +394,8 @@ export class GameScene extends Phaser.Scene {
 
   private onPointerDown(pointer: Phaser.Input.Pointer) {
     if (this.allDone) return;
+    // The hand stops while the player is dragging (story 12, R9).
+    this.hand?.setVisible(false);
     if (this.phaseTwo) {
       this.phaseTwo.onPointerDown(pointer);
       return;
@@ -409,8 +427,10 @@ export class GameScene extends Phaser.Scene {
   private startDrag(press: Press): boolean {
     const { hit } = press;
     let started = false;
-    if (hit.kind === 'pool' && hit.character) started = this.board.pickUpFromPool(hit.character);
-    if (hit.kind === 'cell') started = this.board.pickUpFromCell(hit.row, hit.cell);
+    // In the tutorial, only the step's letters can be picked up, and only from the pool (story 12, R2).
+    const allowed = this.tutorialLetters();
+    if (hit.kind === 'pool' && hit.character && (!allowed || allowed.includes(hit.character))) started = this.board.pickUpFromPool(hit.character);
+    if (hit.kind === 'cell' && !allowed) started = this.board.pickUpFromCell(hit.row, hit.cell);
     if (!started) return false;
     press.dragging = true;
     this.redraw();
@@ -461,6 +481,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onPointerUp(pointer: Phaser.Input.Pointer) {
+    this.time.delayedCall(0, () => this.updateGuide(true));
     if (this.phaseTwo) {
       this.phaseTwo.onPointerUp(pointer);
       return;
@@ -474,9 +495,10 @@ export class GameScene extends Phaser.Scene {
       this.endDragVisuals();
       // A dropped letter travels on from where it was released (story 16, R6).
       const origin = { character: this.board.drag!.character, x: pointer.x, y: pointer.y };
-      if (hit.kind === 'cell') this.act(() => this.board.dropOnCell(hit.row, hit.cell), origin);
+      const target = hit.kind === 'cell' && this.tutorialAllowsCell(hit.row, hit.cell) ? hit : null;
+      if (target) this.act(() => this.board.dropOnCell(target.row, target.cell), origin);
       else this.act(() => this.board.dropAway(), origin);
-    } else if (!press.dead) {
+    } else if (!press.dead && !this.tutorialStepNow()) {
       this.tap(press.hit);
     }
   }
@@ -499,7 +521,118 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (event.key === 'Backspace' || event.key.startsWith('Arrow')) event.preventDefault();
+    if (this.tutorialStepNow()) return;
     this.act(() => this.board.key(event.key));
+  }
+
+  // The tutorial (story 12)
+
+  private tutorialStepNow(): TutorialStep | null {
+    if (!this.tutorial) return null;
+    return tutorialStep(this.tutorial, this.board, this.phaseTwo?.phaseState ?? null);
+  }
+
+  /** The empty cells the current step fills. */
+  private tutorialCells(): { row: number; cell: number }[] | null {
+    const step = this.tutorialStepNow();
+    if (step === 1) return this.tutorial!.first.cells.map((cell) => ({ row: this.tutorial!.first.row, cell }));
+    if (step === 2) {
+      return this.board.rows.flatMap((row, rowIndex) => row.cells.flatMap((cell, cellIndex) => (cell.kind === 'empty' ? [{ row: rowIndex, cell: cellIndex }] : [])));
+    }
+    return null;
+  }
+
+  /** The letters the current step uses: the answers' letters for its cells. Null outside the tutorial. */
+  private tutorialLetters(): string[] | null {
+    const cells = this.tutorialCells();
+    if (!this.tutorialStepNow()) return null;
+    return (cells ?? []).map(({ row, cell }) => Array.from(this.board.rows[row].word)[cell]);
+  }
+
+  private tutorialAllowsCell(row: number, cell: number): boolean {
+    const cells = this.tutorialCells();
+    if (!this.tutorialStepNow()) return true;
+    return (cells ?? []).some((target) => target.row === row && target.cell === cell);
+  }
+
+  private phaseTwoRules(): PhaseTwoRules {
+    const step = () => this.tutorialStepNow();
+    const plan = this.tutorial;
+    return {
+      handle: (word) => !step() || (step() === 3 && word === plan!.move.word),
+      slide: (word) => !step() || (step() === 4 && word === plan!.slide.word),
+      slot: (word, slot) => !step() || (word === plan!.move.word && Math.sign(slot - plan!.move.from) === Math.sign(plan!.move.to - plan!.move.from)),
+      keys: () => !step(),
+    };
+  }
+
+  private clearGuide() {
+    this.guideText?.destroy();
+    this.guideText = null;
+    if (this.hand) this.tweens.killTweensOf(this.hand);
+    this.hand?.destroy(true);
+    this.hand = null;
+    if (this.themeGlow) this.tweens.killTweensOf(this.themeGlow);
+    this.themeGlow?.destroy();
+    this.themeGlow = null;
+    this.guideShown = '';
+  }
+
+  /** The text, the hand and level 2's tip for where the player is now. Rebuilt only when that changes. */
+  private updateGuide(force = false) {
+    const step = this.tutorialStepNow();
+    const view = this.phaseTwo;
+    const afterTutorial = this.levels[this.levelNumber - 2]?.tutorial === true && !this.tutorial && !view && !this.allDone;
+    const tip = afterTutorial && !this.board.rows.some((row) => row.locked);
+    const waiting = view && !view.ready;
+    const shown = waiting ? 'ceremony' : step ? `step ${step}` : tip ? 'tip' : '';
+    if (!force && shown === this.guideShown && this.guideText?.active !== false) {
+      this.guideText?.setDepth(this.guideText.depth);
+      return;
+    }
+    this.clearGuide();
+    this.guideShown = shown;
+    if (!shown || shown === 'ceremony') return;
+
+    const texts: Record<string, string> = {
+      'step 1': 'Drag a letter to complete a word',
+      'step 2': 'Finish the grid!',
+      'step 3': 'To find the vertical final word, you can reorder the words',
+      'step 4': 'You can drag words side to side to find the word, try it!',
+      tip: 'All words in a level relate to a theme.',
+    };
+    const layout = this.layoutNow;
+    const rowsTop = view ? view.rowsTopEdge : layout.rows[0].cells[0].y;
+    const y = (layout.top.height + rowsTop) / 2;
+    this.guideText = makeGuideText(this, texts[shown], layout.width / 2, y, layout.tileSize * 0.42, layout.width * 0.9);
+
+    if (shown === 'tip') {
+      const theme = layout.topItems.find((item) => item.name === 'theme')!;
+      this.themeGlow = this.add
+        .rectangle(theme.x + theme.width / 2, theme.y + theme.height / 2, theme.width + 8, theme.height + 4)
+        .setStrokeStyle(3, colours.highlight)
+        .setDepth(TOP_GLOW_DEPTH);
+      this.tweens.add({ targets: this.themeGlow, alpha: 0.3, duration: timings.themeGlow, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      return;
+    }
+
+    const plan = this.tutorial!;
+    let from: { x: number; y: number } | null = null;
+    let to: { x: number; y: number } | null = null;
+    if (step === 1) {
+      const tile = layout.poolTiles.find((candidate) => candidate.character === plan.first.letters[0]);
+      if (tile) from = centre(tile);
+      to = centre(layout.rows[plan.first.row].cells[plan.first.cells[0]]);
+    } else if (step === 3 && view) {
+      from = view.handleCentre(plan.move.word);
+      to = { x: from.x, y: from.y + (plan.move.to - plan.move.from) * view.rowPitch };
+    } else if (step === 4 && view) {
+      from = view.letterCentre(plan.slide.word, plan.slide.cell);
+      to = { x: view.columnCentre, y: from.y };
+    }
+    if (!from || !to) return;
+    this.hand = makeHand(this, layout.tileSize);
+    moveHand(this, this.hand, from, to);
   }
 
   // Letters travelling (story 16, R6 and R7)
@@ -644,6 +777,7 @@ export class GameScene extends Phaser.Scene {
         onNextLevel: () => this.nextLevel(),
       },
       this.layoutNow,
+      this.phaseTwoRules(),
     );
     this.phaseTwo = view;
 
@@ -653,7 +787,10 @@ export class GameScene extends Phaser.Scene {
     else this.tweens.add({ targets: pool, alpha: 0, duration: timings.ceremony, onComplete: () => pool.forEach((object) => object.destroy()) });
 
     this.redraw();
-    const finished = () => view.checkInstantWin();
+    const finished = () => {
+      view.checkInstantWin();
+      this.updateGuide(true);
+    };
     view.setPendingFinish(finished);
     view.playCeremony(from, finished);
     if (reopening) view.skipCeremony();
@@ -661,6 +798,8 @@ export class GameScene extends Phaser.Scene {
 
   /** Saved before the celebration, so closing during it loses nothing (story 11, R5). */
   private won(view: PhaseTwoView) {
+    this.clearGuide();
+    this.guideShown = 'won';
     this.progress = winLevel(this.progress);
     this.save();
     view.celebrate();

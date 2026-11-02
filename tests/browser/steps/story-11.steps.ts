@@ -7,7 +7,7 @@ import { test, type GameView, type Scenario } from './fixtures';
 import { installProbe, screen, startRecording, stopRecording, type Drawn, type Frame } from './probe';
 import { columnGraphics, openLevel, pitchOf, popupParts, ready, restingX, solve, two, waitForPopup, win } from './phase-two.steps';
 import { watchErrors } from './foundation.steps';
-import { current, useLevels } from './story-02.steps';
+import { current, useLevelList, useLevels } from './story-02.steps';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -19,10 +19,11 @@ function prepareLevel(scenario: Scenario) {
 }
 
 /** Loads the game as a player would: from saved progress, not from a test hook. */
-async function openGame(page: Page, scenario: Scenario, address = '/') {
+export async function openGame(page: Page, scenario: Scenario, address = '/') {
   prepareLevel(scenario);
   if (!scenario.levelsGiven) {
-    await useLevels(page, scenario.level, scenario.levelCount);
+    if (scenario.levelList) await useLevelList(page, scenario.levelList);
+    else await useLevels(page, scenario.level, scenario.levelCount);
     scenario.levelsGiven = true;
   }
   await page.goto(address);
@@ -87,7 +88,7 @@ Given('the player is on the last level', async ({ scenario }) => {
 });
 
 // Given and Then share this text: before the game opens it sets the points, after that it checks the saved total.
-Given(/^the player has (\d+) points in total$/, async ({ page, scenario }, points: string) => {
+Given(/^the player has (\d+) points? in total$/, async ({ page, scenario }, points: string) => {
   if (scenario.views.length === 0) scenario.points = Number(points);
   else await expect.poll(() => savedPoints(page)).toBe(Number(points));
 });
@@ -112,7 +113,11 @@ Then("there's no way to reach level 6", async ({ page, scenario }) => {
   expect((await view(page)).phaseTwo).toBeNull();
 });
 
-Given(/^the player has won level (\d+)$/, async ({ page, scenario }, level: string) => {
+Given(/^the player has won level (\d+)$/, async ({ page, scenario, $uri }, level: string) => {
+  if ($uri.includes('story-12')) {
+    scenario.wonTutorial = true;
+    return;
+  }
   await wonLevel(page, scenario, Number(level));
 });
 
@@ -174,7 +179,14 @@ Then(/^level 5 appears with a fade of about 0\.3 seconds$/, async ({ page, scena
   expect(after.every((sample) => sample.alpha === 0 || !sample.running)).toBe(true);
 });
 
-Then(/^level (\d+) opens$/, async ({ page }, level: string) => {
+// In story 12, this opens the level after the tutorial, as a player who has won level 1 would.
+Then(/^level (\d+) opens$/, async ({ page, scenario, $uri }, level: string) => {
+  if ($uri.includes('story-12') && scenario.views.length === 0) {
+    await openGame(page, scenario);
+    await page.evaluate(({ key, text }) => localStorage.setItem(key, text), { key: SAVE_KEY, text: writeProgress({ level: Number(level), points: Number(level) - 1, inLevel: null }) });
+    scenario.views = [];
+    await openGame(page, scenario);
+  }
   expect((await view(page)).levelNumber).toBe(Number(level));
   expect((await view(page)).phaseTwo).toBeNull();
 });

@@ -14,8 +14,14 @@ export async function useLevels(page: Page, level: Level, count: number) {
   await page.addInitScript((levels) => Object.assign(window, { wordSlideTestLevels: levels }), Array.from({ length: count }, () => level));
 }
 
-export async function open(page: Page, level: Level, levelNumber: number, points: number, levelCount = 12): Promise<GameView> {
-  await useLevels(page, level, Math.max(levelCount, levelNumber));
+/** Gives the game a list of different levels, from the next page load on. Development builds only. */
+export async function useLevelList(page: Page, levels: Level[]) {
+  await page.addInitScript((list) => Object.assign(window, { wordSlideTestLevels: list }), levels);
+}
+
+export async function open(page: Page, level: Level, levelNumber: number, points: number, levelCount = 12, list?: Level[]): Promise<GameView> {
+  if (list) await useLevelList(page, list);
+  else await useLevels(page, level, Math.max(levelCount, levelNumber));
   await page.goto('/');
   await page.waitForFunction(() => (window as unknown as { wordSlideReady?: boolean }).wordSlideReady === true);
   await installProbe(page);
@@ -152,7 +158,7 @@ Given('the level is open on a screen of 800×450', async ({ page, scenario }) =>
 });
 
 When('the level opens', async ({ page, scenario }) => {
-  scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points));
+  scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points, scenario.levelCount, scenario.levelList));
 });
 
 When(/^each level opens(?: on the same screen)?$/, async ({ page, scenario }) => {

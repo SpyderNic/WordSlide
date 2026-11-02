@@ -22,6 +22,9 @@ export const woodAndBrass: Style = {
   timings: {
     letterTravel: 150,
     lockPulseGrow: 150,
+    handMove: 1000,
+    handPause: 600,
+    themeGlow: 900,
     lockPulseShrink: 200,
     wrongShake: 300,
     alreadyFound: 1400,

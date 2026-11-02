@@ -25,6 +25,11 @@ export interface Style {
     letterTravel: number;
     /** A locking tile grows, takes its new colour at its biggest, then shrinks back (D37). */
     lockPulseGrow: number;
+    /** The tutorial's hand glides for handMove, then pauses for handPause, and repeats (story 12, R9). */
+    handMove: number;
+    handPause: number;
+    /** One brightening and dimming of level 2's outline around the theme (story 12, R12). */
+    themeGlow: number;
     lockPulseShrink: number;
     wrongShake: number;
     alreadyFound: number;

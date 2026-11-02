@@ -46,7 +46,7 @@ export async function openLevel(page: Page, scenario: Scenario) {
         scenario.level.finalWord = unsolvedFinalWord(scenario.level.answers.map((answer) => answer.word));
       }
     }
-    scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points, scenario.levelCount));
+    scenario.views.push(await open(page, scenario.level, scenario.levelNumber, scenario.points, scenario.levelCount, scenario.levelList));
   }
   for (const step of scenario.setup.splice(0)) await step(page);
 }
@@ -127,7 +127,7 @@ function goldLetters(frames: Frame[], gold: number) {
   return [...found.values()];
 }
 
-async function arrange(page: Page, order: string[], cells: Record<string, number>) {
+export async function arrange(page: Page, order: string[], cells: Record<string, number>) {
   await page.evaluate(({ order, cells }) => (window as unknown as { wordSlide: Hooks }).wordSlide.arrange(order, cells), { order, cells });
 }
 
@@ -151,7 +151,7 @@ export async function pitchOf(page: Page) {
 }
 
 /** Where a word's cell is on screen right now. */
-async function pointOnWord(page: Page, word: string, cell: number) {
+export async function pointOnWord(page: Page, word: string, cell: number) {
   const view = await two(page);
   const row = rowOf(view, word);
   const pitch = await pitchOf(page);
@@ -174,7 +174,7 @@ async function settle(page: Page) {
   await page.waitForTimeout(350);
 }
 
-async function dragSlowlyAndRelease(page: Page, word: string, cell: number, cells: number) {
+export async function dragSlowlyAndRelease(page: Page, word: string, cell: number, cells: number) {
   await dragWord(page, word, cell, cells);
   await page.waitForTimeout(200);
   await page.mouse.up();
@@ -441,6 +441,11 @@ When('the player presses a letter key', async ({ page, scenario }) => {
 });
 
 Then('nothing changes', async ({ page, scenario }) => {
+  const now = await current(page);
+  if (!now.phaseTwo && scenario.before) {
+    expect(now.layout).toEqual(scenario.before.layout);
+    return;
+  }
   expect(await two(page)).toEqual(scenario.twoBefore);
 });
 
@@ -840,7 +845,14 @@ When('the player quickly presses Up, then Down', async ({ page, scenario }) => {
   await page.waitForTimeout(50);
 });
 
-When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({ page, scenario }, key: string) => {
+When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({ page, scenario, $uri }, key: string) => {
+  if ($uri.includes('story-12')) {
+    await openLevel(page, scenario);
+    scenario.before = await current(page);
+    await page.keyboard.press(`Arrow${key}`);
+    await page.waitForTimeout(300);
+    return;
+  }
   await ready(page, scenario);
   scenario.twoBefore = await two(page);
   scenario.acted = true;
@@ -1265,6 +1277,12 @@ function plan(scenario: Scenario, text: string, rows: string[], cells: Record<st
 When(/^the column (?:reads|spells) (.+?)(?: from top to bottom)?$/, async ({ page, scenario, $uri }, text: string) => {
   await ready(page, scenario);
   const key = text === 'the final word' ? 'ELK' : text.split(', ').join('');
+  if ($uri.includes('story-12') && key === 'OX') {
+    await arrange(page, ['OWL', 'FOX'], { OWL: 0, FOX: 1 });
+    await startRecording(page);
+    await dragSlowlyAndRelease(page, 'FOX', 1, -1);
+    return;
+  }
   // Only story 10 uses this as an action. Everywhere else it's a check, and must never arrange anything.
   if (!$uri.includes('story-10')) {
     expect((await two(page)).columnText).toBe(key);

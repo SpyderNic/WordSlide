@@ -15,6 +15,8 @@ export interface Level {
   theme: string;
   answers: Answer[];
   finalWord: string;
+  /** Level 1 is a strict tutorial (story 12, D43). */
+  tutorial?: boolean;
 }
 
 export interface PoolTile {

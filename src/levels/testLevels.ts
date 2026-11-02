@@ -4,13 +4,15 @@ import type { Level } from '../game/level';
 export const testLevels: Level[] = [
   {
     theme: 'Animals',
-    answers: [{ word: 'ZEBRA' }, { word: 'LEMUR' }, { word: 'KANGAROO' }],
-    finalWord: 'ELK',
+    // Level 1 walks the player through the game (story 12, D43).
+    tutorial: true,
+    answers: [{ word: 'FOX', revealed: [{ position: 1, letter: 'F' }, { position: 2, letter: 'O' }] }, { word: 'OWL', revealed: [{ position: 1, letter: 'O' }, { position: 3, letter: 'L' }] }],
+    finalWord: 'OX',
   },
   {
     theme: 'Animals',
-    answers: [{ word: 'FOX', revealed: [{ position: 1, letter: 'F' }, { position: 2, letter: 'O' }] }, { word: 'OWL', revealed: [{ position: 1, letter: 'O' }, { position: 3, letter: 'L' }] }],
-    finalWord: 'OX',
+    answers: [{ word: 'ZEBRA' }, { word: 'LEMUR' }, { word: 'KANGAROO' }],
+    finalWord: 'ELK',
   },
   {
     theme: 'Food',

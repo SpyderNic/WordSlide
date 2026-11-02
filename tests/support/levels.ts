@@ -18,6 +18,16 @@ export function makeLevel(words: string[], finalWord?: string): Level {
   };
 }
 
+/** The designer's sample tutorial level (story 12): F O _ and O _ L, spelling OX. */
+export function tutorialLevel(): Level {
+  const level: Level = { ...makeLevel(['FOX', 'OWL'], 'OX'), tutorial: true };
+  reveal(level, 'FOX', 'F', 1);
+  reveal(level, 'FOX', 'O', 2);
+  reveal(level, 'OWL', 'O', 1);
+  reveal(level, 'OWL', 'L', 3);
+  return level;
+}
+
 export function levelWithRows(rows: number): Level {
   return makeLevel(SPARE_WORDS.slice(0, rows));
 }

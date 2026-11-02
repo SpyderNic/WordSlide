@@ -28,6 +28,10 @@ export interface Scenario {
   /** How many levels the game is given: copies of the scenario's level. */
   levelCount: number;
   levelsGiven?: boolean;
+  /** Different levels for the game to play in order, instead of copies of one (story 12). */
+  levelList?: Level[];
+  wonTutorial?: boolean;
+  handPath?: { t: number; x: number; y: number }[];
   /** Set once the game has closed and opened again. */
   reopened?: boolean;
   fadeSamples?: { t: number; alpha: number; running: boolean }[];

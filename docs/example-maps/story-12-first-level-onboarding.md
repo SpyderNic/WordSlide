@@ -1,6 +1,6 @@
 # Story 12: First-level tutorial
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-12-first-level-tutorial.feature](../../features/story-12-first-level-tutorial.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-12-first-level-tutorial.feature](../../features/story-12-first-level-tutorial.feature). Built on 2026-11-02.
 
 *As a new player, I want the first level to walk me through each step, so that I understand the game within a minute without reading instructions.*
 
@@ -100,6 +100,7 @@ It pauses briefly between repeats, and it stops while the player is dragging.
 *Changed by the designer.* Each step is dragging only.
 
 - 🟩 In step 1, pressing `X` does nothing
+- 🟩 In step 1, tapping the X in the pool does nothing (added while building, as the rule says each step is dragging only)
 - 🟩 Level 1 shows no Recall All button at any point
 
 **Confirmed:** ☑
@@ -150,3 +151,19 @@ This is a requirement on story 15. It needs two steps of filling, and a final wo
 ### 🟥 Q6. Does the tutorial teach the theme?
 
 **Answer:** Not in level 1. Level 2 highlights the theme, with text saying something like "All words in a level relate to a theme." (R12).
+
+### 🟥 Q7. Where does the tutorial level go among the playtest levels?
+
+**Answer:** First. The FOX and OWL sample, already one of the three playtest levels, becomes level 1, and the other two follow. The level is marked as the tutorial in its data, so a final tutorial level can replace it later.
+
+### 🟥 Q8. What's the tutorial level's theme?
+
+**Answer:** Animals.
+
+### 🟥 Q9. How does the hand look?
+
+**Answer:** A simple pointing hand, drawn in code. It glides from its start to its target in about 1 second, pauses about 0.6 seconds, and repeats. The timings live in the style file.
+
+### 🟥 Q10. How does level 2 highlight the theme?
+
+**Answer:** A gently pulsing outline around it, in the highlight colour, until the first word locks (R12).

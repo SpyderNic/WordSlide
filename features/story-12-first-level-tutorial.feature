@@ -3,6 +3,7 @@
 # These scenarios use the designer's sample level, which isn't final: the
 # answers FOX and OWL, the final word OX, starting as F O _ and O _ L.
 
+@browser
 Feature: First-level tutorial
   As a new player
   I want the first level to walk me through each step
@@ -147,6 +148,10 @@ Feature: First-level tutorial
     Scenario: There's no Recall All button
       When the player finishes step 1
       Then there's no Recall All button
+
+    Scenario: Tapping a letter does nothing
+      When the player taps the X in the pool
+      Then nothing changes
 
     Scenario Outline: Keys do nothing
       When the player presses <key>
