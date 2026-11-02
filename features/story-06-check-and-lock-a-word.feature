@@ -266,6 +266,19 @@ Feature: Check and lock a word
       Then each tile and its letter keep their centre while they pulse
 
     @browser
+    Scenario: Typing on doesn't cut a pulse short
+      Given a level containing the answer HOT DOG
+      And HOT DOG's row is selected
+      When the player types H, O, T and then D straight away
+      Then HOT's tiles grow 15% and shrink back, without being cut short
+
+    @browser
+    Scenario: Typing on doesn't cut a shake short
+      Given the top row is selected
+      When the player types LEMAR and then Z straight away
+      Then the top row shakes for the whole shake, without being cut short
+
+    @browser
     Scenario: A part pulses the same way
       Given a level containing the answer HOT DOG
       When the player places H, O and T in the first three cells of HOT DOG's row

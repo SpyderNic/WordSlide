@@ -126,6 +126,7 @@ Feature: Visual style
     Scenario: Words slide under the column's sides
       Given phase two has started
       Then the column's sides are drawn above the words
+      And so is its glass line
       And its tinted strip is drawn behind them
 
     Scenario: The prototype needs no image files

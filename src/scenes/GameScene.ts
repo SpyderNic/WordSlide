@@ -27,6 +27,11 @@ interface Point {
   y: number;
 }
 
+/** A pulse or a shake that's still playing, so a redraw can carry it on with the new tiles. */
+type Effect =
+  | { kind: 'pulse'; row: number; cells: number[]; before: Cell['kind'][]; start: number }
+  | { kind: 'shake'; row: number; cells: number[]; start: number };
+
 /** The letter in a cell, if it holds one. */
 function letterIn(cell: Cell): string | null {
   return cell.kind === 'placed' || cell.kind === 'revealed' || cell.kind === 'locked' ? cell.character : null;
@@ -83,6 +88,8 @@ export class GameScene extends Phaser.Scene {
   private arriving = new Map<string, number>();
   /** Letters flying back to the pool, by letter: their tile's count goes up when they land (story 16, R7). */
   private incoming = new Map<string, number>();
+  /** Pulses and shakes still playing: moving on never cuts them short (D37). */
+  private effects: Effect[] = [];
   private pointsText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
@@ -177,6 +184,7 @@ export class GameScene extends Phaser.Scene {
     this.allDone = false;
     this.incoming.clear();
     this.arriving.clear();
+    this.effects = [];
     this.press = null;
     this.endDragVisuals();
     this.levelNumber = this.progress.level;
@@ -267,6 +275,7 @@ export class GameScene extends Phaser.Scene {
     this.layoutNow.rows.forEach((row, index) => row.cells.forEach((cell, cellIndex) => this.drawCell(cell, index, cellIndex, row.locked)));
     this.layoutNow.poolTiles.forEach((tile) => this.drawPoolTile(tile));
     this.drawRecall();
+    this.replayEffects();
   }
 
   private keep<T extends Phaser.GameObjects.GameObject>(object: T): T {
@@ -675,6 +684,26 @@ export class GameScene extends Phaser.Scene {
    * then shrink back (D37). They're drawn locked already, so they show their old colours while they grow.
    */
   private pulse(row: number, cells: number[], before: Cell['kind'][], wait = 0) {
+    const effect: Effect = { kind: 'pulse', row, cells, before, start: this.time.now + wait };
+    this.effects.push(effect);
+    this.playPulse(effect);
+  }
+
+  /** A redraw makes new tiles: each pulse or shake still playing carries on with them, from where it had got to. */
+  private replayEffects() {
+    const { lockPulseGrow, lockPulseShrink, wrongShake } = timings;
+    this.effects = this.effects.filter((effect) => this.time.now < effect.start + (effect.kind === 'pulse' ? lockPulseGrow + lockPulseShrink : wrongShake));
+    for (const effect of this.effects) {
+      if (effect.kind === 'pulse') this.playPulse(effect);
+      else this.playShake(effect);
+    }
+  }
+
+  private playPulse({ row, cells, before, start }: Extract<Effect, { kind: 'pulse' }>) {
+    const grow = timings.lockPulseGrow;
+    const shrink = timings.lockPulseShrink;
+    const peak = currentStyle.pulseScale;
+    const elapsed = this.time.now - start;
     const targets: CellPart[] = [];
     const finish: (() => void)[] = [];
     cells.forEach((cell, index) => {
@@ -692,29 +721,42 @@ export class GameScene extends Phaser.Scene {
         }
       }
     });
+    const shrinkBack = (from: number) => {
+      finish.forEach((step) => step());
+      targets.forEach((part) => part.setScale(from));
+      this.tweens.add({ targets, scale: 1, duration: grow + shrink - Math.max(elapsed, grow), ease: 'Sine.easeIn' });
+    };
+    if (elapsed >= grow) {
+      shrinkBack(peak - ((peak - 1) * (elapsed - grow)) / shrink);
+      return;
+    }
+    targets.forEach((part) => part.setScale(1 + ((peak - 1) * Math.max(elapsed, 0)) / grow));
     this.tweens.add({
       targets,
-      scale: currentStyle.pulseScale,
-      delay: wait,
-      duration: timings.lockPulseGrow,
+      scale: peak,
+      delay: Math.max(-elapsed, 0),
+      duration: grow - Math.max(elapsed, 0),
       ease: 'Sine.easeOut',
-      onComplete: () => {
-        finish.forEach((step) => step());
-        this.tweens.add({ targets, scale: 1, duration: timings.lockPulseShrink, ease: 'Sine.easeIn' });
-      },
+      onComplete: () => shrinkBack(peak),
     });
   }
 
   /** Only the letters that didn't lock move. Locked parts and special characters stay still (D37). */
   private shake(row: number, wait = 0) {
-    const moving = this.board.rows[row].cells.flatMap((cell, index) =>
-      cell.kind === 'locked' || cell.kind === 'special' ? [] : (this.cellObjects.get(`${row}:${index}`) ?? []),
-    );
+    const cells = this.board.rows[row].cells.flatMap((cell, index) => (cell.kind === 'locked' || cell.kind === 'special' ? [] : [index]));
+    const effect: Effect = { kind: 'shake', row, cells, start: this.time.now + wait };
+    this.effects.push(effect);
+    this.playShake(effect);
+  }
+
+  private playShake({ row, cells, start }: Extract<Effect, { kind: 'shake' }>) {
+    const elapsed = this.time.now - start;
+    const moving = cells.flatMap((cell) => this.cellObjects.get(`${row}:${cell}`) ?? []);
     this.tweens.add({
       targets: moving,
       x: `+=${SHAKE_DISTANCE}`,
-      delay: wait,
-      duration: timings.wrongShake / 4,
+      delay: Math.max(-elapsed, 0),
+      duration: (timings.wrongShake - Math.max(elapsed, 0)) / 4,
       yoyo: true,
       repeat: 1,
     });

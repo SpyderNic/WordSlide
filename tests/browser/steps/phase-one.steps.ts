@@ -737,6 +737,8 @@ When("the player places D, O and G in the last three cells of HOT DOG's row", as
   const { layout } = await current(page);
   const row = rowOf(layout, 'HOT DOG');
   scenario.pulse = { row, cells: lastPart(layout, row) };
+  // HOT's own pulse, from locking, plays to the end first (it's never cut short).
+  await page.waitForTimeout(700);
   await startRecording(page);
   for (const [index, cell] of lastPart(layout, row).entries()) await placeLetter(row, cell, 'DOG'[index])(page);
   await page.waitForTimeout(600);
@@ -897,4 +899,64 @@ Then("only HON's tiles shake", async ({ page, scenario }) => {
   const space = centreOf(layout.rows[row].cells[3]);
   const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => object.depth !== 8 && object.kind !== 'bevel' && Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
   expect(atSpace.every((object) => Math.abs(object.x - space.x) < 0.5)).toBe(true);
+});
+
+// Moving on never cuts a pulse or a shake short (from playing milestone 5)
+
+Given("HOT DOG's row is selected", async ({ scenario }) => {
+  scenario.setup.push(async (page) => {
+    const { layout } = await current(page);
+    const { x, y } = centreOf(layout.rows[rowOf(layout, 'HOT DOG')].cells[0]);
+    await page.mouse.click(x, y);
+  });
+});
+
+Given('the top row is selected', async ({ scenario }) => {
+  scenario.setup.push(async (page) => {
+    const { layout } = await current(page);
+    const { x, y } = centreOf(layout.rows[0].cells[0]);
+    await page.mouse.click(x, y);
+  });
+});
+
+async function typeQuickly(page: Page, scenario: Scenario, keys: string) {
+  await ready(page, scenario);
+  await startRecording(page);
+  for (const key of keys) await page.keyboard.press(key);
+  await page.waitForTimeout(900);
+  scenario.frames = await stopRecording(page);
+}
+
+When('the player types H, O, T and then D straight away', async ({ page, scenario }) => {
+  await typeQuickly(page, scenario, 'hotd');
+});
+
+Then("HOT's tiles grow 15% and shrink back, without being cut short", async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const row = rowOf(layout, 'HOT DOG');
+  for (const samples of pulseSamples(scenario.frames!, layout, row, firstPart(layout, row))) {
+    expect(Math.max(...samples.map((sample) => sample.scale))).toBeGreaterThan(1.13);
+    expect(samples[samples.length - 1].scale).toBe(1);
+    // A pulse cut short drops straight back to its size: a real one shrinks over 0.2 seconds.
+    samples.slice(1).forEach((sample, index) => expect(samples[index].scale - sample.scale).toBeLessThan(0.05));
+  }
+});
+
+When('the player types LEMAR and then Z straight away', async ({ page, scenario }) => {
+  await typeQuickly(page, scenario, 'lemarz');
+});
+
+Then('the top row shakes for the whole shake, without being cut short', async ({ page, scenario }) => {
+  const { layout } = await current(page);
+  const left = centreOf(layout.rows[0].cells[0]).x;
+  const y = centreOf(layout.rows[0].cells[0]).y;
+  // Letters still landing are drawn at depth 8: they aren't the row's tiles.
+  const offsets = scenario.frames!.map((frame) => {
+    const tiles = frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && object.depth !== 8 && Math.abs(object.y - y) < 2);
+    return { t: frame.t, offset: tiles.length ? Math.min(...tiles.map((tile) => tile.x)) - left : 0 };
+  });
+  const shaking = offsets.filter((sample) => Math.abs(sample.offset) > 0.5);
+  expect(shaking.length).toBeGreaterThan(3);
+  expect(shaking[shaking.length - 1].t - shaking[0].t).toBeGreaterThan(200);
+  expect(offsets[offsets.length - 1].offset).toBeCloseTo(0);
 });

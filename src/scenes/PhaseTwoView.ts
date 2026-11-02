@@ -172,10 +172,8 @@ export class PhaseTwoView {
     this.column
       .clear()
       .fillStyle(colours.column, 0.45)
-      .fillRect(left, top, right - left, bottom - top)
-      // A sheen down the strip, so it reads as brass (story 16, R8).
-      .fillStyle(0xffffff, 0.18)
-      .fillRect(left + pad, top + pad, Math.max(2, this.tile * 0.06), bottom - top - pad * 2);
+      .fillRect(left, top, right - left, bottom - top);
+    const glass = left + pad * 2;
     this.columnSides
       .clear()
       .lineStyle(3, colours.column)
@@ -183,6 +181,9 @@ export class PhaseTwoView {
       .lineBetween(right, top, right, bottom)
       .lineBetween(left, top, right, top)
       .lineBetween(left, bottom, right, bottom)
+      // A grey sheen down the column, like glass, above the letters too (story 16, R8).
+      .lineStyle(Math.max(2, this.tile * 0.06), 0xffffff, 0.25)
+      .lineBetween(glass, top + pad, glass, bottom - pad)
       .fillStyle(colours.column)
       .fillTriangle(this.columnX - notch, top - notch, this.columnX + notch, top - notch, this.columnX, top)
       .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom);

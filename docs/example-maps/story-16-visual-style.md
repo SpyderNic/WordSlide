@@ -81,10 +81,10 @@ This covers Recall All, Backspace and hinted letters going back (D9). When sever
 
 - 🟩 The column's strip and notches look like brass
 
-The palette is "honey oak": today's colours, refined, with green for locked letters and gold for the win. Each tile has a soft bevel, lighter top and left edges and darker bottom and right edges, so it looks raised, like a carved wooden block. The column has a sheen line, and its two brass sides are drawn above the words, so letters slide under them like a real cryptex; its tinted strip stays behind the letters (Q7, Q9, Q11, Q12).
+The palette is "honey oak": today's colours, refined, with green for locked letters and gold for the win. Each tile has a soft bevel, lighter top and left edges and darker bottom and right edges, so it looks raised, like a carved wooden block. The column has a grey sheen line, like glass, and its two brass sides; both are drawn above the words, so letters slide under them like a real cryptex. Its tinted strip stays behind the letters (Q7, Q9, Q11, Q12, Q14).
 
 - 🟩 A placed tile's top and left edges are lighter than it, and its bottom and right edges darker
-- 🟩 A word sliding through the column passes under its sides
+- 🟩 A word sliding through the column passes under its sides and its glass line
 
 **Confirmed:** ☑
 
@@ -151,3 +151,7 @@ The palette is "honey oak": today's colours, refined, with green for locked lett
 ### 🟥 Q13. When does a pool count change?
 
 *From playing milestone 5.* **Answer:** A letter going back adds to the count when it lands on its tile. A letter leaving lowers it as it leaves, as picking up a tile does (R7).
+
+### 🟥 Q14. Is the column's glass line above the words too?
+
+*From playing milestone 5.* **Answer:** Yes, like its sides (R8).

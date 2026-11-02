@@ -136,6 +136,7 @@ What that looks like is story 7.
 - 🟩 When LEMUR locks, its row pulses, and all 5 tiles turn the locked colour
 - 🟩 LEMUR's tiles keep their colour while they grow, and take the locked colour at their biggest
 - 🟩 Each tile and its letter keep their centre while they pulse
+- 🟩 Typing on while a part or word pulses doesn't cut the pulse short, and the same goes for the wrong-word shake (from playing milestone 5)
 
 **Confirmed:** ☑
 

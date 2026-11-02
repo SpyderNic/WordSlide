@@ -398,3 +398,12 @@ Then('the Z tile shows x0 straight away', async ({ page }) => {
   expect(await travelling(page, 'Z')).toBe(true);
   expect(await shownCount(page, 'Z')).toBe('x0');
 });
+
+Then('so is its glass line', async ({ page }) => {
+  const objects = await screen(page);
+  const sides = objects.find((object) => object.kind === 'graphics' && object.triangles.length === 2)!;
+  const upright = sides.lines.filter((line) => Math.abs(line.x1 - line.x2) < 0.5 && Math.abs(line.y2 - line.y1) > 40).map((line) => line.x1);
+  const [left, right] = [Math.min(...upright), Math.max(...upright)];
+  // A third upright line, inside the column rather than on its edges.
+  expect(upright.some((x) => x > left + 2 && x < right - 2)).toBe(true);
+});
