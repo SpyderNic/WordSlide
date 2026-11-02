@@ -498,7 +498,7 @@ export class GameScene extends Phaser.Scene {
       const target = hit.kind === 'cell' && this.tutorialAllowsCell(hit.row, hit.cell) ? hit : null;
       if (target) this.act(() => this.board.dropOnCell(target.row, target.cell), origin);
       else this.act(() => this.board.dropAway(), origin);
-    } else if (!press.dead && !this.tutorialStepNow()) {
+    } else if (!press.dead && this.tutorialAllowsTap(press.hit)) {
       this.tap(press.hit);
     }
   }
@@ -521,7 +521,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (event.key === 'Backspace' || event.key.startsWith('Arrow')) event.preventDefault();
-    if (this.tutorialStepNow()) return;
+    if (!this.tutorialAllowsKey(event.key)) return;
     this.act(() => this.board.key(event.key));
   }
 
@@ -547,6 +547,20 @@ export class GameScene extends Phaser.Scene {
     const cells = this.tutorialCells();
     if (!this.tutorialStepNow()) return null;
     return (cells ?? []).map(({ row, cell }) => Array.from(this.board.rows[row].word)[cell]);
+  }
+
+  /** In steps 1 and 2, typing the step's letter works like dragging it (story 12, R10). */
+  private tutorialAllowsKey(key: string): boolean {
+    const step = this.tutorialStepNow();
+    if (!step) return true;
+    return step <= 2 && key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
+  }
+
+  /** In step 2, tapping the step's letter in the pool works too (story 12, R10). */
+  private tutorialAllowsTap(hit: Hit): boolean {
+    const step = this.tutorialStepNow();
+    if (!step) return true;
+    return step === 2 && hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
   }
 
   private tutorialAllowsCell(row: number, cell: number): boolean {

@@ -299,10 +299,10 @@ Then('the hand stops', async ({ page, scenario }) => {
 
 // Recall All and keys
 
-When(/^the player presses (X|Backspace)$/, async ({ page, scenario }, key: string) => {
+When(/^the player presses (X|W|Backspace)$/, async ({ page, scenario }, key: string) => {
   await openLevel(page, scenario);
   scenario.before = await current(page);
-  await page.keyboard.press(key === 'X' ? 'x' : key);
+  await page.keyboard.press(key.length === 1 ? key.toLowerCase() : key);
   await page.waitForTimeout(300);
 });
 

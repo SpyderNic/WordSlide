@@ -143,23 +143,37 @@ Feature: First-level tutorial
       Then the text says "Finish the grid!"
       And FOX is still locked
 
-  Rule: Recall All doesn't appear, and keys do nothing
+  Rule: Recall All doesn't appear, and only the step's letters can be typed
 
     Scenario: There's no Recall All button
       When the player finishes step 1
       Then there's no Recall All button
 
-    Scenario: Tapping a letter does nothing
+    Scenario: Typing the X completes the word
+      When the player presses X
+      Then FOX locks
+
+    Scenario: Typing the W finishes the grid
+      Given FOX is locked
+      When the player presses W
+      Then OWL locks
+
+    Scenario: Tapping the W finishes the grid
+      Given FOX is locked
+      When the player taps the W in the pool
+      Then OWL locks
+
+    Scenario: Tapping a letter in step 1 does nothing
       When the player taps the X in the pool
       Then nothing changes
 
-    Scenario Outline: Keys do nothing
+    Scenario Outline: Other keys do nothing
       When the player presses <key>
       Then nothing changes
 
       Examples:
         | key       |
-        | X         |
+        | W         |
         | Up        |
         | Left      |
         | Backspace |

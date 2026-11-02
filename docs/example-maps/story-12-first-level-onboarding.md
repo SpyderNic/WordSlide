@@ -95,12 +95,14 @@ It pauses briefly between repeats, and it stops while the player is dragging.
 
 **Confirmed:** ☑
 
-### 🟦 R10. Recall All doesn't appear in the tutorial, and arrow and letter keys do nothing
+### 🟦 R10. Recall All doesn't appear in the tutorial, and only the step's letters can be typed
 
-*Changed by the designer.* Each step is dragging only.
+*Changed by the designer, then again after playing milestone 5 (Q11).* In steps 1 and 2, typing the step's letter works like dragging it. In step 2, tapping it in the pool works too. Arrow keys, Backspace and every other key do nothing, and steps 3 and 4 are dragging only.
 
-- 🟩 In step 1, pressing `X` does nothing
-- 🟩 In step 1, tapping the X in the pool does nothing (added while building, as the rule says each step is dragging only)
+- 🟩 In step 1, pressing `X` completes FOX
+- 🟩 In step 1, pressing `W` does nothing
+- 🟩 In step 1, tapping the X in the pool does nothing
+- 🟩 In step 2, pressing `W` finishes the grid, and so does tapping the W
 - 🟩 Level 1 shows no Recall All button at any point
 
 **Confirmed:** ☑
@@ -167,3 +169,7 @@ This is a requirement on story 15. It needs two steps of filling, and a final wo
 ### 🟥 Q10. How does level 2 highlight the theme?
 
 **Answer:** A gently pulsing outline around it, in the highlight colour, until the first word locks (R12).
+
+### 🟥 Q11. Can the player type the letters in the tutorial?
+
+*From playing milestone 5.* **Answer:** Yes, in steps 1 and 2: typing the step's letter works like dragging it. Tapping it works in step 2 (R10).

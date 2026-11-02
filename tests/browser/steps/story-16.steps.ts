@@ -388,13 +388,13 @@ Then('then it shows x1', async ({ page }) => {
   expect(await shownCount(page, 'Z')).toBe('x1');
 });
 
-When(/^the player taps the (X|Z) in the pool$/, async ({ page, scenario }, letter: string) => {
+When(/^the player taps the (W|X|Z) in the pool$/, async ({ page, scenario }, letter: string) => {
   const layout = await layoutNow(page, scenario);
   scenario.before = await current(page);
   const { x, y } = centreOf(poolTile(layout, letter));
   await page.mouse.click(x, y);
   // Story 12 checks nothing changed: give a tap that did something time to show.
-  if (letter === 'X') await page.waitForTimeout(400);
+  if (letter !== 'Z') await page.waitForTimeout(400);
 });
 
 Then('the Z tile shows x0 straight away', async ({ page }) => {
