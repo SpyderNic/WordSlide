@@ -129,6 +129,12 @@ Feature: Visual style
       And so is its glass line
       And its tinted strip is drawn behind them
 
+    @browser
+    Scenario: A lifted row passes under the glass line too
+      Given phase two has started
+      When the player lifts a row by its handle
+      Then the glass line is drawn above the lifted row
+
     Scenario: The prototype needs no image files
       When the game is built
       Then it contains no art images

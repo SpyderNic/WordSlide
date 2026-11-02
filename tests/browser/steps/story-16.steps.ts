@@ -4,7 +4,7 @@ import { styles } from '../../../src/style';
 import { makeLevel, reveal } from '../../support/levels';
 import { test, type Scenario } from './fixtures';
 import { centreOf, hold, layoutNow, placeLetter, poolTile, ready, rowOf, themePoint } from './phase-one.steps';
-import { waitForPopup, win } from './phase-two.steps';
+import { two, waitForPopup, win } from './phase-two.steps';
 import { screen, startRecording, stopRecording, tweens, type Frame } from './probe';
 import { current } from './story-02.steps';
 
@@ -399,11 +399,23 @@ Then('the Z tile shows x0 straight away', async ({ page }) => {
   expect(await shownCount(page, 'Z')).toBe('x0');
 });
 
-Then('so is its glass line', async ({ page }) => {
+/** The column's glass line: an upright line inside the column, between its two sides. */
+async function glassLine(page: Page) {
   const objects = await screen(page);
   const sides = objects.find((object) => object.kind === 'graphics' && object.triangles.length === 2)!;
-  const upright = sides.lines.filter((line) => Math.abs(line.x1 - line.x2) < 0.5 && Math.abs(line.y2 - line.y1) > 40).map((line) => line.x1);
-  const [left, right] = [Math.min(...upright), Math.max(...upright)];
-  // A third upright line, inside the column rather than on its edges.
-  expect(upright.some((x) => x > left + 2 && x < right - 2)).toBe(true);
+  const edges = sides.lines.filter((line) => Math.abs(line.x1 - line.x2) < 0.5 && Math.abs(line.y2 - line.y1) > 40).map((line) => line.x1);
+  const [left, right] = [Math.min(...edges), Math.max(...edges)];
+  return objects.find((object) => object.kind === 'graphics' && object.lines.some((line) => Math.abs(line.x1 - line.x2) < 0.5 && Math.abs(line.y2 - line.y1) > 40 && line.x1 > left + 2 && line.x1 < right - 2));
+}
+
+Then('so is its glass line', async ({ page }) => {
+  const glass = await glassLine(page);
+  expect(glass).toBeDefined();
+  expect(glass!.depth).toBeGreaterThan(1);
+});
+
+Then('the glass line is drawn above the lifted row', async ({ page }) => {
+  const lifted = (await two(page)).rows.find((row) => row.depth > 1);
+  expect(lifted, 'No row is lifted').toBeDefined();
+  expect((await glassLine(page))!.depth).toBeGreaterThan(lifted!.depth);
 });

@@ -64,6 +64,8 @@ export class PhaseTwoView {
   private column!: Phaser.GameObjects.Graphics;
   /** The brass sides and notches, above the words, so letters slide under them (story 16, R8). */
   private columnSides!: Phaser.GameObjects.Graphics;
+  /** The grey glass line, above every word, even one lifted by its handle (story 16, R8). */
+  private columnGlass!: Phaser.GameObjects.Graphics;
   private press: Press | null = null;
   private tile = 0;
   private pitch = 0;
@@ -118,10 +120,12 @@ export class PhaseTwoView {
     this.column = this.scene.add.graphics().setAlpha(0).setDepth(0);
     // Above the words (depth 1), below a row lifted to be moved (depth 2).
     this.columnSides = this.scene.add.graphics().setAlpha(0).setDepth(1.5);
+    // Above a lifted row (depth 2), below the handles (depth 3).
+    this.columnGlass = this.scene.add.graphics().setAlpha(0).setDepth(2.5);
     this.drawColumn();
     this.phase.rows.forEach((row, index) => this.buildRow(index, from[index]));
 
-    this.scene.tweens.add({ targets: [this.column, this.columnSides], alpha: 1, duration: timings.ceremony });
+    this.scene.tweens.add({ targets: [this.column, this.columnSides, this.columnGlass], alpha: 1, duration: timings.ceremony });
     this.rowViews.forEach((view, index) => {
       this.scene.tweens.add({
         targets: view.container,
@@ -140,6 +144,7 @@ export class PhaseTwoView {
     this.placeEverything();
     this.column.setAlpha(1);
     this.columnSides.setAlpha(1);
+    this.columnGlass.setAlpha(1);
     if (this.phase.canReorder) {
       this.handlesVisible = true;
       this.rowViews.forEach((view) => view.handle.setVisible(true));
@@ -151,7 +156,7 @@ export class PhaseTwoView {
   skipCeremony() {
     if (this.ceremonyDone) return;
     this.rowViews.forEach((view) => this.scene.tweens.killTweensOf(view.container));
-    this.scene.tweens.killTweensOf([this.column, this.columnSides]);
+    this.scene.tweens.killTweensOf([this.column, this.columnSides, this.columnGlass]);
     this.finishCeremony(this.pendingFinish);
   }
 
@@ -181,12 +186,14 @@ export class PhaseTwoView {
       .lineBetween(right, top, right, bottom)
       .lineBetween(left, top, right, top)
       .lineBetween(left, bottom, right, bottom)
-      // A grey sheen down the column, like glass, above the letters too (story 16, R8).
-      .lineStyle(Math.max(2, this.tile * 0.06), 0xffffff, 0.25)
-      .lineBetween(glass, top + pad, glass, bottom - pad)
       .fillStyle(colours.column)
       .fillTriangle(this.columnX - notch, top - notch, this.columnX + notch, top - notch, this.columnX, top)
       .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom);
+    // A grey sheen down the column, like glass (story 16, R8).
+    this.columnGlass
+      .clear()
+      .lineStyle(Math.max(2, this.tile * 0.06), 0xffffff, 0.25)
+      .lineBetween(glass, top + pad, glass, bottom - pad);
   }
 
   private buildRow(index: number, from: { x: number; y: number }) {
@@ -563,7 +570,7 @@ export class PhaseTwoView {
   private showPopup(justWon = true) {
     this.celebrating = null;
     this.popup?.destroy(true);
-    const targets: Phaser.GameObjects.GameObject[] = [this.column, this.columnSides];
+    const targets: Phaser.GameObjects.GameObject[] = [this.column, this.columnSides, this.columnGlass];
     this.rowViews.forEach((view) => targets.push(view.container));
     this.scene.tweens.add({ targets, alpha: 0, duration: WIN_FADE });
 
@@ -582,6 +589,7 @@ export class PhaseTwoView {
     this.celebrating?.remove();
     this.column?.destroy();
     this.columnSides?.destroy();
+    this.columnGlass?.destroy();
     this.popup?.destroy(true);
     this.rowViews.forEach((view) => {
       view.container.destroy(true);

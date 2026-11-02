@@ -188,7 +188,7 @@ async function handleOf(page: Page, word: string) {
   return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
 }
 
-async function dragHandle(page: Page, word: string, slots: number) {
+export async function dragHandle(page: Page, word: string, slots: number) {
   const point = await handleOf(page, word);
   const pitch = await pitchOf(page);
   await grab(page, point);
@@ -1544,4 +1544,10 @@ Then('turns gold at its biggest', async ({ page, scenario }) => {
     const peak = samples.reduce((best, sample, index) => (sample.scale > samples[best].scale ? index : best), 0);
     samples.slice(peak).forEach((sample) => expect(sample.fill).toBe(colours.tileGold));
   }
+});
+
+When('the player lifts a row by its handle', async ({ page, scenario }) => {
+  await ready(page, scenario);
+  // Held part of the way, so the row stays lifted between slots.
+  await dragHandle(page, (await two(page)).rows[0].word, 0.4);
 });

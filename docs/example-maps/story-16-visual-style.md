@@ -85,6 +85,7 @@ The palette is "honey oak": today's colours, refined, with green for locked lett
 
 - 🟩 A placed tile's top and left edges are lighter than it, and its bottom and right edges darker
 - 🟩 A word sliding through the column passes under its sides and its glass line
+- 🟩 A row lifted by its handle passes under the glass line too, though above the sides (from playing milestone 5)
 
 **Confirmed:** ☑
 
