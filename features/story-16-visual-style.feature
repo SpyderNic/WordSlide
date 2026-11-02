@@ -86,6 +86,19 @@ Feature: Visual style
         | a drop on a fixed cell     |
 
     @browser
+    Scenario: A letter going back counts when it lands
+      Given a Z placed in a cell
+      When the player presses Recall All
+      Then the Z tile shows x0 until the Z lands
+      And then it shows x1
+
+    @browser
+    Scenario: A letter leaving the pool counts as it leaves
+      Given a row is selected
+      When the player taps the Z in the pool
+      Then the Z tile shows x0 straight away
+
+    @browser
     Scenario: Several letters go back one after another
       Given letters placed in three cells
       When the player presses Recall All
@@ -102,6 +115,18 @@ Feature: Visual style
       Then it travels from there to its tile in the pool
 
   Rule: The look is warm wood and brass, drawn in code
+
+    @browser
+    Scenario: Tiles look raised
+      Given a Z placed in a cell
+      Then its tile's top and left edges are lighter than it
+      And its bottom and right edges are darker
+
+    @browser
+    Scenario: Words slide under the column's sides
+      Given phase two has started
+      Then the column's sides are drawn above the words
+      And its tinted strip is drawn behind them
 
     Scenario: The prototype needs no image files
       When the game is built

@@ -55,7 +55,8 @@ Then('the Z tile is drawn grey', async ({ page }) => {
 
 Then('the Z tile is drawn in its ordinary colour', async ({ page }) => {
   const { layout, colours }: GameView = await current(page);
-  expect(await fillAt(page, zTile(layout))).toBe(colours.tile);
+  // A letter going back counts once it lands on its tile (story 16, R7).
+  await expect.poll(async () => fillAt(page, zTile(layout))).toBe(colours.tile);
 });
 
 Then('the Recall All button is drawn grey', async ({ page }) => {

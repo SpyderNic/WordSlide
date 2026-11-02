@@ -70,6 +70,7 @@ This covers Recall All, Backspace and hinted letters going back (D9). When sever
 
 - 🟩 Recall All sends each letter back along a short path
 - 🟩 Recall All with three placed letters sends them back one after another
+- 🟩 A letter going back adds to its pool count only when it lands, and a letter leaving the pool lowers the count as it leaves (Q13)
 
 **Confirmed:** ☑
 
@@ -80,7 +81,10 @@ This covers Recall All, Backspace and hinted letters going back (D9). When sever
 
 - 🟩 The column's strip and notches look like brass
 
-The palette is "honey oak": today's colours, refined, with green for locked letters and gold for the win. Each tile has a soft bevel, a lighter top edge and a darker bottom edge, like a carved wooden block, and the column has a sheen line (Q7, Q9).
+The palette is "honey oak": today's colours, refined, with green for locked letters and gold for the win. Each tile has a soft bevel, lighter top and left edges and darker bottom and right edges, so it looks raised, like a carved wooden block. The column has a sheen line, and its two brass sides are drawn above the words, so letters slide under them like a real cryptex; its tinted strip stays behind the letters (Q7, Q9, Q11, Q12).
+
+- 🟩 A placed tile's top and left edges are lighter than it, and its bottom and right edges darker
+- 🟩 A word sliding through the column passes under its sides
 
 **Confirmed:** ☑
 
@@ -135,3 +139,15 @@ The palette is "honey oak": today's colours, refined, with green for locked lett
 ### 🟥 Q10. When several letters go back at once, do they travel together?
 
 **Answer:** One after another, 0.03 seconds apart, top row first (R7).
+
+### 🟥 Q11. Should tiles look more 3D?
+
+*From playing milestone 5.* **Answer:** Yes: lighter on the left too, and darker on the right (R8).
+
+### 🟥 Q12. Which parts of the column are drawn above the words?
+
+*From playing milestone 5.* **Answer:** Just its two sides. The tinted strip stays behind, so the column's letters stay easy to read (R8).
+
+### 🟥 Q13. When does a pool count change?
+
+*From playing milestone 5.* **Answer:** A letter going back adds to the count when it lands on its tile. A letter leaving lowers it as it leaves, as picking up a tile does (R7).

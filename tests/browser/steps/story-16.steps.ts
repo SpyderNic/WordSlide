@@ -310,3 +310,91 @@ Then('the game can use it with no change to its rules or code', async ({ page, s
   expect(tile?.fill).toBe(styles.test.colours.tilePlaced);
 });
 
+
+// Raised tiles, the column's sides, and pool counts (from playing milestone 5)
+
+function brightness(colour: number) {
+  return ((colour >> 16) & 255) * 0.299 + ((colour >> 8) & 255) * 0.587 + (colour & 255) * 0.114;
+}
+
+async function edgesOfFirstCell(page: Page, scenario: Scenario) {
+  const layout = await layoutNow(page, scenario);
+  const cell = layout.rows[0].cells[0];
+  const { x, y } = centreOf(cell);
+  const objects = await screen(page);
+  const body = objects.find((object) => object.kind === 'rect' && object.fill !== null && Math.abs(object.x - x) < 2 && Math.abs(object.y - y) < 2)!;
+  const edges = objects.filter((object) => object.kind === 'bevel' && Math.abs(object.x - x) < cell.width / 2 + 1 && Math.abs(object.y - y) < cell.height / 2 + 1);
+  const edge = (side: 'top' | 'bottom' | 'left' | 'right') =>
+    edges.find((object) =>
+      side === 'top' ? object.y < y - cell.height * 0.3 && object.width > cell.width * 0.5
+      : side === 'bottom' ? object.y > y + cell.height * 0.3 && object.width > cell.width * 0.5
+      : side === 'left' ? object.x < x - cell.width * 0.3 && object.height > cell.height * 0.5
+      : object.x > x + cell.width * 0.3 && object.height > cell.height * 0.5,
+    );
+  return { body, edge };
+}
+
+Then("its tile's top and left edges are lighter than it", async ({ page, scenario }) => {
+  const { body, edge } = await edgesOfFirstCell(page, scenario);
+  for (const side of ['top', 'left'] as const) {
+    expect(edge(side), side).toBeDefined();
+    expect(brightness(edge(side)!.fill!)).toBeGreaterThan(brightness(body.fill!));
+  }
+});
+
+Then('its bottom and right edges are darker', async ({ page, scenario }) => {
+  const { body, edge } = await edgesOfFirstCell(page, scenario);
+  for (const side of ['bottom', 'right'] as const) {
+    expect(edge(side), side).toBeDefined();
+    expect(brightness(edge(side)!.fill!)).toBeLessThan(brightness(body.fill!));
+  }
+});
+
+Then("the column's sides are drawn above the words", async ({ page }) => {
+  const objects = await screen(page);
+  const sides = objects.find((object) => object.kind === 'graphics' && object.triangles.length === 2)!;
+  const letters = objects.filter((object) => object.kind === 'text' && object.depth === 1);
+  expect(letters.length).toBeGreaterThan(5);
+  // Two upright lines, one each side of the column, drawn over the words' depth.
+  expect(sides.lines.filter((line) => Math.abs(line.x1 - line.x2) < 0.5 && Math.abs(line.y2 - line.y1) > 40).length).toBeGreaterThanOrEqual(2);
+  expect(sides.depth).toBeGreaterThan(1);
+});
+
+Then('its tinted strip is drawn behind them', async ({ page }) => {
+  const objects = await screen(page);
+  const strip = objects.filter((object) => object.kind === 'graphics' && object.triangles.length === 0 && object.depth < 1);
+  expect(strip.length).toBeGreaterThan(0);
+});
+
+/** The count shown on a letter's pool tile, as drawn. */
+async function shownCount(page: Page, letter: string) {
+  const { layout } = await current(page);
+  const tile = poolTile(layout, letter);
+  const objects = await screen(page);
+  return objects.find((object) => object.kind === 'text' && /^x\d+$/.test(object.text ?? '') && object.x > tile.x && object.x < tile.x + tile.width && object.y > tile.y && object.y < tile.y + tile.height)?.text;
+}
+
+async function travelling(page: Page, letter: string) {
+  return (await screen(page)).some((object) => object.kind === 'text' && object.depth === TRAVEL_DEPTH && object.text === letter);
+}
+
+Then('the Z tile shows x0 until the Z lands', async ({ page }) => {
+  expect(await travelling(page, 'Z')).toBe(true);
+  expect(await shownCount(page, 'Z')).toBe('x0');
+});
+
+Then('then it shows x1', async ({ page }) => {
+  await expect.poll(() => travelling(page, 'Z')).toBe(false);
+  expect(await shownCount(page, 'Z')).toBe('x1');
+});
+
+When('the player taps the Z in the pool', async ({ page, scenario }) => {
+  const layout = await layoutNow(page, scenario);
+  const { x, y } = centreOf(poolTile(layout, 'Z'));
+  await page.mouse.click(x, y);
+});
+
+Then('the Z tile shows x0 straight away', async ({ page }) => {
+  expect(await travelling(page, 'Z')).toBe(true);
+  expect(await shownCount(page, 'Z')).toBe('x0');
+});

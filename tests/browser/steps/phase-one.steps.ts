@@ -895,6 +895,6 @@ Then("only HON's tiles shake", async ({ page, scenario }) => {
   for (const cell of [0, 1, 2]) expect(movement(cell)).toBeGreaterThan(2);
   for (const cell of [4, 5, 6]) expect(movement(cell)).toBeLessThan(0.5);
   const space = centreOf(layout.rows[row].cells[3]);
-  const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => object.depth !== 8 && Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
+  const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => object.depth !== 8 && object.kind !== 'bevel' && Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
   expect(atSpace.every((object) => Math.abs(object.x - space.x) < 0.5)).toBe(true);
 });

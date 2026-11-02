@@ -17,7 +17,8 @@ export interface Line {
 export type Triangle = [number, number, number, number, number, number];
 
 export interface Drawn {
-  kind: 'rect' | 'text' | 'graphics';
+  /** A tile's bevel edges are 'bevel', so tests that look for tiles don't mistake them for tiles (story 16, R8). */
+  kind: 'rect' | 'text' | 'graphics' | 'bevel';
   /** The object's centre on screen. Graphics draw from their own origin. */
   x: number;
   y: number;
@@ -127,8 +128,6 @@ export async function installProbe(page: Page) {
       const found: Drawn[] = [];
       const visit = (object: GameObject, parent: Parent) => {
         if (!object.visible) return;
-        // A tile's bevel edges are part of its look, not tiles of their own (story 16, R8).
-        if (object.name === 'bevel') return;
         const at: Parent = {
           x: parent.x + object.x * parent.scale,
           y: parent.y + object.y * parent.scale,
@@ -144,7 +143,7 @@ export async function installProbe(page: Page) {
         if (object.type === 'Rectangle') {
           found.push({
             ...base,
-            kind: 'rect',
+            kind: object.name === 'bevel' ? 'bevel' : 'rect',
             width: object.width * at.scale,
             height: object.height * at.scale,
             fill: object.isFilled ? object.fillColor : null,

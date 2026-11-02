@@ -81,6 +81,8 @@ export class GameScene extends Phaser.Scene {
   private allComplete: Phaser.GameObjects.Container | null = null;
   /** Cells waiting for a travelling letter, by "row:cell", and when it lands (story 16, R6). */
   private arriving = new Map<string, number>();
+  /** Letters flying back to the pool, by letter: their tile's count goes up when they land (story 16, R7). */
+  private incoming = new Map<string, number>();
   private pointsText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
@@ -173,6 +175,8 @@ export class GameScene extends Phaser.Scene {
     this.allComplete?.destroy(true);
     this.allComplete = null;
     this.allDone = false;
+    this.incoming.clear();
+    this.arriving.clear();
     this.press = null;
     this.endDragVisuals();
     this.levelNumber = this.progress.level;
@@ -332,7 +336,8 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private drawPoolTile({ character, count, x, y, width, height }: PoolTileView) {
+  private drawPoolTile({ character, count: total, x, y, width, height }: PoolTileView) {
+    const count = total - (this.incoming.get(character) ?? 0);
     const colour = count === 0 ? colours.tileGrey : colours.tile;
     this.poolObjects.push(makeTile(this, x + width / 2, y + height / 2, width, colour));
     this.poolObjects.push(this.drawPoolText(character, x + width / 2, y + height * 0.45, height * 0.55));
@@ -496,7 +501,10 @@ export class GameScene extends Phaser.Scene {
     const events = change() ?? [];
     const flights = this.flightsSince(before, origin);
     const landing = this.time.now + timings.letterTravel;
-    flights.forEach((flight) => flight.cell && this.arriving.set(flight.cell, landing));
+    flights.forEach((flight) => {
+      if (flight.cell) this.arriving.set(flight.cell, landing);
+      else this.incoming.set(flight.character, (this.incoming.get(flight.character) ?? 0) + 1);
+    });
     this.applied(events, flights.some((flight) => flight.cell));
     flights.forEach((flight) => this.fly(flight));
   }
@@ -542,9 +550,30 @@ export class GameScene extends Phaser.Scene {
     return flights;
   }
 
-  private fly({ character, from, to, delay }: { character: string; from: Point; to: Point; delay: number }) {
+  private fly({ character, from, to, cell, delay }: { character: string; from: Point; to: Point; cell?: string; delay: number }) {
     const tile = makeTile(this, from.x, from.y, this.layoutNow.tileSize, colours.tilePlaced, { text: character, colour: colours.text }).setDepth(TRAVEL_DEPTH);
-    this.tweens.add({ targets: tile, x: to.x, y: to.y, delay, duration: timings.letterTravel, ease: 'Sine.easeOut', onComplete: () => tile.destroy(true) });
+    const board = this.board;
+    this.tweens.add({
+      targets: tile,
+      x: to.x,
+      y: to.y,
+      delay,
+      duration: timings.letterTravel,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        tile.destroy(true);
+        if (cell || this.board !== board) return;
+        this.incoming.set(character, (this.incoming.get(character) ?? 1) - 1);
+        this.redrawPool();
+      },
+    });
+  }
+
+  private redrawPool() {
+    if (this.phaseTwo || this.allDone) return;
+    this.fadePoolNow();
+    this.layoutNow.poolTiles.forEach((tile) => this.drawPoolTile(tile));
+    this.drawRecall();
   }
 
   // Feedback

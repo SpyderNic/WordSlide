@@ -60,7 +60,10 @@ export interface PhaseTwoTestView {
 
 export class PhaseTwoView {
   private readonly rowViews: RowView[] = [];
+  /** The tinted strip, behind the words. */
   private column!: Phaser.GameObjects.Graphics;
+  /** The brass sides and notches, above the words, so letters slide under them (story 16, R8). */
+  private columnSides!: Phaser.GameObjects.Graphics;
   private press: Press | null = null;
   private tile = 0;
   private pitch = 0;
@@ -113,10 +116,12 @@ export class PhaseTwoView {
   playCeremony(from: { x: number; y: number }[], onFinished: () => void) {
     this.measure();
     this.column = this.scene.add.graphics().setAlpha(0).setDepth(0);
+    // Above the words (depth 1), below a row lifted to be moved (depth 2).
+    this.columnSides = this.scene.add.graphics().setAlpha(0).setDepth(1.5);
     this.drawColumn();
     this.phase.rows.forEach((row, index) => this.buildRow(index, from[index]));
 
-    this.scene.tweens.add({ targets: this.column, alpha: 1, duration: timings.ceremony });
+    this.scene.tweens.add({ targets: [this.column, this.columnSides], alpha: 1, duration: timings.ceremony });
     this.rowViews.forEach((view, index) => {
       this.scene.tweens.add({
         targets: view.container,
@@ -134,6 +139,7 @@ export class PhaseTwoView {
     this.ceremonyDone = true;
     this.placeEverything();
     this.column.setAlpha(1);
+    this.columnSides.setAlpha(1);
     if (this.phase.canReorder) {
       this.handlesVisible = true;
       this.rowViews.forEach((view) => view.handle.setVisible(true));
@@ -145,7 +151,7 @@ export class PhaseTwoView {
   skipCeremony() {
     if (this.ceremonyDone) return;
     this.rowViews.forEach((view) => this.scene.tweens.killTweensOf(view.container));
-    this.scene.tweens.killTweensOf(this.column);
+    this.scene.tweens.killTweensOf([this.column, this.columnSides]);
     this.finishCeremony(this.pendingFinish);
   }
 
@@ -167,14 +173,19 @@ export class PhaseTwoView {
       .clear()
       .fillStyle(colours.column, 0.45)
       .fillRect(left, top, right - left, bottom - top)
-      .lineStyle(3, colours.column)
-      .strokeRect(left, top, right - left, bottom - top)
-      .fillStyle(colours.column)
-      .fillTriangle(this.columnX - notch, top - notch, this.columnX + notch, top - notch, this.columnX, top)
-      .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom)
       // A sheen down the strip, so it reads as brass (story 16, R8).
       .fillStyle(0xffffff, 0.18)
       .fillRect(left + pad, top + pad, Math.max(2, this.tile * 0.06), bottom - top - pad * 2);
+    this.columnSides
+      .clear()
+      .lineStyle(3, colours.column)
+      .lineBetween(left, top, left, bottom)
+      .lineBetween(right, top, right, bottom)
+      .lineBetween(left, top, right, top)
+      .lineBetween(left, bottom, right, bottom)
+      .fillStyle(colours.column)
+      .fillTriangle(this.columnX - notch, top - notch, this.columnX + notch, top - notch, this.columnX, top)
+      .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom);
   }
 
   private buildRow(index: number, from: { x: number; y: number }) {
@@ -551,7 +562,7 @@ export class PhaseTwoView {
   private showPopup(justWon = true) {
     this.celebrating = null;
     this.popup?.destroy(true);
-    const targets: Phaser.GameObjects.GameObject[] = [this.column];
+    const targets: Phaser.GameObjects.GameObject[] = [this.column, this.columnSides];
     this.rowViews.forEach((view) => targets.push(view.container));
     this.scene.tweens.add({ targets, alpha: 0, duration: WIN_FADE });
 
@@ -569,6 +580,7 @@ export class PhaseTwoView {
   destroy() {
     this.celebrating?.remove();
     this.column?.destroy();
+    this.columnSides?.destroy();
     this.popup?.destroy(true);
     this.rowViews.forEach((view) => {
       view.container.destroy(true);
