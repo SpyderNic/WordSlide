@@ -1,4 +1,4 @@
-# Status: approved by the designer on 2026-10-31.
+# Status: approved by the designer on 2026-10-31. Q13 and Q14 added on 2026-11-03.
 # Map: docs/example-maps/story-15-draft-the-first-levels.md
 # The designer plays these levels blind, so these scenarios check the structure
 # of the levels and never name their words. Only level 1 is known.
@@ -65,6 +65,25 @@ Feature: Draft the first levels
       When the Space and Sports levels are checked
       Then in each theme, the first level with each number of rows doesn't need reordering, apart from level 21
       And every other level does
+
+  Rule: Answers grow longer with the rows (Q13)
+
+    Scenario Outline: Answer lengths by rows
+      When the levels with <rows> rows are checked
+      Then their answers have <shortest> to <longest> letters
+
+      Examples:
+        | rows | shortest | longest |
+        | 2    | 3        | 5       |
+        | 3    | 3        | 5       |
+        | 4    | 3        | 6       |
+        | 5    | 4        | 7       |
+
+  Rule: Level 21 needs a longer row above a shorter one (Q14)
+
+    Scenario: No way of locking avoids the move
+      When level 21 is checked
+      Then its solution has a longer word above a shorter one
 
   Rule: From level 2, no letters are revealed (which levels need reordering is story 21)
 

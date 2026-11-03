@@ -5,3 +5,4 @@ reports/
 test-results/
 playwright-report/
 .features-gen/
+content/reviews/

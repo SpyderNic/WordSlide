@@ -1,6 +1,6 @@
 # Story 15: Draft the first levels
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-15-draft-the-first-levels.feature](../../features/story-15-draft-the-first-levels.feature). Not implemented yet. It needs stories 1 and 14 first.
+**Status:** 🟢 Approved by the designer on 2026-10-31, with Q13 and Q14 added on 2026-11-03, along with its scenarios in [story-15-draft-the-first-levels.feature](../../features/story-15-draft-the-first-levels.feature). Not implemented yet. It needs stories 1 and 14 first.
 
 *As the game's designer, I want a first set of levels to play, so that I can find out whether the game is fun and how hard it should be.*
 
@@ -108,9 +108,33 @@ Your document says words should be familiar enough to reason about. Other langua
 
 **Confirmed:** ☑
 
+### 🟦 R13. Answers grow longer with the rows
+
+*From Q13.* Answers are 3–5 letters in 2- and 3-row levels, 3–6 in 4-row levels, and 4–7 in 5-row levels. The final word has one letter per row.
+
+- 🟩 A 4-row level's answers have 3 to 6 letters, and its final word has 4
+
+**Confirmed:** ☑
+
+### 🟦 R14. Level 21 needs a longer row above a shorter one
+
+*From Q14.* That way, no way of locking the words avoids the move (D8), so the reordering tutorial always shows there (story 21, Q12).
+
+- 🟩 Level 21's solution has a longer word above a shorter one
+
+**Confirmed:** ☑
+
 ---
 
 ## Answered questions
+
+### 🟥 Q13. How long are the answers in each level?
+
+*Added on 2026-11-03.* **Answer:** They grow with the rows (R13).
+
+### 🟥 Q14. Must level 21 always show the reordering tutorial?
+
+*Added on 2026-11-03.* **Answer:** Yes. Level 21 needs a longer row above a shorter one (R14).
 
 ### 🟥 Q1. Do you want to keep FOX, OWL and OX as level 1?
 

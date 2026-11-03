@@ -1,6 +1,6 @@
 # Story 14: Level generator
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-14-level-generator.feature](../../features/story-14-level-generator.feature). Not implemented yet.
+**Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-14-level-generator.feature](../../features/story-14-level-generator.feature). Built on 2026-11-03.
 
 *As the game's designer, I want a tool that suggests levels from a theme's word list, so that making many levels doesn't mean finding every combination by hand.*
 

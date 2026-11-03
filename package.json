@@ -10,7 +10,9 @@
     "test": "npm run test:logic && npm run test:browser",
     "test:logic": "node --import tsx node_modules/@cucumber/cucumber/bin/cucumber.js",
     "test:browser": "bddgen && playwright test",
-    "test:other-style": "node scripts/other-style.mjs"
+    "test:other-style": "node scripts/other-style.mjs",
+    "levels:generate": "node --import tsx tools/generator/cli.ts generate",
+    "levels:approve": "node --import tsx tools/generator/cli.ts approve"
   },
   "dependencies": {
     "@fontsource/nunito": "^5.3.0",
