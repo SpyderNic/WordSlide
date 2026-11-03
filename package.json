@@ -12,7 +12,8 @@
     "test:browser": "bddgen && playwright test",
     "test:other-style": "node scripts/other-style.mjs",
     "levels:generate": "node --import tsx tools/generator/cli.ts generate",
-    "levels:approve": "node --import tsx tools/generator/cli.ts approve"
+    "levels:approve": "node --import tsx tools/generator/cli.ts approve",
+    "levels:draft": "node --import tsx tools/content/draft.ts"
   },
   "dependencies": {
     "@fontsource/nunito": "^5.3.0",

@@ -37,6 +37,7 @@ Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find i
 - Browser tests give the game its levels through `window.wordSlideTestLevels` (see `useLevels` in `tests/browser/steps/story-02.steps.ts`), so they never depend on the prototype's levels.
 - Browser tests play as if the reordering tutorial were already behind the player (`window.wordSlideReorderingTaught`, set in `tests/browser/steps/fixtures.ts`), so handles show in every test level. Stories 12 and 21 turn it off with `reorderingNotTaught`, so that story 21's rule decides.
 - `npm run levels:generate -- --theme Animals --words <list> --rows 3 --lengths 3-5 --reordering needed` runs the level generator (story 14) and writes a review file to `content/reviews/`, which git ignores. Tick the boxes, then `npm run levels:approve -- <review file>` adds those levels to `src/levels/levels.json`. The generator lives in `tools/`, so the game never bundles it. Its output only prints counts (D46).
+- The game's levels are `src/levels/levels.json`. `npm run levels:draft` redrafts the prototype's 40 levels (story 15) from `content/word-lists/`, with the generator and Claude's picks, and prints only numbers. Never print, quote or summarise those lists or levels (D46).
 - `npm run build` type-checks and builds.
 - `npm run test:logic` runs scenarios without a browser, using Cucumber. Steps are in `tests/logic/steps`.
 - `npm run test:browser` runs scenarios tagged `@browser` in a real browser. Steps are in `tests/browser/steps`.

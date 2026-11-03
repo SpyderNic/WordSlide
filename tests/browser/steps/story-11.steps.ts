@@ -8,6 +8,7 @@ import { installProbe, screen, startRecording, stopRecording, type Drawn, type F
 import { columnGraphics, openLevel, pitchOf, popupParts, ready, restingX, solve, two, waitForPopup, win } from './phase-two.steps';
 import { watchErrors } from './foundation.steps';
 import { current, useLevelList, useLevels } from './story-02.steps';
+import { expectInterstitialHasNoButton, pressPlayAndRecord, themedLevels } from './story-15.steps';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -118,6 +119,11 @@ Given(/^the player has won level (\d+)$/, async ({ page, scenario, $uri }, level
     scenario.wonTutorial = true;
     return;
   }
+  // Story 15's levels change theme after level 10.
+  if ($uri.includes('story-15')) {
+    scenario.levelList = themedLevels();
+    scenario.level = scenario.levelList[Number(level) - 1];
+  }
   await wonLevel(page, scenario, Number(level));
 });
 
@@ -137,7 +143,12 @@ Then("there's no way to open level 4", async ({ page }) => {
 
 // The next level
 
-When('the player presses "Play Level 5"', async ({ page, scenario }) => {
+When(/^the player presses "Play Level (\d+)"$/, async ({ page, scenario, $uri }, _level: string) => {
+  // Story 15 watches for the theme's interstitial.
+  if ($uri.includes('story-15')) {
+    await pressPlayAndRecord(page, scenario);
+    return;
+  }
   if (scenario.views.length === 0) await wonLevel(page, scenario, 4);
   await page.evaluate(() => {
     const camera = (window as unknown as { wordSlide: { scene: { cameras: { main: { fadeEffect: { alpha: number; isRunning: boolean } } } } } }).wordSlide.scene.cameras.main;
@@ -378,7 +389,12 @@ When('the popup appears after the win', async ({ page, scenario }) => {
   await waitForPopup(page);
 });
 
-Then('it has no button', async ({ page }) => {
+Then('it has no button', async ({ page, $uri }) => {
+  // Story 15 means the interstitial.
+  if ($uri.includes('story-15')) {
+    await expectInterstitialHasNoButton(page);
+    return;
+  }
   expect((await popupParts(page)).some((object) => object.text?.startsWith('Play'))).toBe(false);
   expect((await two(page)).popup?.buttonRect).toBeNull();
 });

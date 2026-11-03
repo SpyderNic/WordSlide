@@ -5,7 +5,7 @@ import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type P
 import type { Cell, Level } from '../game/level';
 import { NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
 import { pickedLevel, resetAsked } from '../game/startingLevel';
-import { testLevels } from '../levels/testLevels';
+import { levels } from '../levels';
 import { createPlatform } from '../platform';
 import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
@@ -26,6 +26,8 @@ const TRAVEL_DEPTH = 8;
 const TRAVEL_STAGGER = 30;
 /** Level 2's outline around the theme sits just above the top of the screen's items (story 12, R12). */
 const TOP_GLOW_DEPTH = 21;
+/** Above everything, the popup included (story 15, R11). */
+const INTERSTITIAL_DEPTH = 40;
 
 interface Point {
   x: number;
@@ -81,7 +83,7 @@ export class GameScene extends Phaser.Scene {
   private foundText: Phaser.GameObjects.Container | null = null;
   private poolObjects: Phaser.GameObjects.GameObject[] = [];
   private phaseTwo: PhaseTwoView | null = null;
-  private levels: Level[] = testLevels;
+  private levels: Level[] = levels;
   private progress: Progress = NEW_PLAYER;
   private platform!: Platform;
   /** False while the designer peeks at a level picked in the address (story 11, R13). */
@@ -107,6 +109,9 @@ export class GameScene extends Phaser.Scene {
   /** Pulses and shakes still playing: moving on never cuts them short (D37). */
   private effects: Effect[] = [];
   private pointsText: Phaser.GameObjects.Text | null = null;
+  /** The full-screen card naming a new theme. Input is ignored while it shows (story 15, R11). */
+  private interstitial: Phaser.GameObjects.Rectangle | null = null;
+  private interstitialText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
     super('GameScene');
@@ -252,6 +257,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onResize() {
+    const { width, height } = this.scale;
+    this.interstitial?.setPosition(width / 2, height / 2).setSize(width, height);
+    this.interstitialText?.setPosition(width / 2, height / 2);
     if (!this.board) return;
     this.board.cancelDrag();
     this.endDragVisuals();
@@ -406,7 +414,7 @@ export class GameScene extends Phaser.Scene {
   // Input
 
   private onPointerDown(pointer: Phaser.Input.Pointer) {
-    if (this.allDone) return;
+    if (this.allDone || this.interstitial) return;
     // The hand stops while the player is dragging (story 12, R9).
     this.hand?.setVisible(false);
     if (this.phaseTwo) {
@@ -528,7 +536,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onKey(event: KeyboardEvent) {
-    if (this.allDone) return;
+    if (this.allDone || this.interstitial) return;
     if (this.phaseTwo) {
       this.phaseTwo.onKey(event);
       return;
@@ -871,7 +879,45 @@ export class GameScene extends Phaser.Scene {
   }
 
   private nextLevel() {
-    this.startLevel(undefined, true);
+    const next = this.levels[this.progress.level - 1];
+    if (next && next.theme !== this.level.theme) this.showInterstitial(next.theme);
+    else this.startLevel(undefined, true);
+  }
+
+  /** Fades in a card naming the new theme, opens the level behind it, then fades it away (story 15, R11). */
+  private showInterstitial(theme: string) {
+    const { width, height } = this.scale;
+    const quarter = timings.interstitial / 4;
+    this.interstitial = this.add.rectangle(width / 2, height / 2, width, height, colours.background).setDepth(INTERSTITIAL_DEPTH).setAlpha(0);
+    this.interstitialText = this.add
+      .text(width / 2, height / 2, theme, {
+        fontFamily: currentStyle.font,
+        fontSize: `${Math.round(Math.max(Math.min(width, height) * 0.14, currentStyle.minText))}px`,
+        color: `#${colours.highlight.toString(16).padStart(6, '0')}`,
+      })
+      .setOrigin(0.5)
+      .setDepth(INTERSTITIAL_DEPTH + 1)
+      .setAlpha(0);
+    const card = [this.interstitial, this.interstitialText];
+    this.tweens.add({
+      targets: card,
+      alpha: 1,
+      duration: quarter,
+      onComplete: () => {
+        this.startLevel();
+        this.tweens.add({
+          targets: card,
+          alpha: 0,
+          delay: quarter * 2,
+          duration: quarter,
+          onComplete: () => {
+            card.forEach((object) => object.destroy());
+            this.interstitial = null;
+            this.interstitialText = null;
+          },
+        });
+      },
+    });
   }
 
   /**

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Given, Then, When } from '@cucumber/cucumber';
 import { validateLevel } from '../../../src/game/validator';
-import { testLevels } from '../../../src/levels/testLevels';
+import { levels } from '../../../src/levels';
 import { LocalPlatform } from '../../../src/platform/LocalPlatform';
 import type { Platform } from '../../../src/platform/Platform';
 import { currentStyle } from '../../../src/style';
@@ -50,7 +50,7 @@ Then('the letter travel time is {int} milliseconds', function (milliseconds: num
 });
 
 Then('every test level passes the validator', function () {
-  for (const level of testLevels) {
+  for (const level of levels) {
     assert.deepEqual(validateLevel(level).errors, [], level.finalWord);
   }
 });

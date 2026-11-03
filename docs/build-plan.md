@@ -9,7 +9,7 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 | 3 | **Phase one** | 3, 4, 5, 6, 17 | Done |
 | 4 | **Phase two** | 7, 8, 9, 10 | Done |
 | 5 | **The whole game**, including the tutorial (FTUE) | 11, 16, 12 | Built: waiting for the designer to play it |
-| 6 | **Content**: generator and the 40 levels | 14, 15 | Started: story 14 built |
+| 6 | **Content**: generator and the 40 levels | 14, 15 | Built: waiting for the designer to play it |
 
 ## How we work
 
@@ -24,7 +24,7 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 
 Milestones 1 to 4 are done, and the designer has been told how to play milestone 4. The test audit below is done and reported in `docs/test-audit.md`. Milestone 5 has started, and story 11 is built. After playing it, the designer added split-word locking (D48, story 6 R16), which is built too, and so are story 16, the visual style, and story 12, the tutorial. Before playing, the designer moved reordering to its own tutorial, on the first level that needs it (story 21, built on 2026-11-03). In the prototype, that's level 2. **Next is the designer playing milestone 5.**
 
-The playtest levels are the tutorial (FOX and OWL) and two blind levels. Handles appear from the first level that needs reordering (D45, `src/game/reordering.ts`).
+Milestone 6 is built (2026-11-03): the level generator (story 14) and the 40 levels (story 15), with a full-screen card naming each new theme. The levels are in `src/levels/levels.json`, drafted with `npm run levels:draft` from the word lists in `content/word-lists/`, which the designer doesn't see (D46). Reordering is first needed at level 21, and its tutorial always shows there (story 15, Q14). Handles appear once reordering is taught (D45, `src/game/reordering.ts`). **Next is the designer playing milestones 5 and 6.**
 
 Mobile testing on a real device is parked until all milestones are done, at the designer's request.
 

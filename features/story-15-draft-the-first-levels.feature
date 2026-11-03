@@ -40,6 +40,7 @@ Feature: Draft the first levels
         | 21   | 30 | Space   |
         | 31   | 40 | Sports  |
 
+    @browser
     Scenario: The level number counts straight through
       Given the player has won level 10
       When the next level opens
@@ -101,12 +102,15 @@ Feature: Draft the first levels
       Given Animals, whose only 2-letter final word is used by the tutorial
       Then its levels have 2, 3, 3, 3, 3, 3, 4, 4, 4, 5 rows
 
+    # Claude does this while drafting: it can't be checked automatically.
+    @manual
     Scenario: A theme with no short final words is flagged
       Given a theme with no 2-letter or 3-letter final words
       When the levels are drafted
       Then Claude flags it to the designer
       And those levels have 4 rows
 
+  @browser
   Rule: A full-screen interstitial shows when the theme changes
 
     Scenario: The theme changes

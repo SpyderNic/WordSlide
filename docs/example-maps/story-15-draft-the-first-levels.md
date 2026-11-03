@@ -1,6 +1,6 @@
 # Story 15: Draft the first levels
 
-**Status:** 🟢 Approved by the designer on 2026-10-31, with Q13 and Q14 added on 2026-11-03, along with its scenarios in [story-15-draft-the-first-levels.feature](../../features/story-15-draft-the-first-levels.feature). Not implemented yet. It needs stories 1 and 14 first.
+**Status:** 🟢 Approved by the designer on 2026-10-31, with Q13 and Q14 added on 2026-11-03, and built on 2026-11-03, along with its scenarios in [story-15-draft-the-first-levels.feature](../../features/story-15-draft-the-first-levels.feature).
 
 *As the game's designer, I want a first set of levels to play, so that I can find out whether the game is fun and how hard it should be.*
 

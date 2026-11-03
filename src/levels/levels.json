@@ -1,0 +1,680 @@
+[
+  {
+    "theme": "Animals",
+    "tutorial": true,
+    "answers": [
+      {
+        "word": "FOX",
+        "revealed": [
+          {
+            "position": 1,
+            "letter": "F"
+          },
+          {
+            "position": 2,
+            "letter": "O"
+          }
+        ]
+      },
+      {
+        "word": "OWL",
+        "revealed": [
+          {
+            "position": 1,
+            "letter": "O"
+          },
+          {
+            "position": 3,
+            "letter": "L"
+          }
+        ]
+      }
+    ],
+    "finalWord": "OX"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "CALF"
+      },
+      {
+        "word": "CAMEL"
+      },
+      {
+        "word": "OTTER"
+      }
+    ],
+    "finalWord": "CAT"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "BEAR"
+      },
+      {
+        "word": "CLAM"
+      },
+      {
+        "word": "MOTH"
+      }
+    ],
+    "finalWord": "BAT"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "APE"
+      },
+      {
+        "word": "BISON"
+      },
+      {
+        "word": "TIGER"
+      }
+    ],
+    "finalWord": "ANT"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "BEE"
+      },
+      {
+        "word": "CRANE"
+      },
+      {
+        "word": "KOALA"
+      }
+    ],
+    "finalWord": "EEL"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "BIRD"
+      },
+      {
+        "word": "CRAB"
+      },
+      {
+        "word": "GOAT"
+      }
+    ],
+    "finalWord": "RAT"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "ALPACA"
+      },
+      {
+        "word": "IGUANA"
+      },
+      {
+        "word": "MONKEY"
+      },
+      {
+        "word": "TOUCAN"
+      }
+    ],
+    "finalWord": "LION"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "BADGER"
+      },
+      {
+        "word": "DOG"
+      },
+      {
+        "word": "RAVEN"
+      },
+      {
+        "word": "GECKO"
+      }
+    ],
+    "finalWord": "DOVE"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "EMU"
+      },
+      {
+        "word": "COBRA"
+      },
+      {
+        "word": "BEETLE"
+      },
+      {
+        "word": "DONKEY"
+      }
+    ],
+    "finalWord": "MOLE"
+  },
+  {
+    "theme": "Animals",
+    "answers": [
+      {
+        "word": "GOOSE"
+      },
+      {
+        "word": "CHICKEN"
+      },
+      {
+        "word": "BEAVER"
+      },
+      {
+        "word": "RHINO"
+      },
+      {
+        "word": "LEOPARD"
+      }
+    ],
+    "finalWord": "SNAIL"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "BACON"
+      },
+      {
+        "word": "CRUMB"
+      },
+      {
+        "word": "STEAK"
+      }
+    ],
+    "finalWord": "NUT"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "CHOP"
+      },
+      {
+        "word": "APPLE"
+      },
+      {
+        "word": "DONUT"
+      }
+    ],
+    "finalWord": "OAT"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "JELLY"
+      },
+      {
+        "word": "KEBAB"
+      },
+      {
+        "word": "MELON"
+      }
+    ],
+    "finalWord": "JAM"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "CHILI"
+      },
+      {
+        "word": "CREAM"
+      },
+      {
+        "word": "MANGO"
+      }
+    ],
+    "finalWord": "HAM"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "BAGEL"
+      },
+      {
+        "word": "CURRY"
+      },
+      {
+        "word": "LEMON"
+      }
+    ],
+    "finalWord": "GUM"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "BREAD"
+      },
+      {
+        "word": "CHIPS"
+      },
+      {
+        "word": "PEACH"
+      }
+    ],
+    "finalWord": "DIP"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "BASIL"
+      },
+      {
+        "word": "CARROT"
+      },
+      {
+        "word": "MUFFIN"
+      },
+      {
+        "word": "PEPPER"
+      }
+    ],
+    "finalWord": "SOUP"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "CASHEW"
+      },
+      {
+        "word": "CEREAL"
+      },
+      {
+        "word": "GARLIC"
+      },
+      {
+        "word": "PEANUT"
+      }
+    ],
+    "finalWord": "SALT"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "CAKE"
+      },
+      {
+        "word": "FLOUR"
+      },
+      {
+        "word": "BURGER"
+      },
+      {
+        "word": "RAISIN"
+      }
+    ],
+    "finalWord": "CORN"
+  },
+  {
+    "theme": "Food",
+    "answers": [
+      {
+        "word": "STEW"
+      },
+      {
+        "word": "BANANA"
+      },
+      {
+        "word": "WAFFLE"
+      },
+      {
+        "word": "LETTUCE"
+      },
+      {
+        "word": "PRETZEL"
+      }
+    ],
+    "finalWord": "WAFER"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "CORE"
+      },
+      {
+        "word": "BEAM"
+      },
+      {
+        "word": "SKY"
+      }
+    ],
+    "finalWord": "RAY"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "GIANT"
+      },
+      {
+        "word": "ALIEN"
+      },
+      {
+        "word": "LASER"
+      }
+    ],
+    "finalWord": "GAS"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "DUST"
+      },
+      {
+        "word": "DWARF"
+      },
+      {
+        "word": "NOVA"
+      }
+    ],
+    "finalWord": "UFO"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "LIGHT"
+      },
+      {
+        "word": "COMET"
+      },
+      {
+        "word": "CREW"
+      }
+    ],
+    "finalWord": "ICE"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "BLAST"
+      },
+      {
+        "word": "FUEL"
+      },
+      {
+        "word": "NIGHT"
+      }
+    ],
+    "finalWord": "SUN"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "MOON"
+      },
+      {
+        "word": "MARS"
+      },
+      {
+        "word": "PROBE"
+      }
+    ],
+    "finalWord": "ORB"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "CRATER"
+      },
+      {
+        "word": "ENGINE"
+      },
+      {
+        "word": "LANDER"
+      },
+      {
+        "word": "OXYGEN"
+      }
+    ],
+    "finalWord": "RING"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "COSMOS"
+      },
+      {
+        "word": "EARTH"
+      },
+      {
+        "word": "GALAXY"
+      },
+      {
+        "word": "ORBIT"
+      }
+    ],
+    "finalWord": "STAR"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "ROVER"
+      },
+      {
+        "word": "METEOR"
+      },
+      {
+        "word": "ORION"
+      },
+      {
+        "word": "RADAR"
+      }
+    ],
+    "finalWord": "VOID"
+  },
+  {
+    "theme": "Space",
+    "answers": [
+      {
+        "word": "CAPSULE"
+      },
+      {
+        "word": "JUPITER"
+      },
+      {
+        "word": "BIG BANG"
+      },
+      {
+        "word": "LAUNCH"
+      },
+      {
+        "word": "SATURN"
+      }
+    ],
+    "finalWord": "LUNAR"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "PASS"
+      },
+      {
+        "word": "BOXER"
+      },
+      {
+        "word": "COURT"
+      }
+    ],
+    "finalWord": "SET"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "DART"
+      },
+      {
+        "word": "BOUT"
+      },
+      {
+        "word": "DUNK"
+      }
+    ],
+    "finalWord": "RUN"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "CANOE"
+      },
+      {
+        "word": "ACE"
+      },
+      {
+        "word": "KART"
+      }
+    ],
+    "finalWord": "NET"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "CHAMP"
+      },
+      {
+        "word": "BALL"
+      },
+      {
+        "word": "RACE"
+      }
+    ],
+    "finalWord": "PAR"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "CLIMB"
+      },
+      {
+        "word": "CLUB"
+      },
+      {
+        "word": "FIELD"
+      }
+    ],
+    "finalWord": "CUE"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "GAME"
+      },
+      {
+        "word": "KAYAK"
+      },
+      {
+        "word": "SWIM"
+      }
+    ],
+    "finalWord": "GYM"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "CUP"
+      },
+      {
+        "word": "DISCUS"
+      },
+      {
+        "word": "HOCKEY"
+      },
+      {
+        "word": "KEEPER"
+      }
+    ],
+    "finalWord": "PUCK"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "COACH"
+      },
+      {
+        "word": "BIKE"
+      },
+      {
+        "word": "KARATE"
+      },
+      {
+        "word": "GOALIE"
+      }
+    ],
+    "finalWord": "HIKE"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "GLOVE"
+      },
+      {
+        "word": "BOX"
+      },
+      {
+        "word": "BAT"
+      },
+      {
+        "word": "HURDLE"
+      }
+    ],
+    "finalWord": "GOAL"
+  },
+  {
+    "theme": "Sports",
+    "answers": [
+      {
+        "word": "JUMP"
+      },
+      {
+        "word": "ARCHERY"
+      },
+      {
+        "word": "ATHLETE"
+      },
+      {
+        "word": "CYCLING"
+      },
+      {
+        "word": "WHISTLE"
+      }
+    ],
+    "finalWord": "MATCH"
+  }
+]
