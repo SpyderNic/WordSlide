@@ -163,9 +163,9 @@ Feature: First-level tutorial
       When the player taps the W in the pool
       Then OWL locks
 
-    Scenario: Tapping a letter in step 1 does nothing
+    Scenario: Tapping the X completes the word
       When the player taps the X in the pool
-      Then nothing changes
+      Then FOX locks
 
     Scenario Outline: Other keys do nothing
       When the player presses <key>

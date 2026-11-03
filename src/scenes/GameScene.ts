@@ -556,11 +556,11 @@ export class GameScene extends Phaser.Scene {
     return step <= 2 && key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
   }
 
-  /** In step 2, tapping the step's letter in the pool works too (story 12, R10). */
+  /** In steps 1 and 2, tapping the step's letter in the pool works too (story 12, R10). */
   private tutorialAllowsTap(hit: Hit): boolean {
     const step = this.tutorialStepNow();
     if (!step) return true;
-    return step === 2 && hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
+    return step <= 2 && hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
   }
 
   private tutorialAllowsCell(row: number, cell: number): boolean {
