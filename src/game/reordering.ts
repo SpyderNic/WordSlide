@@ -2,15 +2,20 @@ import { cellsOf } from './characters';
 import { rowOrder, type Level } from './level';
 import { validateLevel } from './validator';
 
+/** Whether words in this order can spell the final word by sliding alone. */
+export function spellsBySliding(words: string[], finalWord: string): boolean {
+  const letters = cellsOf(finalWord);
+  return words.every((word, row) => cellsOf(word).includes(letters[row]));
+}
+
 /** A level needs reordering if its rows, in their starting order (D5), can't spell the final word by sliding (story 21, R1). */
 export function needsReordering(level: Level): boolean {
-  const letters = cellsOf(level.finalWord);
-  return !rowOrder(level.answers).every((answer, row) => cellsOf(answer.word).includes(letters[row]));
+  return !spellsBySliding(rowOrder(level.answers).map((answer) => answer.word), level.finalWord);
 }
 
 /**
- * The reordering tutorial's level number, counted from 1, or null if no level needs reordering.
- * It's the first level that needs reordering, worked out from the levels, so it moves when the content changes.
+ * The first level that needs reordering, counted from 1, or null if none does. Worked out from the levels, so it moves when
+ * the content changes. The game shows the tutorial there, unless the player's locked rows already spell the word (Q12).
  * Level 1's tutorial never counts: it teaches sliding only, and its ceremony puts its rows in order.
  */
 export function reorderingTutorial(levels: Level[]): number | null {
@@ -33,10 +38,4 @@ export function rowsInDesignedOrder(level: Level, words: string[]): number[] {
   const order = designedOrder(level);
   const from = words.map((_, row) => row);
   return from.sort((a, b) => order.indexOf(words[a]) - order.indexOf(words[b]));
-}
-
-/** Handles appear from the reordering tutorial on (D45). */
-export function hasHandles(levels: Level[], levelNumber: number): boolean {
-  const tutorial = reorderingTutorial(levels);
-  return tutorial !== null && levelNumber >= tutorial;
 }

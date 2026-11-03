@@ -11,7 +11,7 @@ import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
 import { PhaseTwoView, type PhaseTwoRules } from './PhaseTwoView';
 import { loadHand, makeGuideText, makeHand, moveHand } from './guide';
-import { designedOrder, hasHandles, reorderingTutorial, rowsInDesignedOrder } from '../game/reordering';
+import { designedOrder, needsReordering, rowsInDesignedOrder, spellsBySliding } from '../game/reordering';
 import { firstReorderingMove, tutorialPlan, tutorialStep, type ReorderingMove, type TutorialPlan, type TutorialStep } from '../game/tutorial';
 import { buildPopup } from './popup';
 import { makeTile, paintTile } from './tiles';
@@ -191,7 +191,7 @@ export class GameScene extends Phaser.Scene {
 
   /** For tests: opens a level as if the player had reached it. */
   private show(level: Level, levelNumber: number, points: number) {
-    this.progress = { level: levelNumber, points, inLevel: null };
+    this.progress = { ...this.progress, level: levelNumber, points, inLevel: null };
     this.startLevel(level);
   }
 
@@ -546,6 +546,8 @@ export class GameScene extends Phaser.Scene {
     if (!this.reordering || this.reorderingDone || !phase || phase.won) return null;
     if (phase.rows[this.reordering.to]?.word === this.reordering.word) {
       this.reorderingDone = true;
+      this.progress = { ...this.progress, reorderingTaught: true };
+      this.save();
       return null;
     }
     return 'reorder';
@@ -588,18 +590,11 @@ export class GameScene extends Phaser.Scene {
     return (cells ?? []).some((target) => target.row === row && target.cell === cell);
   }
 
-  /** Handles appear from the reordering tutorial on (story 21, R1). Tests can play as if it were already behind the player. */
+  /** Saved once the player makes the reordering tutorial's move (story 21, R1). Tests can play as if it were already behind the player. */
   private reorderingTaught(): boolean {
     const taught = (window as unknown as { wordSlideReorderingTaught?: boolean }).wordSlideReorderingTaught;
     if (import.meta.env.DEV && taught) return true;
-    return hasHandles(this.levels, this.levelNumber);
-  }
-
-  /** The first level that needs reordering teaches it (story 21, R1). */
-  private isReorderingTutorial(): boolean {
-    const taught = (window as unknown as { wordSlideReorderingTaught?: boolean }).wordSlideReorderingTaught;
-    if (import.meta.env.DEV && taught) return false;
-    return reorderingTutorial(this.levels) === this.levelNumber;
+    return this.progress.reorderingTaught === true;
   }
 
   private phaseTwoRules(): PhaseTwoRules {
@@ -811,11 +806,14 @@ export class GameScene extends Phaser.Scene {
     if (this.phaseTwo) return;
     let from = this.layoutNow.rows.map((row) => ({ x: row.cells[0].x + row.cells[0].width / 2, y: row.cells[0].y + row.cells[0].height / 2 }));
     let words = this.board.rows.map((row) => row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join(''));
-    const canReorder = this.reorderingTaught();
-    if (canReorder && !this.tutorial && this.isReorderingTutorial()) {
-      this.reordering = firstReorderingMove(words, designedOrder(this.level));
-    }
-    if (!canReorder) {
+    // Until reordering is taught, a level that needs it shows the tutorial, unless the rows as locked already spell the word (Q12).
+    const taught = this.reorderingTaught();
+    const lockedSpells = spellsBySliding(words, this.level.finalWord);
+    const teachHere = !taught && !this.tutorial && needsReordering(this.level) && !lockedSpells;
+    // The move comes from the rows' starting order, so reopening after it was made doesn't show it again.
+    if (teachHere) this.reordering = firstReorderingMove(words, designedOrder(this.level));
+    const canReorder = taught || teachHere;
+    if (!canReorder && !lockedSpells) {
       // Each row glides from where it was in phase one to its designed slot.
       const rows = rowsInDesignedOrder(this.level, words);
       from = rows.map((row) => from[row]);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Given, Then, When } from '@cucumber/cucumber';
 import type { Level } from '../../../src/game/level';
-import { hasHandles, needsReordering, reorderingTutorial } from '../../../src/game/reordering';
+import { needsReordering, reorderingTutorial } from '../../../src/game/reordering';
 import { makeLevel, tutorialLevel } from '../../support/levels';
 
 interface ReorderingWorld {
@@ -51,8 +51,4 @@ Given('the levels start with the FOX, OWL and OX tutorial, followed by a level t
 
 Then('the 2nd level is the reordering tutorial', function (this: ReorderingWorld) {
   assert.equal(reorderingTutorial(this.levels), 2);
-});
-
-Then('level 1 has no handles', function (this: ReorderingWorld) {
-  assert.equal(hasHandles(this.levels, 1), false);
 });

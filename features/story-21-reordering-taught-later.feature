@@ -1,4 +1,4 @@
-# Status: approved by the designer on 2026-11-03.
+# Status: approved by the designer on 2026-11-03, and changed after playing (Q12).
 # Map: docs/example-maps/story-21-reordering-taught-later.md
 # Level 1 is the tutorial level: the answers FOX and OWL, and the final word OX,
 # starting as F O _ and O _ L. Other levels are test levels, arranged so that
@@ -10,7 +10,7 @@ Feature: Reordering is taught later
   I want to learn one move at a time
   So that the early levels stay simple and reordering arrives as something new
 
-  Rule: The first level that needs reordering is the reordering tutorial
+  Rule: The reordering tutorial shows on the first level whose rows, as locked, need moving
 
     @browser
     Scenario: No handles before it
@@ -32,8 +32,9 @@ Feature: Reordering is taught later
       Then every row has its handle
 
     @browser
-    Scenario: Handles after the tutorial, even where reordering isn't needed
-      Given a level after the first level that needs reordering, which doesn't need reordering itself
+    Scenario: Handles once reordering is taught, even where it isn't needed
+      Given the player has been taught reordering
+      And a level that doesn't need reordering
       When phase two starts
       Then every row has its handle
 
@@ -42,7 +43,7 @@ Feature: Reordering is taught later
       When the 2nd level changes so that it needs reordering
       Then the 2nd level is the reordering tutorial
 
-  Rule: Before the reordering tutorial, the ceremony puts the rows in the designed order
+  Rule: Before reordering is taught, the ceremony puts the rows in the designed order
 
     @browser
     Scenario: Same-length rows swap during the ceremony
@@ -67,8 +68,9 @@ Feature: Reordering is taught later
       Then the rows haven't changed order
 
     @browser
-    Scenario: From the tutorial on, rows keep their phase-one order
-      Given a level after the first level that needs reordering, with two same-length answers
+    Scenario: Once reordering is taught, rows keep their phase-one order
+      Given the player has been taught reordering
+      And a level with two same-length answers
       And they are locked in the other order from the designed one
       When the ceremony ends
       Then the rows are in the order they were locked
@@ -161,7 +163,6 @@ Feature: Reordering is taught later
     Scenario: Level 1 never counts
       Given the levels start with the FOX, OWL and OX tutorial, followed by a level that needs reordering
       Then the 2nd level is the reordering tutorial
-      And level 1 has no handles
 
   Rule: On a level that needs several moves, the hand shows the first
 
@@ -178,5 +179,37 @@ Feature: Reordering is taught later
       Given the player has made the shown move
       When the player swaps the top two rows
       Then the rows are in the solution's order
+
+  Rule: If the player's rows don't need moving, the tutorial waits (Q12)
+
+    @browser
+    Scenario: Locked so that no move is needed
+      Given the first level that needs reordering
+      And its same-length words are locked so that the rows spell the final word by sliding
+      When the ceremony ends
+      Then there's no tutorial text and no hand
+      And no row has a handle
+
+    @browser
+    Scenario: The tutorial shows on a later level whose rows need moving
+      Given the player locked the first level that needs reordering so that no move was needed
+      When the player wins it and the next level, which needs reordering, reaches phase two
+      Then the text says "To find the vertical final word, you can reorder the words"
+
+    @browser
+    Scenario: Making the move teaches reordering for good
+      Given the reordering tutorial's ceremony has ended
+      And the player has made the shown move
+      When the player wins the level and the next level reaches phase two
+      Then every row has its handle
+      And there's no tutorial text and no hand
+
+    @browser
+    Scenario: Reopening after the move
+      Given the reordering tutorial's ceremony has ended
+      And the player has made the shown move
+      When the game closes and opens again
+      Then every row has its handle
+      And there's no tutorial text and no hand
 
   # The planned content (R6) is checked in story 15.

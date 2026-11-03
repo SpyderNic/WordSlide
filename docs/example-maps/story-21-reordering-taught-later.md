@@ -1,6 +1,6 @@
 # Story 21: Reordering is taught later
 
-**Status:** 🟢 Approved by the designer on 2026-11-03, along with its scenarios in [story-21-reordering-taught-later.feature](../../features/story-21-reordering-taught-later.feature). Built on 2026-11-03.
+**Status:** 🟢 Approved by the designer on 2026-11-03, and changed after playing (Q12). Built on 2026-11-03.
 
 *As a new player, I want to learn one move at a time, so that the early levels stay simple and reordering arrives as something new.*
 
@@ -14,19 +14,25 @@ All level 1 examples use the tutorial level: the answers FOX and OWL, and the fi
 
 ## Rules and examples
 
-### 🟦 R1. The first level that needs reordering is the reordering tutorial
+### 🟦 R1. The reordering tutorial shows on the first level whose rows, as the player locked them, need moving
 
-*Changed by the designer, with Q10.* It's worked out from the levels themselves, so nothing in a level's data marks it, and it moves when the content changes. A level needs reordering if its starting order, the rows' order by length (D5), isn't the order that spells the final word (Q10). Level 1, the onboarding tutorial, never counts: its rows swap in the ceremony (R2), since it teaches sliding only. Before the reordering tutorial, phase two has no handles, and rows can't be moved by mouse, touch or keyboard (D45). From it on, every level has handles.
+*Changed by the designer, with Q10 and Q12.* It's worked out from the levels and from how the player locked the words, so nothing in a level's data marks it, and it moves when the content changes. A level needs reordering if its starting order, the rows' order by length (D5), isn't the order that spells the final word (Q10). Level 1, the onboarding tutorial, never counts: its rows swap in the ceremony (R2), since it teaches sliding only.
 
-- 🟩 In today's prototype, that's level 2
-- 🟩 In the planned content, that's level 21, and level 20's phase two has no handles: Shift+Up does nothing
+On a level that needs reordering, before reordering has been taught, the ceremony keeps the rows as the player locked them. If they can't spell the final word by sliding, the tutorial shows. If they can, because same-length words were locked the other way round (D8), there's no tutorial and no handles, and the tutorial waits for a later level (Q12).
+
+Reordering is taught once the player makes the tutorial's move, and that's saved with their progress. Until then, phase two has no handles outside the tutorial, and rows can't be moved by mouse, touch or keyboard (D45). From then on, every level has handles.
+
+- 🟩 In today's prototype, the first level that needs reordering is level 2
+- 🟩 In the planned content, it's level 21, and level 20's phase two has no handles: Shift+Up does nothing
 - 🟩 If an early level changes so that it needs reordering, the tutorial moves there, with no change to the rules or scenarios
+- 🟩 In level 2, the player locks the two same-length words the other way round: the rows spell the final word by sliding, so there's no tutorial and no handles. Level 3 shows the tutorial, if its rows need moving
+- 🟩 After the player makes the tutorial's move and closes the game, reopening it on the next level shows handles
 
 **Confirmed:** ☑
 
-### 🟦 R2. Before the reordering tutorial, the ceremony puts the rows in the designed order
+### 🟦 R2. Before reordering is taught, the ceremony puts the rows in the designed order
 
-*From Q1, Q5 and Q8.* Words can lock in any row of the same length (D8), and without handles the player couldn't fix that. So, while the words left-align, the rows also glide into the solution's order, at the same time and speed. Only same-length rows ever swap. Phase one is unchanged. From the reordering tutorial on, rows keep their phase-one order (story 7, R3).
+*From Q1, Q5 and Q8.* Words can lock in any row of the same length (D8), and without handles the player couldn't fix that. So, if the rows as locked can't spell the final word, the rows glide into the solution's order while the words left-align, at the same time and speed. Only same-length rows ever swap. Phase one is unchanged. This doesn't apply on the level where the tutorial shows (R1). Once reordering is taught, rows keep their phase-one order (story 7, R3).
 
 - 🟩 In level 1, FOX and OWL lock as FOX, OWL. During the ceremony, the rows swap to OWL, FOX, and the column reads O, F
 - 🟩 After the reordering tutorial, two words locked in the other order stay as they are, and the player reorders them
@@ -81,6 +87,10 @@ As in story 12, R8.
 ---
 
 ## Answered questions
+
+### 🟥 Q12. What if the player locks the tutorial level's words so that no move is needed?
+
+*From playing on 2026-11-03.* **Answer:** The tutorial is skipped, and the handles stay hidden, until a level where the player's rows do need moving (R1).
 
 ### 🟥 Q10. What counts as "needs reordering"?
 

@@ -3,7 +3,7 @@ import { createBdd } from 'playwright-bdd';
 import type { Level } from '../../../src/game/level';
 import { DEFAULT_WORDS, makeLevel } from '../../support/levels';
 import { reorderingNotTaught, test, type Scenario } from './fixtures';
-import { dragHandle, dragSlowlyAndRelease, fillRow, pitchOf, ready, two } from './phase-two.steps';
+import { arrange, dragHandle, dragSlowlyAndRelease, fillRow, pitchOf, ready, two, waitForPopup } from './phase-two.steps';
 import { handPath, tutorialText, visits } from './story-12.steps';
 import { current } from './story-02.steps';
 
@@ -11,8 +11,8 @@ const { Given, When, Then } = createBdd(test);
 
 // In length order (D5), LEMUR, ZEBRA, KANGAROO spell EEN by sliding alone.
 const slidesOnly = (): Level => makeLevel(DEFAULT_WORDS, 'EEN');
-// Only ZEBRA has a Z, so ZEBRA must move above LEMUR.
-const needsReordering = (): Level => makeLevel(DEFAULT_WORDS, 'ZLK');
+// Only ZEBRA's E and LEMUR's L work, so ZEBRA must sit above LEMUR. Locked that way round (D8), the rows spell ELK by sliding.
+const needsReordering = (): Level => makeLevel(DEFAULT_WORDS, 'ELK');
 
 
 /** The levels slide only, need reordering, then slide only: the 2nd is the reordering tutorial. */
@@ -37,7 +37,13 @@ Given('the first level that needs reordering', async ({ page, scenario }) => {
   await onLevel(page, scenario, 2);
 });
 
-Given("a level after the first level that needs reordering, which doesn't need reordering itself", async ({ page, scenario }) => {
+// Saved with the player's progress, as the game saves it once the tutorial's move is made (Q12).
+Given('the player has been taught reordering', async ({ page }) => {
+  await reorderingNotTaught(page);
+  await page.addInitScript(() => localStorage.setItem('wordSlide.progress', JSON.stringify({ level: 1, points: 0, inLevel: null, reorderingTaught: true })));
+});
+
+Given("a level that doesn't need reordering", async ({ page, scenario }) => {
   await onLevel(page, scenario, 3);
 });
 
@@ -65,7 +71,7 @@ Given('a level before the first level that needs reordering, with two same-lengt
   await onLevel(page, scenario, 1);
 });
 
-Given('a level after the first level that needs reordering, with two same-length answers', async ({ page, scenario }) => {
+Given('a level with two same-length answers', async ({ page, scenario }) => {
   await onLevel(page, scenario, 3);
 });
 
@@ -232,4 +238,48 @@ Then("the rows are in the solution's order", async ({ page }) => {
 // Story 7: the fixtures already play as if the reordering tutorial were behind the player. This says so.
 Given('the reordering tutorial has been shown', async ({ page }) => {
   await page.addInitScript(() => Object.assign(window, { wordSlideReorderingTaught: true }));
+});
+
+// The tutorial waits (Q12)
+
+Given('its same-length words are locked so that the rows spell the final word by sliding', async ({ scenario }) => {
+  scenario.setup.push(fillRow(0, 'ZEBRA'), fillRow(1, 'LEMUR'));
+});
+
+/** Wins the level on screen, presses the popup's button, and gets the next level past its ceremony. */
+async function winAndGoOn(page: Page, scenario: Scenario, order: string[], cells: Record<string, number>) {
+  await arrange(page, order, cells);
+  // As story 10 does: select the top word, then nudge it away and back, so it settles on the winning column.
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(150);
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(50);
+  await page.keyboard.press('ArrowRight');
+  await waitForPopup(page);
+  const levelNumber = async () => ((await current(page)) as unknown as { levelNumber: number }).levelNumber;
+  const level = await levelNumber();
+  await page.keyboard.press('Enter');
+  await expect.poll(levelNumber).toBe(level + 1);
+  await page.waitForTimeout(600);
+  await ready(page, scenario);
+}
+
+Given('the player locked the first level that needs reordering so that no move was needed', async ({ page, scenario }) => {
+  await reorderingNotTaught(page);
+  scenario.levelList = [slidesOnly(), needsReordering(), twoRows(), slidesOnly()];
+  scenario.level = scenario.levelList[1];
+  scenario.levelNumber = 2;
+  scenario.finalWordGiven = true;
+  scenario.setup.push(fillRow(0, 'ZEBRA'), fillRow(1, 'LEMUR'));
+  await ready(page, scenario);
+  expect(await tutorialText(page)).toEqual([]);
+});
+
+When('the player wins it and the next level, which needs reordering, reaches phase two', async ({ page, scenario }) => {
+  await winAndGoOn(page, scenario, ['ZEBRA', 'LEMUR', 'KANGAROO'], { ZEBRA: 1, LEMUR: 0, KANGAROO: 0 });
+});
+
+// After the move, DOG is above CAT: DOG's O and CAT's C spell OC.
+When('the player wins the level and the next level reaches phase two', async ({ page, scenario }) => {
+  await winAndGoOn(page, scenario, ['DOG', 'CAT'], { DOG: 1, CAT: 0 });
 });

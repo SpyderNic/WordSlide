@@ -13,15 +13,21 @@ export interface Progress {
   level: number;
   points: number;
   inLevel: LevelSnapshot | null;
+  /** Set once the player makes the reordering tutorial's move: from then on, every level has handles (story 21, Q12). */
+  reorderingTaught?: boolean;
 }
 
 export const NEW_PLAYER: Progress = { level: 1, points: 0, inLevel: null };
 
 export const SAVE_KEY = 'wordSlide.progress';
 
+function taught(progress: Partial<Progress>): Pick<Progress, 'reorderingTaught'> {
+  return progress.reorderingTaught === true ? { reorderingTaught: true } : {};
+}
+
 /** Winning unlocks the next level and gives 1 point (D23). The next level starts fresh. */
 export function winLevel(progress: Progress): Progress {
-  return { level: progress.level + 1, points: progress.points + 1, inLevel: null };
+  return { ...taught(progress), level: progress.level + 1, points: progress.points + 1, inLevel: null };
 }
 
 export function writeProgress(progress: Progress): string {
@@ -35,7 +41,7 @@ export function readProgress(text: string | null): Progress {
     const level = saved?.level;
     const points = saved?.points;
     if (!Number.isInteger(level) || level! < 1 || !Number.isInteger(points) || points! < 0) return NEW_PLAYER;
-    return { level: level!, points: points!, inLevel: saved?.inLevel ?? null };
+    return { ...taught(saved!), level: level!, points: points!, inLevel: saved?.inLevel ?? null };
   } catch {
     return NEW_PLAYER;
   }
