@@ -22,9 +22,9 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 
 ## Where we are
 
-Milestones 1 to 4 are done, and the designer has been told how to play milestone 4. The test audit below is done and reported in `docs/test-audit.md`. Milestone 5 has started, and story 11 is built. After playing it, the designer added split-word locking (D48, story 6 R16), which is built too, and so are story 16, the visual style, and story 12, the tutorial. **Next is the designer playing milestone 5.**
+Milestones 1 to 4 are done, and the designer has been told how to play milestone 4. The test audit below is done and reported in `docs/test-audit.md`. Milestone 5 has started, and story 11 is built. After playing it, the designer added split-word locking (D48, story 6 R16), which is built too, and so are story 16, the visual style, and story 12, the tutorial. Before playing, the designer moved reordering to its own tutorial, on the first level that needs it (story 21, built on 2026-11-03). In the prototype, that's level 2. **Next is the designer playing milestone 5.**
 
-The playtest levels are the tutorial (FOX and OWL) and two blind levels. The handles' link to the tutorial (D45) is still only a `canReorder` setting in `src/game/phaseTwo.ts`: every level after the tutorial shows handles.
+The playtest levels are the tutorial (FOX and OWL) and two blind levels. Handles appear from the first level that needs reordering (D45, `src/game/reordering.ts`).
 
 Mobile testing on a real device is parked until all milestones are done, at the designer's request.
 

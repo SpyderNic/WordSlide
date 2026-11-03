@@ -72,7 +72,9 @@ Your document says words should be familiar enough to reason about. Other langua
 
 **Confirmed:** ☑
 
-### 🟦 R9. From level 2, reordering is needed in every level, and no letters are revealed
+### 🟦 R9. From level 2, no letters are revealed, and reordering follows story 21
+
+*Changed by story 21 on 2026-11-03.* Levels 2 to 20 don't need reordering, so level 21, the first Space level, is the reordering tutorial. After it, each theme's first level at each row count doesn't need reordering, and the rest do (story 21, R6). The generator's setting is chosen per level.
 
 *From Q5 and Q6.* You can change this after playing.
 

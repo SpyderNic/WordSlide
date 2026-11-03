@@ -51,11 +51,22 @@ Feature: Draft the first levels
       When the words in a theme's levels are compared
       Then no answer or final word appears twice
 
-  Rule: From level 2, reordering is needed and no letters are revealed
+  Rule: Reordering is first needed at level 21, then eases in at each row count (story 21, R6)
 
-    Scenario: Reordering is needed
-      When levels 2 to 40 are checked
-      Then none of them can be solved by sliding alone
+    Scenario: Levels 2 to 20 don't need reordering
+      When levels 2 to 20 are checked
+      Then none of them needs reordering
+
+    Scenario: Level 21 is the reordering tutorial
+      When the levels are checked
+      Then the first level that needs reordering is level 21
+
+    Scenario: After it, each theme eases in at each row count
+      When the Space and Sports levels are checked
+      Then in each theme, the first level with each number of rows doesn't need reordering, apart from level 21
+      And every other level does
+
+  Rule: From level 2, no letters are revealed (which levels need reordering is story 21)
 
     Scenario: Nothing is revealed but special characters
       When levels 2 to 40 are checked

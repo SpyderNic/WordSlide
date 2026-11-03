@@ -11,7 +11,8 @@ import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
 import { PhaseTwoView, type PhaseTwoRules } from './PhaseTwoView';
 import { loadHand, makeGuideText, makeHand, moveHand } from './guide';
-import { tutorialPlan, tutorialStep, type TutorialPlan, type TutorialStep } from '../game/tutorial';
+import { designedOrder, hasHandles, reorderingTutorial, rowsInDesignedOrder } from '../game/reordering';
+import { firstReorderingMove, tutorialPlan, tutorialStep, type ReorderingMove, type TutorialPlan, type TutorialStep } from '../game/tutorial';
 import { buildPopup } from './popup';
 import { makeTile, paintTile } from './tiles';
 
@@ -94,6 +95,10 @@ export class GameScene extends Phaser.Scene {
   private incoming = new Map<string, number>();
   /** The tutorial, on a level marked as one (story 12). */
   private tutorial: TutorialPlan | null = null;
+  /** The reordering tutorial's move, on the first level that needs reordering (story 21). */
+  private reordering: ReorderingMove | null = null;
+  /** Set once the move is made: after it, the player plays freely. */
+  private reorderingDone = false;
   private guideText: Phaser.GameObjects.Text | null = null;
   private hand: Phaser.GameObjects.Container | null = null;
   private themeGlow: Phaser.GameObjects.Rectangle | null = null;
@@ -202,6 +207,8 @@ export class GameScene extends Phaser.Scene {
     this.effects = [];
     this.clearGuide();
     this.tutorial = level?.tutorial ? tutorialPlan(level) : null;
+    this.reordering = null;
+    this.reorderingDone = false;
     this.press = null;
     this.endDragVisuals();
     this.levelNumber = this.progress.level;
@@ -534,8 +541,14 @@ export class GameScene extends Phaser.Scene {
   // The tutorial (story 12)
 
   private tutorialStepNow(): TutorialStep | null {
-    if (!this.tutorial) return null;
-    return tutorialStep(this.tutorial, this.board, this.phaseTwo?.phaseState ?? null);
+    if (this.tutorial) return tutorialStep(this.tutorial, this.board, this.phaseTwo?.phaseState ?? null);
+    const phase = this.phaseTwo?.phaseState;
+    if (!this.reordering || this.reorderingDone || !phase || phase.won) return null;
+    if (phase.rows[this.reordering.to]?.word === this.reordering.word) {
+      this.reorderingDone = true;
+      return null;
+    }
+    return 'reorder';
   }
 
   /** The empty cells the current step fills. */
@@ -559,14 +572,14 @@ export class GameScene extends Phaser.Scene {
   private tutorialAllowsKey(key: string): boolean {
     const step = this.tutorialStepNow();
     if (!step) return true;
-    return step <= 2 && key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
+    return (step === 1 || step === 2) && key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
   }
 
   /** In steps 1 and 2, tapping the step's letter in the pool works too (story 12, R10). */
   private tutorialAllowsTap(hit: Hit): boolean {
     const step = this.tutorialStepNow();
     if (!step) return true;
-    return step <= 2 && hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
+    return (step === 1 || step === 2) && hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
   }
 
   private tutorialAllowsCell(row: number, cell: number): boolean {
@@ -575,13 +588,27 @@ export class GameScene extends Phaser.Scene {
     return (cells ?? []).some((target) => target.row === row && target.cell === cell);
   }
 
+  /** Handles appear from the reordering tutorial on (story 21, R1). Tests can play as if it were already behind the player. */
+  private reorderingTaught(): boolean {
+    const taught = (window as unknown as { wordSlideReorderingTaught?: boolean }).wordSlideReorderingTaught;
+    if (import.meta.env.DEV && taught) return true;
+    return hasHandles(this.levels, this.levelNumber);
+  }
+
+  /** The first level that needs reordering teaches it (story 21, R1). */
+  private isReorderingTutorial(): boolean {
+    const taught = (window as unknown as { wordSlideReorderingTaught?: boolean }).wordSlideReorderingTaught;
+    if (import.meta.env.DEV && taught) return false;
+    return reorderingTutorial(this.levels) === this.levelNumber;
+  }
+
   private phaseTwoRules(): PhaseTwoRules {
     const step = () => this.tutorialStepNow();
-    const plan = this.tutorial;
+    const move = () => this.reordering!;
     return {
-      handle: (word) => !step() || (step() === 3 && word === plan!.move.word),
-      slide: (word) => !step() || (step() === 4 && word === plan!.slide.word),
-      slot: (word, slot) => !step() || (word === plan!.move.word && Math.sign(slot - plan!.move.from) === Math.sign(plan!.move.to - plan!.move.from)),
+      handle: (word) => !step() || (step() === 'reorder' && word === move().word),
+      slide: (word) => !step() || (step() === 3 && word === this.tutorial!.slide.word),
+      slot: (word, slot) => !step() || (step() === 'reorder' && word === move().word && Math.sign(slot - move().from) === Math.sign(move().to - move().from)),
       keys: () => !step(),
     };
   }
@@ -617,8 +644,8 @@ export class GameScene extends Phaser.Scene {
     const texts: Record<string, string> = {
       'step 1': 'Drag a letter to complete a word',
       'step 2': 'Finish the grid!',
-      'step 3': 'To find the vertical final word, you can reorder the words',
-      'step 4': 'You can drag words side to side to find the word, try it!',
+      'step 3': 'You can drag words side to side to find the word, try it!',
+      'step reorder': 'To find the vertical final word, you can reorder the words',
       tip: 'All words in a level relate to a theme.',
     };
     const layout = this.layoutNow;
@@ -636,19 +663,20 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    const plan = this.tutorial!;
+    const plan = this.tutorial;
+    const move = this.reordering;
     let from: { x: number; y: number } | null = null;
     let to: { x: number; y: number } | null = null;
-    if (step === 1) {
+    if (step === 1 && plan) {
       const tile = layout.poolTiles.find((candidate) => candidate.character === plan.first.letters[0]);
       if (tile) from = centre(tile);
       to = centre(layout.rows[plan.first.row].cells[plan.first.cells[0]]);
-    } else if (step === 3 && view) {
-      from = view.handleCentre(plan.move.word);
-      to = { x: from.x, y: from.y + (plan.move.to - plan.move.from) * view.rowPitch };
-    } else if (step === 4 && view) {
+    } else if (step === 3 && plan && view) {
       from = view.letterCentre(plan.slide.word, plan.slide.cell);
       to = { x: view.columnCentre, y: from.y };
+    } else if (step === 'reorder' && move && view) {
+      from = view.handleCentre(move.word);
+      to = { x: from.x, y: from.y + (move.to - move.from) * view.rowPitch };
     }
     if (!from || !to) return;
     this.hand = makeHand(this, layout.tileSize);
@@ -781,9 +809,19 @@ export class GameScene extends Phaser.Scene {
   /** Reopening goes straight to the finished layout, with any saved positions (story 11, R10). */
   private startCeremony(saved: PhaseTwoSnapshot | null = null, reopening = false) {
     if (this.phaseTwo) return;
-    const from = this.layoutNow.rows.map((row) => ({ x: row.cells[0].x + row.cells[0].width / 2, y: row.cells[0].y + row.cells[0].height / 2 }));
-    const words = this.board.rows.map((row) => row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join(''));
-    const phase = (saved && PhaseTwo.restore(saved, words, this.level.finalWord)) || new PhaseTwo(words, this.level.finalWord);
+    let from = this.layoutNow.rows.map((row) => ({ x: row.cells[0].x + row.cells[0].width / 2, y: row.cells[0].y + row.cells[0].height / 2 }));
+    let words = this.board.rows.map((row) => row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join(''));
+    const canReorder = this.reorderingTaught();
+    if (canReorder && !this.tutorial && this.isReorderingTutorial()) {
+      this.reordering = firstReorderingMove(words, designedOrder(this.level));
+    }
+    if (!canReorder) {
+      // Each row glides from where it was in phase one to its designed slot.
+      const rows = rowsInDesignedOrder(this.level, words);
+      from = rows.map((row) => from[row]);
+      words = rows.map((row) => words[row]);
+    }
+    const phase = (saved && PhaseTwo.restore(saved, words, this.level.finalWord, canReorder)) || new PhaseTwo(words, this.level.finalWord, canReorder);
     const next = this.levelNumber < this.levels.length ? this.levelNumber + 1 : null;
     const view = new PhaseTwoView(
       this,

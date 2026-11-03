@@ -31,9 +31,9 @@ Rows start centred (D5), so each word moves a different distance to the right.
 
 **Confirmed:** ☑
 
-### 🟦 R3. Rows keep the order they had in phase one
+### 🟦 R3. Rows keep the order they had in phase one, once the reordering tutorial has been shown
 
-Words can lock in a different row of the same length (D8), so this may not be the designed order.
+Words can lock in a different row of the same length (D8), so this may not be the designed order. *Changed by story 21 on 2026-11-03.* Before the reordering tutorial, the ceremony puts the rows in the designed order instead, since there are no handles (story 21, R2).
 
 - 🟩 With ZEBRA locked in the top row and LEMUR in the middle row, they stay that way
 
@@ -49,7 +49,7 @@ It wasn't visible in phase one.
 
 ### 🟦 R5. A handle appears for each row, once the reordering tutorial has been shown (D6, D45)
 
-Using them is story 9. In level 1, the tutorial's step 3 shows them.
+Using them is story 9. *Changed by story 21 on 2026-11-03.* The reordering tutorial is the first level that needs reordering, and it shows them.
 
 - 🟩 Three rows get three handles
 

@@ -1,4 +1,4 @@
-# Status: approved by the designer on 2026-10-31.
+# Status: approved by the designer on 2026-10-31, and changed by story 21 on 2026-11-03.
 # Map: docs/example-maps/story-12-first-level-onboarding.md
 # These scenarios use the designer's sample level, which isn't final: the
 # answers FOX and OWL, the final word OX, starting as F O _ and O _ L.
@@ -46,34 +46,10 @@ Feature: First-level tutorial
       Then OWL locks
       And the phase-two ceremony plays
 
-  Rule: Step 3 is reordering the words
+  Rule: Step 3 is sliding the word (changed by story 21: reordering moved to its own tutorial)
 
     Background:
       Given the ceremony has ended
-
-    Scenario: The step is shown
-      Then the text says "To find the vertical final word, you can reorder the words"
-      And a hand starts on FOX's handle and shows the row being dragged down
-
-    Scenario: The right move changes the rows
-      When the player drags FOX's handle down
-      Then the rows are OWL, FOX
-      And the column reads O, F
-
-    Scenario Outline: Other moves do nothing
-      When the player tries to <action>
-      Then nothing moves
-
-      Examples:
-        | action                  |
-        | drag OWL's handle       |
-        | slide FOX               |
-        | slide OWL               |
-
-  Rule: Step 4 is sliding the word
-
-    Background:
-      Given the rows are OWL, FOX
 
     Scenario: The step is shown
       Then the text says "You can drag words side to side to find the word, try it!"
@@ -96,7 +72,6 @@ Feature: First-level tutorial
       Examples:
         | action            |
         | slide OWL         |
-        | drag a handle     |
 
   Rule: The win is the normal win
 
@@ -123,7 +98,6 @@ Feature: First-level tutorial
         | 1    |
         | 2    |
         | 3    |
-        | 4    |
 
     # Added on 2026-11-03: the text and the hand stayed where they were after a rotation.
     # The sliding step gets an example once story 21 is built.

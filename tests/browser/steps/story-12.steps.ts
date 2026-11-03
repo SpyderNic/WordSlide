@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 import { createBdd } from 'playwright-bdd';
 import { SAVE_KEY, writeProgress } from '../../../src/game/progress';
 import { DEFAULT_WORDS, makeLevel, tutorialLevel } from '../../support/levels';
-import { test, type GameView, type Scenario } from './fixtures';
+import { reorderingNotTaught, test, type GameView, type Scenario } from './fixtures';
 import { centreOf, hold, layoutNow, placeLetter, poolTile } from './phase-one.steps';
 import { dragHandle, dragSlowlyAndRelease, openLevel, pitchOf, pointOnWord, popupParts, ready, restingX, two, waitForPopup } from './phase-two.steps';
 import { screen, startRecording, stopRecording, type Drawn, type Frame } from './probe';
@@ -18,15 +18,15 @@ const TEXT_DEPTH = 22;
 const STEP_TEXT: Record<string, string> = {
   1: 'Drag a letter to complete a word',
   2: 'Finish the grid!',
-  3: 'To find the vertical final word, you can reorder the words',
-  4: 'You can drag words side to side to find the word, try it!',
+  // Reordering moved to its own tutorial (story 21), so sliding is step 3.
+  3: 'You can drag words side to side to find the word, try it!',
 };
 
 function handIn(objects: Drawn[]) {
   return objects.find((object) => object.depth === HAND_DEPTH);
 }
 
-async function handPath(page: Page, scenario: Scenario, wait = 2600) {
+export async function handPath(page: Page, scenario: Scenario, wait = 2600) {
   await startRecording(page);
   await page.waitForTimeout(wait);
   const frames = await stopRecording(page);
@@ -37,11 +37,11 @@ async function handPath(page: Page, scenario: Scenario, wait = 2600) {
   return scenario.handPath;
 }
 
-function visits(path: { x: number; y: number }[], target: { x: number; y: number }, tolerance: number) {
+export function visits(path: { x: number; y: number }[], target: { x: number; y: number }, tolerance: number) {
   return path.some((point) => Math.hypot(point.x - target.x, point.y - target.y) <= tolerance);
 }
 
-async function tutorialText(page: Page) {
+export async function tutorialText(page: Page) {
   return (await screen(page)).filter((object) => object.kind === 'text' && object.depth === TEXT_DEPTH).map((object) => object.text);
 }
 
@@ -60,7 +60,8 @@ async function lockRow(page: Page, row: number, word: string) {
 
 // The tutorial level
 
-Given('a new player on level 1', async ({ scenario }) => {
+Given('a new player on level 1', async ({ page, scenario }) => {
+  await reorderingNotTaught(page);
   const normal = makeLevel(DEFAULT_WORDS, 'ELK');
   scenario.level = tutorialLevel();
   scenario.levelList = [scenario.level, normal, normal];
@@ -143,55 +144,13 @@ Then('FOX is still locked', async ({ page }) => {
 
 // Step 3
 
-Then("a hand starts on FOX's handle and shows the row being dragged down", async ({ page, scenario }) => {
-  const view = await two(page);
-  const handle = view.handles[view.rows.findIndex((row) => row.word === 'FOX')];
-  const start = { x: handle.x + handle.width / 2, y: handle.y + handle.height / 2 };
-  const path = await handPath(page, scenario);
-  const pitch = await pitchOf(page);
-  expect(visits(path, start, handle.width * 0.6)).toBe(true);
-  expect(visits(path, { x: start.x, y: start.y + pitch }, handle.width * 0.6)).toBe(true);
-});
-
-When("the player drags FOX's handle down", async ({ page, scenario }) => {
-  await ready(page, scenario);
-  await dragHandle(page, 'FOX', 1);
-  await page.mouse.up();
-  await page.waitForTimeout(400);
-});
-
-// Given and Then share this text: as a Given it gets to step 4 by moving FOX, as a Then it checks.
-Then(/^the rows are (OWL, FOX|FOX, OWL)$/, async ({ page, scenario }, rows: string) => {
-  if (scenario.views.length === 0) {
-    await ready(page, scenario);
-    await dragHandle(page, 'FOX', 1);
-    await page.mouse.up();
-    await page.waitForTimeout(400);
-  }
-  expect((await two(page)).rows.map((row) => row.word).join(', ')).toBe(rows);
-});
-
-When(/^the player tries to (drag OWL's handle|slide FOX|slide OWL|drag a handle)$/, async ({ page, scenario }, action: string) => {
+When('the player tries to slide OWL', async ({ page, scenario }) => {
   await ready(page, scenario);
   scenario.twoBefore = await two(page);
-  if (action.includes('handle')) {
-    const word = action.includes('OWL') ? 'OWL' : (await two(page)).rows[0].word;
-    await dragHandle(page, word, word === (await two(page)).rows[0].word ? 1 : -1);
-    // Held, nothing lifts or follows the pointer either: the move isn't allowed at all.
-    const held = await two(page);
-    held.rows.forEach((row, index) => {
-      expect(row.depth).toBe(scenario.twoBefore!.rows[index].depth);
-      expect(row.scale).toBe(1);
-      expect(row.y).toBeCloseTo(scenario.twoBefore!.rows[index].y);
-    });
-  } else {
-    await dragSlowlyAndRelease(page, action.endsWith('FOX') ? 'FOX' : 'OWL', 0, -1);
-  }
+  await dragSlowlyAndRelease(page, 'OWL', 0, -1);
   await page.mouse.up();
   await page.waitForTimeout(400);
 });
-
-// Step 4
 
 Then('a hand animates from the X of FOX to the column', async ({ page, scenario }) => {
   const view = await two(page);
@@ -255,14 +214,7 @@ Then("step 2's text shows", async ({ page }) => {
 Given(/^step (\d) is showing$/, async ({ page, scenario }, step: string) => {
   await openLevel(page, scenario);
   if (Number(step) >= 2) await lockRow(page, 0, 'FOX');
-  if (Number(step) >= 3) {
-    await ready(page, scenario);
-  }
-  if (Number(step) >= 4) {
-    await dragHandle(page, 'FOX', 1);
-    await page.mouse.up();
-    await page.waitForTimeout(400);
-  }
+  if (Number(step) >= 3) await ready(page, scenario);
   await expect.poll(() => tutorialText(page)).toContain(STEP_TEXT[step]);
 });
 
@@ -357,7 +309,7 @@ Then(/^(?:the tip is gone|there's no tip)$/, async ({ page }) => {
   await expect.poll(() => tutorialText(page)).toEqual([]);
 });
 
-Then('every normal action is allowed', async ({ page }) => {
+Then(/^every (?:normal|phase-one) action is allowed$/, async ({ page }) => {
   const { layout } = await current(page);
   // Recall All shows, a tapped letter goes in, and a letter key types.
   const { x, y } = centreOf(layout.recall);

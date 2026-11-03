@@ -38,10 +38,11 @@ Feature: Switch to phase two
       When the ceremony plays
       Then the end of a long word can be off screen
 
-  Rule: Rows keep their phase-one order
+  Rule: Rows keep their phase-one order, once the reordering tutorial has been shown (changed by story 21)
 
     Scenario: Words locked in a different order stay there
-      Given ZEBRA is locked in the top row
+      Given the reordering tutorial has been shown
+      And ZEBRA is locked in the top row
       And LEMUR is locked in the middle row
       When the ceremony plays
       Then ZEBRA is in the top row

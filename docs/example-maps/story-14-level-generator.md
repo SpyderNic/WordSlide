@@ -85,6 +85,8 @@ Its logic is plain code, tested like the validator. This also keeps the door ope
 
 ### 🟦 R10. Whether reordering is needed is a setting
 
+*Changed by story 21 on 2026-11-03.* "Needs reordering" means the rows, in their starting order (D5), can't spell the final word by sliding (story 21, Q10).
+
 *From Q4.* With it on, the final word can't be spelled without moving a row. With it off, the rows' starting order can spell it, so sliding alone solves the level.
 
 - 🟩 With reordering off, a suggestion can be solved by sliding only
@@ -103,6 +105,8 @@ Its logic is plain code, tested like the validator. This also keeps the door ope
 
 ### 🟦 R12. Handles only appear once the reordering tutorial has been shown
 
+*Changed by story 21 on 2026-11-03.* Moved to story 21: the reordering tutorial is the first level that needs reordering, so no level number is fixed.
+
 *From Q7.* Today that's level 1 (story 12, step 3), so this changes nothing yet. It lets reordering be introduced later, say at level 20, as long as levels 1–19 don't need it. Without handles, rows can't be moved, by mouse, touch or keyboard.
 
 - 🟩 If the reordering tutorial were at level 20, level 19's phase two would have no handles, and Shift+Up would do nothing
@@ -110,7 +114,9 @@ Its logic is plain code, tested like the validator. This also keeps the door ope
 
 **Confirmed:** ☑
 
-### 🟦 R13. The validator rejects a level that needs reordering before the tutorial for it
+### 🟦 R13. ~~The validator rejects a level that needs reordering before the tutorial for it~~
+
+*Changed by story 21 on 2026-11-03.* No longer needed: the first level that needs reordering is the tutorial, so no earlier level can need it.
 
 Without this, a level could become impossible to solve, because the player couldn't move its rows.
 

@@ -110,32 +110,8 @@ Feature: Level generator
       When the generator runs
       Then every suggestion can be solved by sliding alone
 
-  Rule: Handles only appear once the reordering tutorial has been shown
-
-    Scenario: Handles appear after the tutorial
-      Given the reordering tutorial is in level 1
-      And the player is on level 2
-      When phase two starts
-      Then every row has its handle
-
-    Scenario: No handles before the tutorial
-      Given the reordering tutorial is in level 20
-      And the player is on level 19
-      When phase two starts
-      Then no row has a handle
-
-    Scenario: Without handles, rows can't move by keyboard
-      Given the reordering tutorial is in level 20
-      And the player is on level 19
-      And a row is selected
-      When the player presses Shift+Up
-      Then the rows don't change
-
-    Scenario: The validator rejects a level that needs reordering too early
-      Given the reordering tutorial is in level 20
-      And a level 19 that can't be solved by sliding alone
-      When the validator checks the level
-      Then the level is rejected because it needs reordering before the tutorial
+  # Handles and the validator's check before the reordering tutorial moved to
+  # story 21, which puts that tutorial at level 21.
 
   Rule: Within a theme, every word is unique across the curated levels
 

@@ -83,7 +83,12 @@ async function clickCell(page: Page, scenario: Scenario, word: string, cell: num
 
 // Travel to a cell
 
-Given('a row is selected', async ({ page, scenario }) => {
+Given('a row is selected', async ({ page, scenario, $uri }) => {
+  // Story 21 selects a row in phase two: the bottom one, so that Shift+Up would move it.
+  if ($uri.includes('story-21')) {
+    await page.evaluate(() => (window as unknown as { wordSlide: { select: (row: number) => void } }).wordSlide.select(2));
+    return;
+  }
   await clickCell(page, scenario, 'LEMUR', 0);
 });
 

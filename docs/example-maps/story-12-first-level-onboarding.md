@@ -34,7 +34,7 @@ From level 2, the game plays normally, apart from one theme tip (R12). A won lev
 Anything else does nothing, and every other rule of the game still applies to the allowed action.
 
 - 🟩 In step 1, trying to drag the W does nothing
-- 🟩 In step 3, trying to slide a word does nothing
+- 🟩 In step 3, trying to slide OWL does nothing
 
 **Confirmed:** ☑
 
@@ -55,17 +55,13 @@ The text changes to "Finish the grid!". There's no hand. Only the W can be dragg
 
 **Confirmed:** ☑
 
-### 🟦 R5. Step 3: reorder the words
+### 🟦 R5. ~~Step 3: reorder the words~~
 
-After the ceremony, the text says "To find the vertical final word, you can reorder the words". A hand starts on FOX's handle and shows the row being dragged down (Q2). Only FOX's handle can be dragged, only down.
+*Changed by story 21 on 2026-11-03.* Reordering moved to its own tutorial, on the first level that needs it. In level 1, the ceremony puts OWL above FOX instead, with no handles.
 
-- 🟩 The rows become OWL, FOX, and the column reads O, F
+### 🟦 R6. Step 3: slide the word
 
-**Confirmed:** ☑
-
-### 🟦 R6. Step 4: slide the word
-
-The text changes to "You can drag words side to side to find the word, try it!". A hand animates from the X of FOX, now in row 2, to the column. Only FOX can be slid. It snaps as usual, so it can stop on another letter, and the hand carries on until the X is in the column (Q3).
+*Changed by story 21 on 2026-11-03.* After the ceremony, the text says "You can drag words side to side to find the word, try it!". A hand animates from the X of FOX, now in row 2, to the column. Only FOX can be slid. It snaps as usual, so it can stop on another letter, and the hand carries on until the X is in the column (Q3).
 
 - 🟩 Sliding FOX until its X is in the column spells OX
 

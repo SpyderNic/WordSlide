@@ -60,10 +60,10 @@ export async function solve(page: Page, scenario: Scenario) {
 
 /** Gets to phase two, past the ceremony. */
 export async function ready(page: Page, scenario: Scenario) {
-  if (scenario.views.length > 0 && ((await current(page)) as TwoView).phaseTwo?.handlesVisible) return;
+  if (scenario.views.length > 0 && ((await current(page)) as TwoView).phaseTwo?.ceremonyDone) return;
   await solve(page, scenario);
   await page.evaluate(() => (window as unknown as { wordSlide: Hooks }).wordSlide.skipCeremony());
-  await expect.poll(async () => (await two(page)).handlesVisible).toBe(true);
+  await expect.poll(async () => (await two(page)).ceremonyDone).toBe(true);
 }
 
 /** Plays the ceremony for real, recording it. */
@@ -71,11 +71,11 @@ async function playCeremony(page: Page, scenario: Scenario) {
   await openLevel(page, scenario);
   await startRecording(page);
   await solve(page, scenario);
-  await expect.poll(async () => (await two(page)).handlesVisible, { timeout: 3000 }).toBe(true);
+  await expect.poll(async () => (await two(page)).ceremonyDone, { timeout: 3000 }).toBe(true);
   scenario.frames = await stopRecording(page);
 }
 
-function fillRow(row: number, word: string) {
+export function fillRow(row: number, word: string) {
   return (page: Page) =>
     page.evaluate(
       ({ row, word }) => {
@@ -1453,7 +1453,7 @@ Then('it stretches less than half a cell past that letter', async ({ page, scena
 
 Then('nothing moves', async ({ page, scenario }) => {
   const now = await two(page);
-  const positions = (view: PhaseTwoTestView) => view.rows.map((row) => [row.columnCell, row.x]);
+  const positions = (view: PhaseTwoTestView) => view.rows.map((row) => [row.word, row.columnCell, row.x]);
   expect(positions(now)).toEqual(positions(scenario.twoBefore!));
 });
 

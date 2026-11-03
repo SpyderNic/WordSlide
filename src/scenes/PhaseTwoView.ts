@@ -63,6 +63,7 @@ export interface PhaseTwoTestView {
   rows: { word: string; columnCell: number; x: number; y: number; scale: number; depth: number; selected: boolean }[];
   handles: Rect[];
   handlesVisible: boolean;
+  ceremonyDone: boolean;
   columnText: string;
   won: boolean;
   dragging: boolean;
@@ -689,6 +690,7 @@ export class PhaseTwoView {
         height: handle.size,
       })),
       handlesVisible: this.rowViews.some((view) => view.handle.visible),
+      ceremonyDone: this.ceremonyDone,
       columnText: this.phase.columnText(),
       won: this.phase.won,
       dragging: this.press !== null,

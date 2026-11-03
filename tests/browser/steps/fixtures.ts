@@ -67,11 +67,18 @@ export interface Scenario {
   goldLetters?: { letter: string; t: number; pulsed: boolean }[];
 }
 
+/** Plays without the fixtures' "reordering already taught", so story 21's rule decides. */
+export async function reorderingNotTaught(page: Page) {
+  await page.addInitScript(() => Object.assign(window, { wordSlideReorderingTaught: false }));
+}
+
 export const test = base.extend<{ scenario: Scenario }>({
   // "npm run test:other-style" runs every scenario again with another style (story 16, R1).
   page: async ({ page }, use) => {
     const style = process.env.WORD_SLIDE_STYLE;
     if (style) await page.addInitScript((name) => Object.assign(window, { wordSlideStyle: name }), style);
+    // Most scenarios play as if the reordering tutorial were already behind the player. Stories 12 and 21 turn this off.
+    await page.addInitScript(() => Object.assign(window, { wordSlideReorderingTaught: true }));
     await use(page);
   },
   scenario: async ({}, use) => {
