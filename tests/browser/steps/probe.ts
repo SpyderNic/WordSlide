@@ -18,7 +18,7 @@ export type Triangle = [number, number, number, number, number, number];
 
 export interface Drawn {
   /** A tile's bevel edges are 'bevel', so tests that look for tiles don't mistake them for tiles (story 16, R8). */
-  kind: 'rect' | 'text' | 'graphics' | 'bevel';
+  kind: 'rect' | 'text' | 'graphics' | 'bevel' | 'image';
   /** The object's centre on screen. Graphics draw from their own origin. */
   x: number;
   y: number;
@@ -153,6 +153,8 @@ export async function installProbe(page: Page) {
           found.push({ ...base, kind: 'text', width: object.width, height: object.height, text: object.text, font: object.style.fontFamily, fontSize: parseFloat(object.style.fontSize) * at.scale });
         } else if (object.type === 'Graphics') {
           found.push({ ...base, kind: 'graphics', width: 0, height: 0, ...parseGraphics(object.commandBuffer, at) });
+        } else if (object.type === 'Image') {
+          found.push({ ...base, kind: 'image', width: object.width * at.scale, height: object.height * at.scale });
         }
       };
       for (const object of window.wordSlide.scene.children.list as GameObject[]) {

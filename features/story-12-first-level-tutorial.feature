@@ -125,6 +125,20 @@ Feature: First-level tutorial
         | 3    |
         | 4    |
 
+    # Added on 2026-11-03: the text and the hand stayed where they were after a rotation.
+    # The sliding step gets an example once story 21 is built.
+    Scenario Outline: The text and the hand follow a rotation
+      Given step <step> is showing
+      When the device rotates
+      Then the text is above the rows and below the theme
+      And the text fits on the screen
+      And <hand>
+
+      Examples:
+        | step | hand                                                                    |
+        | 1    | a hand animates between the X in the pool and the top word's empty cell |
+        | 2    | there's no hand                                                         |
+
     Scenario: The hand repeats until the step is done
       Given step 1 is showing
       When the player waits

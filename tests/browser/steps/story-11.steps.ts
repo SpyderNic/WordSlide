@@ -415,7 +415,8 @@ Then("it doesn't mention points", async ({ page }) => {
 
 Given('a development build', async ({ page }) => {
   await page.goto('/');
-  expect(await page.evaluate(() => 'wordSlide' in window)).toBe(true);
+  // The game sets these up once it has loaded its images.
+  await expect.poll(() => page.evaluate(() => 'wordSlide' in window)).toBe(true);
 });
 
 When(/^the designer picks level (\d+)$/, async ({ page, scenario }, level: string) => {

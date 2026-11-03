@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { currentStyle } from '../style';
 import { hex } from './tiles';
+import pointerUrl from '../../assets/Pointer.png';
+
+const HAND_KEY = 'pointer';
 
 const colours = currentStyle.colours;
 /** The hand sits above the board and popups' parts below; its fingertip is at its position. */
@@ -12,16 +15,16 @@ export interface Point {
   y: number;
 }
 
-/** A simple pointing hand, drawn in code (story 12, Q9). Its fingertip is at (0, 0). */
+/** The designer's pointing hand. It's pixel art, so it's scaled without smoothing. */
+export function loadHand(scene: Phaser.Scene) {
+  scene.load.image(HAND_KEY, pointerUrl);
+  scene.load.once(Phaser.Loader.Events.COMPLETE, () => scene.textures.get(HAND_KEY).setFilter(Phaser.Textures.FilterMode.NEAREST));
+}
+
+/** A pointing hand about a tile tall (story 12, Q9). Its fingertip is at (0, 0). */
 export function makeHand(scene: Phaser.Scene, size: number) {
-  const s = size / 40;
-  const hand = scene.add.graphics();
-  hand.lineStyle(2, colours.text, 1).fillStyle(colours.highlight, 1);
-  // The pointing finger, with a rounded-looking tip, then the palm with lines between its folded fingers.
-  hand.fillTriangle(-4 * s, 4 * s, 4 * s, 4 * s, 0, 0);
-  hand.fillRect(-4 * s, 4 * s, 8 * s, 18 * s).strokeRect(-4 * s, 4 * s, 8 * s, 18 * s);
-  hand.fillRect(-9 * s, 16 * s, 24 * s, 22 * s).strokeRect(-9 * s, 16 * s, 24 * s, 22 * s);
-  for (const x of [4, 9]) hand.lineBetween(x * s, 18 * s, x * s, 28 * s);
+  // In the 128-pixel image, the fingertip is at (64, 8) and the hand is 112 pixels tall.
+  const hand = scene.add.image(0, 0, HAND_KEY).setOrigin(64 / 128, 8 / 128).setScale(size / 112);
   return scene.add.container(0, 0, [hand]).setDepth(HAND_DEPTH);
 }
 

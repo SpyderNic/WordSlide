@@ -84,6 +84,7 @@ The text and the hand disappear, and the celebration and popup play as usual.
 - 🟩 Finishing step 1 replaces its text straight away
 - 🟩 The text sits above the rows and below the theme, in both phases (Q4)
 - 🟩 Reopening the game mid-tutorial carries on at the same step, with the board as saved (Q5)
+- 🟩 *Added on 2026-11-03, after the text and hand were found stuck after a rotation.* Rotating the device moves the text and the hand to the new layout, at every step (D29). Scenarios cover steps 1 and 2 for now, and the sliding step once story 21 is built
 
 **Confirmed:** ☑
 

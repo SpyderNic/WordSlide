@@ -10,7 +10,7 @@ import { createPlatform } from '../platform';
 import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
 import { PhaseTwoView, type PhaseTwoRules } from './PhaseTwoView';
-import { makeGuideText, makeHand, moveHand } from './guide';
+import { loadHand, makeGuideText, makeHand, moveHand } from './guide';
 import { tutorialPlan, tutorialStep, type TutorialPlan, type TutorialStep } from '../game/tutorial';
 import { buildPopup } from './popup';
 import { makeTile, paintTile } from './tiles';
@@ -105,6 +105,10 @@ export class GameScene extends Phaser.Scene {
 
   constructor() {
     super('GameScene');
+  }
+
+  preload() {
+    loadHand(this);
   }
 
   create() {
@@ -250,6 +254,8 @@ export class GameScene extends Phaser.Scene {
       this.phaseTwo.onResize();
       this.fadePoolNow();
     }
+    // The guide is only rebuilt when its step changes, so a new layout needs it rebuilt here.
+    this.guideShown = '';
     this.redraw();
   }
 

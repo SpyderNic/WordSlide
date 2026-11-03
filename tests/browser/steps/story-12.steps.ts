@@ -275,6 +275,13 @@ Then('the text is above the rows and below the theme', async ({ page }) => {
   expect(text.y + text.height / 2).toBeLessThanOrEqual(rowsTop);
 });
 
+Then('the text fits on the screen', async ({ page }) => {
+  const { layout } = await current(page);
+  const text = (await screen(page)).find((object) => object.kind === 'text' && object.depth === TEXT_DEPTH)!;
+  expect(text.x - text.width / 2).toBeGreaterThanOrEqual(0);
+  expect(text.x + text.width / 2).toBeLessThanOrEqual(layout.width);
+});
+
 When('the player waits', async ({ page, scenario }) => {
   await handPath(page, scenario, 4000);
 });

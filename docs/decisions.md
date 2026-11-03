@@ -213,3 +213,6 @@ The designer wants to play the prototype as a new player, to judge difficulty. C
 
 ### D48. A split word's parts lock on their own
 *From playing milestone 5, on 2026-11-02.* A *part* is a run of letters between special characters, or between a special character and the end of the word: HOT DOG has the parts HOT and DOG, and T-REX has T and REX. Once all of a part's cells are filled, it locks if it matches the same part of any not-yet-locked answer that fits the row (D8), even a part of one letter. Only its tiles pulse and take the locked colour, and its letters become fixed, like a locked word's. When the last part completes the word, the parts that had already locked don't pulse again. A full row is still checked as a whole: it locks, or the wrong-word feedback plays, and any locked parts stay. If a row with locked parts can no longer fit any remaining answer, its locked letters go back to the pool, like hints (D9). A word with no special character inside it has one part, so it's unchanged.
+
+### D49. The tutorial's hand is the designer's image
+*2026-11-03.* The tutorial's pointing hand is `assets/Pointer.png`, the designer's pixel-art hand, in place of the one drawn in code (story 12, Q9). It's about a tile tall, drawn without smoothing, and its fingertip is where the hand points.
