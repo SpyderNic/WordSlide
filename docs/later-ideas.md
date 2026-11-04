@@ -12,6 +12,7 @@ Ideas the designer wants to remember for after the prototype. None of these are 
 - **Other languages.** English is for the prototype, and the game may need to cover more languages eventually. From [story 15, R4](example-maps/story-15-draft-the-first-levels.md).
 - **Let the generator take over.** The designer curates levels until they're happy for the generator to take over, and might review an occasional level after that. From [story 15, R7](example-maps/story-15-draft-the-first-levels.md).
 - **Recurring themes.** The same theme can come back later, for example Animals as theme 1 and theme 8, perhaps called Animals II. From [story 15, Q7](example-maps/story-15-draft-the-first-levels.md).
+- **Sub category, as a further hint**. For example, "Animals" as a theme, and "Birds" as a sub category, or "Split Words" as a theme, and "Sun" as a sub category (For words like Glasses, Cream, Bathing... since it'd be split words of Sunglasses, Sun cream and Sunbathing)
 - **Level selector grouped by theme.** A main menu or level selector could group levels by theme. From [story 15, Q7](example-maps/story-15-draft-the-first-levels.md).
 - **Sound.** Placeholder sounds, then real ones: placing a letter, a word locking and winning at least. This was story 18, parked for the prototype.
 - **Full art style.** Once the game proves fun, the look could use a licensed asset pack, or an artist or AI image tool. From [story 16, Q4](example-maps/story-16-visual-style.md).
