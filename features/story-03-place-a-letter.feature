@@ -2,6 +2,7 @@
 # Map: docs/example-maps/story-03-place-a-letter.md
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, nothing is revealed, and the rows are LEMUR, ZEBRA, KANGAROO.
+# Story 23 changed this file's examples on 2026-11-04: each row has its own pool, so examples use the row's own letters.
 
 Feature: Place a letter
   As a player
@@ -21,25 +22,28 @@ Feature: Place a letter
       And cell 2 of LEMUR's row holds an E
 
     Scenario: A wrong letter stays, with no feedback
-      When the player drags Z from the pool to cell 3 of LEMUR's row
-      Then cell 3 of LEMUR's row holds a Z
+      When the player drags U from the pool to cell 1 of LEMUR's row
+      Then cell 1 of LEMUR's row holds a U
       And nothing tells the player whether it's right
 
   Rule: The pool changes as soon as a letter is picked up
 
     Scenario: Picking up a letter lowers its count
-      Given the pool shows A x3
+      Given KANGAROO's row is selected
+      And the pool shows A x2
       When the player picks up an A
-      Then the pool shows A x2
+      Then the pool shows A x1
       And another A can still be dragged
 
     Scenario: Picking up the last copy turns the tile grey
-      Given the pool shows Z x1
+      Given ZEBRA's row is selected
+      And the pool shows Z x1
       When the player picks up the Z
       Then the pool shows a grey Z x0
 
     Scenario: A grey tile can't be dragged
-      Given the pool shows a grey Z x0
+      Given ZEBRA's row is selected
+      And the pool shows a grey Z x0
       When the player tries to drag the Z
       Then nothing is picked up
 
@@ -52,54 +56,54 @@ Feature: Place a letter
   Rule: A pool letter replaces a placed letter
 
     Scenario: The old letter goes back to the pool
-      Given a Z placed in cell 1 of LEMUR's row
+      Given an M placed in cell 1 of LEMUR's row
       When the player drags E from the pool to that cell
       Then that cell holds an E
-      And the pool shows Z x1
-      And the Z tile isn't grey
+      And the pool shows M x1
+      And the M tile isn't grey
 
   Rule: Two placed letters swap
 
     Scenario: Dropping a placed letter on another swaps them
-      Given a Z placed in cell 1 of LEMUR's row
-      And an E placed in cell 1 of ZEBRA's row
-      When the player drags the Z onto the E
+      Given an M placed in cell 1 of LEMUR's row
+      And an E placed in cell 2 of LEMUR's row
+      When the player drags the M onto the E
       Then cell 1 of LEMUR's row holds an E
-      And cell 1 of ZEBRA's row holds a Z
+      And cell 2 of LEMUR's row holds an M
       And the pool hasn't changed
 
   Rule: A letter dropped on a fixed cell goes to the pool
 
     Scenario: A pool letter goes back to the pool
       Given L revealed at position 1 of LEMUR
-      And the pool shows A x3
-      When the player drags A from the pool onto the L
+      And the pool shows E x1
+      When the player drags E from the pool onto the L
       Then the L is still in its cell
-      And the pool shows A x3
+      And the pool shows E x1
 
     Scenario: A placed letter goes to the pool
       Given a level containing the answer T-REX
-      And a D placed in cell 1 of T-REX's row
-      When the player drags the D onto the hyphen
-      Then cell 1 of T-REX's row is empty
-      And the D count goes up by one
+      And an R placed in cell 3 of T-REX's row
+      When the player drags the R onto the hyphen
+      Then cell 3 of T-REX's row is empty
+      And the R count goes up by one
 
   Rule: A pool letter dropped away from any cell goes back to the pool
 
     Scenario: Releasing a letter over the theme
-      Given the pool shows A x3
-      When the player drags A from the pool and releases it over the theme
-      Then the pool shows A x3
+      Given the pool shows E x1
+      When the player drags E from the pool and releases it over the theme
+      Then the pool shows E x1
       And no cell has changed
 
   Rule: Placed letters can move to another empty cell
 
     Scenario: Moving a placed letter leaves the pool unchanged
-      Given a Z placed in cell 1 of LEMUR's row
-      When the player drags the Z to cell 1 of ZEBRA's row
+      Given an M placed in cell 1 of LEMUR's row
+      When the player drags the M to cell 3 of LEMUR's row
       Then cell 1 of LEMUR's row is empty
-      And cell 1 of ZEBRA's row holds a Z
-      And the pool shows a grey Z x0
+      And cell 3 of LEMUR's row holds an M
+      And the pool shows a grey M x0
 
   Rule: Revealed letters and special characters can't be moved
 
@@ -141,7 +145,7 @@ Feature: Place a letter
 
     @browser
     Scenario: A placed letter can be highlighted
-      Given a Z placed in cell 1 of LEMUR's row
+      Given an M placed in cell 1 of LEMUR's row
       When the player drags a tile with its centre over that cell
       Then that cell is highlighted
 
@@ -152,11 +156,12 @@ Feature: Place a letter
 
     @browser
     Scenario: A tile in a gap highlights nothing, even if it touches cells
-      Given the pool shows A x3
+      Given KANGAROO's row is selected
+      And the pool shows A x2
       When the player drags an A with its centre in the gap between two rows, and touching cells in both
       Then no cell is highlighted
       When the player releases it
-      Then the pool shows A x3
+      Then the pool shows A x2
       And no cell has changed
 
     @browser
@@ -199,15 +204,16 @@ Feature: Place a letter
 
     @browser
     Scenario: A pool letter being dragged goes back to the pool
-      Given the pool shows A x3
+      Given KANGAROO's row is selected
+      And the pool shows A x2
       And the player is dragging an A from the pool
       When the device rotates
       Then the drag is cancelled
-      And the pool shows A x3
+      And the pool shows A x2
 
     @browser
     Scenario: A placed letter being dragged goes back to its cell
-      Given the player is dragging a placed Z from cell 1 of LEMUR's row
+      Given the player is dragging a placed M from cell 1 of LEMUR's row
       When the device rotates
       Then the drag is cancelled
-      And the Z is back in cell 1 of LEMUR's row
+      And the M is back in cell 1 of LEMUR's row

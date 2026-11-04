@@ -2,6 +2,8 @@
 
 **Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-05-recall-all.feature](../../features/story-05-recall-all.feature). Built on 2026-10-31.
 
+> *Changed by story 23 on 2026-11-04.* Each row now has its own pool ([story 23](story-23-a-pool-for-each-row.md)). Some of this story's examples changed to use a row's own letters, and scenarios whose rule no longer applies are in `archive/before-story-23/`, with the rule that replaced each.
+
 *As a player, I want one button that clears all my placed letters, so that I can start again without losing the words I've solved.*
 
 **Key:** 🟦 Rule · 🟩 Example · 🟥 Question

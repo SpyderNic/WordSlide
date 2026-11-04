@@ -1,6 +1,6 @@
 # Story 23: A pool for each row
 
-**Status:** 🟢 Approved by the designer on 2026-11-04. Approved along with its scenarios in [story-23-a-pool-for-each-row.feature](../../features/story-23-a-pool-for-each-row.feature).
+**Status:** 🟢 Approved by the designer on 2026-11-04. Approved along with its scenarios in [story-23-a-pool-for-each-row.feature](../../features/story-23-a-pool-for-each-row.feature). Built on 2026-11-04.
 
 *As a player, I want each word to have its own letters, so that finding the words is a fair challenge and the real puzzle is the vertical word.*
 
@@ -47,7 +47,7 @@ Rules marked *From the designer* come from the request.
 Any unfinished row can be selected, by tapping it or with Up and Down (D35). The pool changes straight away, in about 0.25 seconds: letters both pools have glide to their new places, letters the new pool doesn't have fade out, and its new letters fade in (Q3). Letters already placed in the row stay, and its pool shows what's left.
 
 - 🟩 With E and L placed in LEMUR's row, tapping KANGAROO's row shows KANGAROO's letters. Tapping LEMUR's row again shows M, R, U, with E and L as x0
-- 🟩 Going from LEMUR's pool to ZEBRA's, E and R glide to their new places, L, M and U fade out, and A, B and Z fade in
+- 🟩 Going from LEMUR's pool to ZEBRA's, E glides to its new place and R stays in its place (it's the fourth tile in both), L, M and U fade out, and A, B and Z fade in. *Corrected while building: the example first had R gliding too.*
 
 **Confirmed:** ☑
 
@@ -62,11 +62,10 @@ Any unfinished row can be selected, by tapping it or with Up and Down (D35). The
 
 ### 🟦 R6. A row takes its own answer, or another one made of the same letters
 
-*From the designer, with Q7.* A row's pool only has its own answer's letters, so the only other answer it can spell is one with exactly the same letters, such as MEAT for TEAM. If that answer isn't locked yet, it locks there, and the other row now expects the row's own answer. If it's already locked, "already found" shows (D10), and the letters stay. The locking rules stay as they are (D8, D9, D48): they just apply far less often, because letters can no longer go from one row to another.
+*From the designer, with Q7.* A row's pool only has its own answer's letters, so the only other answer it can spell is one with exactly the same letters, such as MEAT for TEAM. If that answer isn't locked yet, it locks there, and the other row now expects the row's own answer. If it's already locked, "already found" shows (D10), and the letters stay. The locking rules stay as they are (D8, D9): they just apply far less often, because letters can no longer go from one row to another.
 
 - 🟩 With TEAM in row 1 and MEAT in row 2, spelling MEAT in row 1 locks it, and row 2 now expects TEAM
 - 🟩 With MEAT already locked in row 2, spelling MEAT in row 1 shows "already found"
-- 🟩 HOT DOG's row locks HOT as soon as its first part is filled, and DOG when the word is complete
 
 **Confirmed:** ☑
 
@@ -99,6 +98,16 @@ Typing a letter sends it to the selected row's first empty cell, if the selected
 *From Q6.* It sends the selected row's placed letters back to its pool, since that's the only pool on screen. It's grey when the selected row has nothing to recall (D36).
 
 - 🟩 With Z placed in ZEBRA's row and L in LEMUR's row, and ZEBRA's row selected, Recall All sends Z back and leaves L in place
+
+**Confirmed:** ☑
+
+### 🟦 R14. A row locks all at once, or not at all
+
+*From the designer, on 2026-11-04, while this story was being built.* With a pool per row, locking a split word's parts on their own (D48) isn't needed any more. A row is checked only when it's full: it locks as a whole, or the whole row shakes. Special characters still stay still.
+
+- 🟩 Placing H, O and T in HOT DOG's row locks nothing, and gives no feedback
+- 🟩 Filling HOT DOG's row with HOT GOD shakes the whole row, and nothing locks
+- 🟩 Filling it with HOT DOG locks it
 
 **Confirmed:** ☑
 
@@ -138,7 +147,8 @@ The ceremony, sliding, reordering and the win stay as they are (stories 7 to 10 
 ## How it will be built
 
 - **Archiving, not deleting.** Before the change, the current state is tagged in git (`before-story-23`), so the whole game can be rolled back. Scenarios that no longer apply move, with their steps, to `archive/before-story-23/`, outside the test runs, with a note saying which rule replaced each. Scenarios that change are edited through their maps first, as usual.
-- **Stories affected:** 3, 4, 5, 6 and 17 (placing, returning, Recall All, locking, the keyboard), 12 (the tutorial), 16 (letters travelling between rows) and 21 (the ceremony's reordering). Decisions D35 (the keyboard) and D36 (Recall All) change. D8, D9, D10 and D48 stay, but only apply to answers made of the same letters (R6).
+- **Part locking (R14):** story 6's rule "A split word's parts lock on their own", its "only the wrong part shakes" and "a part pulses" scenarios, and story 11's "a locked part comes back" are archived.
+- **Stories affected:** 3, 4, 5, 6 and 17 (placing, returning, Recall All, locking, the keyboard), 12 (the tutorial), 16 (letters travelling between rows) and 21 (the ceremony's reordering). Decisions D35 (the keyboard) and D36 (Recall All) change, and D48 (parts locking) is replaced by R14. D8, D9 and D10 stay, but only apply to answers made of the same letters (R6).
 - **Content:** the 40 levels stay as they are.
 - **Shuffling (story 22):** the designer will review whether it's needed once this story is built (Q10).
 

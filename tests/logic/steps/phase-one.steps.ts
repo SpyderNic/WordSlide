@@ -34,19 +34,25 @@ function isSetup(world: World) {
 
 function snapshot(world: World): string {
   const board = boardOf(world);
-  return JSON.stringify({ rows: board.rows, pool: board.pool, selected: board.selectedRow });
+  return JSON.stringify({ rows: board.rows, pool: board.pool, pools: board.snapshot().pools, selected: board.selectedRow });
 }
 
 function poolOf(world: World): string {
   return JSON.stringify(boardOf(world).pool);
 }
 
-/** How many more copies of a letter are on the board than before the last action. */
+/** How many more copies of a letter are in the selected row than before the last action: its pool is the one shown. */
 function placedCopiesAdded(world: World, character: string): number {
-  const placed = (rows: Board['rows']) =>
-    rows.flatMap((row) => row.cells).filter((cell) => cell.kind === 'placed' && cell.character === character).length;
+  const row = boardOf(world).selectedRow ?? 0;
+  const placed = (rows: Board['rows']) => rows[row].cells.filter((cell) => cell.kind === 'placed' && cell.character === character).length;
   const change = placed(boardOf(world).rows) - placed(JSON.parse(world.before!).rows);
   return Math.max(change, 0);
+}
+
+/** A letter's count in the selected row's pool before the last action. A letter only revealed has no tile, so 0. */
+function countBefore(world: World, character: string): number {
+  const pools = JSON.parse(world.before!).pools as { character: string; count: number }[][];
+  return pools[boardOf(world).selectedRow ?? 0].find((tile) => tile.character === character)?.count ?? 0;
 }
 
 function act(world: World, action: (board: Board) => BoardEvent[] | void) {
@@ -69,18 +75,31 @@ function rowIndex(world: World, reference: string): number {
   return index;
 }
 
-/** Sets up the board without disturbing the selection. */
+/** Sets up the board. Placing a letter leaves its row selected, as it would for the player (story 23). */
 function quietly(world: World, setup: (board: Board) => void) {
-  const board = boardOf(world);
-  const { selectedRow, selectionHidden } = board;
-  setup(board);
-  if (board.selectedRow !== null || selectedRow === null) board.selectedRow = board.selectedRow ?? selectedRow;
-  board.selectionHidden = selectionHidden;
-  if (!board.rows[selectedRow ?? 0].locked) board.selectedRow = selectedRow;
+  setup(boardOf(world));
+}
+
+/** Each row has its own pool (story 23). With no row named, a letter comes from a row whose pool has it. */
+function rowWith(board: Board, character: string): number | null {
+  if (board.countOf(character) > 0) return board.selectedRow;
+  const selected = board.selectedRow;
+  for (let row = 0; row < board.rows.length; row++) {
+    board.selectRow(row);
+    if (board.countOf(character) > 0) return row;
+  }
+  if (selected !== null) board.selectRow(selected);
+  return null;
+}
+
+function pickUp(board: Board, character: string): boolean {
+  rowWith(board, character);
+  return board.pickUpFromPool(character);
 }
 
 function place(world: World, row: number, cell: number, character: string): BoardEvent[] {
   const board = boardOf(world);
+  board.selectRow(row);
   assert.ok(board.pickUpFromPool(character), `No ${character} left in the pool`);
   return board.dropOnCell(row, cell);
 }
@@ -141,9 +160,12 @@ function findCell(world: World, character: string): { row: number; cell: number 
 
 function placeSomewhere(world: World, character: string) {
   quietly(world, (board) => {
-    for (let row = board.rows.length - 1; row >= 0; row--) {
+    const selected = board.selectedRow;
+    const rows = [...board.rows.keys()].reverse();
+    for (const row of selected === null ? rows : [selected, ...rows.filter((candidate) => candidate !== selected)]) {
       const cell = board.rows[row].cells.findLastIndex((candidate) => candidate.kind === 'empty');
-      if (cell !== -1) {
+      board.selectRow(row);
+      if (cell !== -1 && board.countOf(character) > 0) {
         place(world, row, cell, character);
         return;
       }
@@ -166,17 +188,6 @@ function hasLock(world: World, word: string) {
   return world.events.some((event) => event.type === 'locked' && event.word === word);
 }
 
-/** A part of a split word locked (D48), and its cells now hold these letters, locked. */
-function hasPartLock(world: World, part: string) {
-  const board = boardOf(world);
-  return world.events.some(
-    (event) =>
-      event.type === 'partLocked' &&
-      event.cells.map((cell) => board.rows[event.row].cells[cell]).every((cell) => cell.kind === 'locked') &&
-      event.cells.map((cell) => (board.rows[event.row].cells[cell] as { character: string }).character).join('') === part,
-  );
-}
-
 const isLocked = (world: World, word: string) =>
   boardOf(world).rows.some((row) => row.locked && row.cells.map((cell) => (cell.kind === 'empty' ? '' : cell.character)).join('') === word);
 
@@ -189,7 +200,8 @@ Given(/^the pool shows (?!these)(.+)$/, function (this: World, text: string) {
     return { character: match[1], count: Number(match[2]) };
   });
   if (isSetup(this) && parts.some((part) => part.character === 'É')) {
-    this.level ??= makeLevel(['CAFÉ', 'PEA']);
+    this.level ??= makeLevel(['NÉE', 'CAT']);
+    rowWith(boardOf(this), 'É');
   }
   for (const { character, count } of parts) {
     const board = boardOf(this);
@@ -205,24 +217,24 @@ Then(/^the (\S+) tile isn't grey$/, function (this: World, character: string) {
   assert.ok(boardOf(this).countOf(character) > 0);
 });
 
-Then(/^the Z and N tiles aren't grey$/, function (this: World) {
-  assert.ok(boardOf(this).countOf('Z') > 0 && boardOf(this).countOf('N') > 0);
+Then(/^the (\S+) and (\S+) tiles aren't grey$/, function (this: World, first: string, second: string) {
+  assert.ok(boardOf(this).countOf(first) > 0 && boardOf(this).countOf(second) > 0);
 });
 
 Then(/^the (\S+) count goes up by one$/, function (this: World, character: string) {
-  const before = JSON.parse(this.before!).pool.find((tile: { character: string }) => tile.character === character).count;
+  const before = countBefore(this, character);
   // Building a word in the same move uses up copies of the letter.
   const used = placedCopiesAdded(this, character);
   assert.equal(boardOf(this).countOf(character), before - used + 1);
 });
 
 Then(/^the (\S+) count drops by one$/, function (this: World, character: string) {
-  const before = JSON.parse(this.before!).pool.find((tile: { character: string }) => tile.character === character).count;
+  const before = countBefore(this, character);
   assert.equal(boardOf(this).countOf(character), before - 1);
 });
 
 Then(/^the (\S+) count hasn't changed$/, function (this: World, character: string) {
-  const before = JSON.parse(this.before!).pool.find((tile: { character: string }) => tile.character === character).count;
+  const before = countBefore(this, character);
   assert.equal(boardOf(this).countOf(character), before);
 });
 
@@ -238,11 +250,11 @@ Then(/^the pool holds (.+)$/, function (this: World, letters: string) {
 Then(/^another (\S+) can still be dragged$/, function (this: World, character: string) {
   const board = boardOf(this);
   board.dropOnCell(0, 0);
-  assert.ok(board.pickUpFromPool(character));
+  assert.ok(pickUp(board, character));
 });
 
 Then(/^the (\S+) can be dragged again$/, function (this: World, character: string) {
-  assert.ok(boardOf(this).pickUpFromPool(character));
+  assert.ok(pickUp(boardOf(this), character));
 });
 
 Then('the E goes back to the pool', function (this: World) {
@@ -282,8 +294,12 @@ Given("an A and an N placed in KANGAROO's row", function (this: World) {
   this.marks!.push({ row, cell: 1 }, { row, cell: 2 });
 });
 
-Given('a Z, an A and an N placed in cells', function (this: World) {
-  ['Z', 'A', 'N'].forEach((character) => placeSomewhere(this, character));
+Given(/^an? (\S+), an? (\S+) and an? (\S+) placed in (.+)'s row$/, function (this: World, a: string, b: string, c: string, word: string) {
+  const row = rowIndex(this, `${word}'s row`);
+  for (const character of [a, b, c]) {
+    const cell = boardOf(this).rows[row].cells.findIndex((candidate) => candidate.kind === 'empty');
+    quietly(this, () => place(this, row, cell, character));
+  }
 });
 
 Given('no placed letters', function (this: World) {
@@ -313,9 +329,9 @@ When("the player drags A from the pool onto LEMUR's M", function (this: World) {
   act(this, () => place(this, rowIndex(this, "LEMUR's row"), 2, 'A'));
 });
 
-When('the player drags A from the pool and releases it over the theme', function (this: World) {
+When(/^the player drags (\S+) from the pool and releases it over the theme$/, function (this: World, character: string) {
   act(this, (board) => {
-    board.pickUpFromPool('A');
+    pickUp(board, character);
     board.dropAway();
   });
 });
@@ -337,13 +353,13 @@ When(/^the player drags the (\S+) and releases it on the A tile$/, function (thi
   });
 });
 
-When(/^the player picks up the Z and releases it over cell 1 of LEMUR's row$/, function (this: World) {
-  const from = findPlaced(this, 'Z');
+When(/^the player picks up the (\S+) and releases it over cell 1 of LEMUR's row$/, function (this: World, character: string) {
+  const from = findPlaced(this, character);
   drag(this, from, from);
 });
 
 When(/^the player picks up (?:an?|the) (\S+)$/, function (this: World, character: string) {
-  act(this, (board) => void board.pickUpFromPool(character));
+  act(this, (board) => void pickUp(board, character));
 });
 
 When(/^the player picks up the placed (\S+)$/, function (this: World, character: string) {
@@ -357,7 +373,7 @@ Given(/^the player is dragging a placed (\S+)$/, function (this: World, characte
 });
 
 Given(/^the player is dragging a (\S+)$/, function (this: World, character: string) {
-  boardOf(this).pickUpFromPool(character);
+  pickUp(boardOf(this), character);
 });
 
 When('the player releases it over the pool', function (this: World) {
@@ -382,7 +398,7 @@ When(/^the player tries to drag the (\S+)$/, function (this: World, name: string
       const { row, cell } = findCell(this, character);
       board.pickUpFromCell(row, cell);
     } else {
-      board.pickUpFromPool(character);
+      pickUp(board, character);
     }
   });
 });
@@ -396,7 +412,10 @@ When('the player tries to drag its M', function (this: World) {
 });
 
 When('the player places a letter', function (this: World) {
-  act(this, () => place(this, 0, 0, 'A'));
+  const board = boardOf(this);
+  const row = board.selectedRow!;
+  const letter = board.pool.find((tile) => tile.count > 0)!.character;
+  act(this, () => place(this, row, board.rows[row].cells.findIndex((cell) => cell.kind === 'empty'), letter));
 });
 
 Then('nothing is picked up', function (this: World) {
@@ -518,9 +537,10 @@ Given('a level containing the answers HOT DOG and TOASTER', function (this: Worl
   this.level = makeLevel(['HOT DOG', 'TOASTER', 'DOG']);
 });
 
-When(/^the player fills (?:the top row|its row|ZEBRA's row) with (.+)$/, function (this: World, word: string) {
+When(/^the player fills (the top row|its row|ZEBRA's row) with (.+)$/, function (this: World, which: string, word: string) {
   act(this, (board) => {
-    const row = board.rows.findIndex((candidate) => cellsOf(candidate.word).length === cellsOf(word).length);
+    const row =
+      which === 'the top row' ? 0 : which === "ZEBRA's row" ? rowIndex(this, which) : board.rows.findIndex((candidate) => cellsOf(candidate.word).length === cellsOf(word).length);
     return fillRow(this, row, word);
   });
 });
@@ -545,6 +565,12 @@ When('the player swaps the R and the U', function (this: World) {
   swap(this, { row: 0, cell: 3 }, { row: 0, cell: 4 });
 });
 
+// ZEBRA's row reads Z E B A R.
+When('the player swaps the A and the R', function (this: World) {
+  const row = rowIndex(this, "ZEBRA's row");
+  swap(this, { row, cell: 3 }, { row, cell: 4 });
+});
+
 When('the player swaps the T and the M', function (this: World) {
   swap(this, { row: 1, cell: 0 }, { row: 1, cell: 3 });
 });
@@ -554,8 +580,8 @@ When("the player swaps the A and the last R of ZEBRA's row", function (this: Wor
 });
 
 Given('the pool counts are noted after placing the R', function (this: World) {
-  boardOf(this).pickUpFromPool('R');
-  this.notedPool = poolOf(this);
+  pickUp(boardOf(this), 'R');
+  this.notedPool = JSON.stringify(boardOf(this).snapshot().pools[0]);
 });
 
 Then('the word locks', function (this: World) {
@@ -564,7 +590,7 @@ Then('the word locks', function (this: World) {
 });
 
 Then('the pool counts are the same', function (this: World) {
-  assert.equal(poolOf(this), this.notedPool);
+  assert.equal(JSON.stringify(boardOf(this).snapshot().pools[0]), this.notedPool);
 });
 
 Given(/^the player has spelled a wrong word (\d+) times$/, function (this: World, times: string) {
@@ -583,7 +609,7 @@ Then(/^(?!an input|the word locks$|nothing locks$)(.+?) locks(?: in row (\d+))?$
     act(this, () => fillRow(this, rowIndex(this, `${word}'s row`), word));
     return;
   }
-  assert.ok(hasLock(this, word) || hasPartLock(this, word), JSON.stringify(this.events));
+  assert.ok(hasLock(this, word), JSON.stringify(this.events));
   if (row) assert.ok(boardOf(this).rows[Number(row) - 1].locked);
 });
 
@@ -627,7 +653,7 @@ Then(/^(.+) can't be placed in (?:that row|HOT DOG's row), because its (?:first 
   assert.ok(blocked);
 });
 
-Then(/^the R disappears from row (\d+)$/, function (this: World, row: string) {
+Then(/^the (\S+) disappears from row (\d+)$/, function (this: World, _letter: string, row: string) {
   assert.ok(!boardOf(this).rows[Number(row) - 1].cells.some((cell) => cell.kind === 'revealed'));
 });
 
@@ -660,7 +686,6 @@ Given(/^(.+)'s row is selected and has no placed letters$/, function (this: Worl
 Given(/^(.+)'s row was selected before a drag$/, function (this: World, word: string) {
   const board = boardOf(this);
   board.selectRow(rowIndex(this, `${word}'s row`));
-  board.selectionHidden = true;
 });
 
 Given('a letter was placed by that drag', function (this: World) {
@@ -675,8 +700,15 @@ Given('no other row has a placed letter', function (this: World) {
   assert.equal(boardOf(this).hasPlacedLetters(), false);
 });
 
+// The selected row, if it has empty cells: the pool's letters are its own.
 Given('a row with empty cells is selected', function (this: World) {
-  boardOf(this).selectRow(0);
+  const board = boardOf(this);
+  const empty = (row: number) => board.rows[row].cells.some((cell) => cell.kind === 'empty');
+  if (board.selectedRow === null || !empty(board.selectedRow)) board.selectRow(board.rows.findIndex((_, row) => empty(row)));
+});
+
+Then(/^the (\S+) and the (\S+) stay placed$/, function (this: World, first: string, second: string) {
+  for (const character of [first, second]) findPlaced(this, character);
 });
 
 Given(/^(.+)'s row has an empty cell$/, function (this: World, word: string) {
@@ -689,7 +721,7 @@ Given(/^(.+)'s row has a placed letter$/, function (this: World, word: string) {
 
 Given('the player has dragged an A to KANGAROO\'s row', function (this: World) {
   const board = boardOf(this);
-  board.pickUpFromPool('A');
+  pickUp(board, 'A');
   board.dropOnCell(rowIndex(this, "KANGAROO's row"), 1);
 });
 
@@ -729,7 +761,7 @@ When('an input completes KANGAROO, which locks', function (this: World) {
 });
 
 When('the player starts dragging a letter', function (this: World) {
-  act(this, (board) => void board.pickUpFromPool('A'));
+  act(this, (board) => void pickUp(board, 'A'));
 });
 
 When(/^the player's input fills it with (.+)$/, function (this: World, word: string) {
@@ -885,6 +917,6 @@ Then('the D stays placed', function (this: World) {
 });
 
 Then('nothing locks', function (this: World) {
-  assert.ok(!this.events.some((event) => event.type === 'locked' || event.type === 'partLocked'), JSON.stringify(this.events));
+  assert.ok(!this.events.some((event) => event.type === 'locked'), JSON.stringify(this.events));
   assert.ok(boardOf(this).rows.every((row) => !row.locked && row.cells.every((cell) => cell.kind !== 'locked')));
 });

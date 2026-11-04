@@ -83,7 +83,9 @@ Feature: A pool for each row
 
     Scenario: Letters both pools have glide, the others fade
       When the player selects ZEBRA's row
-      Then E and R glide to their new places
+      # Corrected while building: R is the fourth tile in both pools, so it stays.
+      Then E glides to its new place
+      And R stays in its place
       And L, M and U fade out
       And A, B and Z fade in
       And the change takes about 0.25 seconds
@@ -121,6 +123,25 @@ Feature: A pool for each row
       When the player spells TEAM in MEAT's row
       Then "already found" shows
       And the letters stay in place
+
+  Rule: A row locks all at once, or not at all
+
+    Background:
+      Given a level containing the answer HOT DOG
+
+    Scenario: A filled part doesn't lock
+      When the player places H, O and T in the first three cells of HOT DOG's row
+      Then nothing in HOT DOG's row locks
+      And no feedback appears
+
+    Scenario: A wrong split word shakes as a whole
+      When the player fills HOT DOG's row with HOT GOD
+      Then every tile of HOT DOG's row shakes
+      And nothing in HOT DOG's row locks
+
+    Scenario: The right split word locks
+      When the player fills HOT DOG's row with HOT DOG
+      Then HOT DOG's row locks
 
   Rule: A wrong word shakes, and the selection stays
 

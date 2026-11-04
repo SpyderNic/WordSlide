@@ -10,10 +10,12 @@ interface AuditWorld {
   rowsBefore: string[];
 }
 
+// Both in ZEBRA's row, the second row: its pool has both letters (story 23).
 Given('a Z held from the pool and an A placed', function (this: AuditWorld) {
   this.board = new Board(makeLevel(DEFAULT_WORDS));
+  this.board.selectRow(1);
   this.board.pickUpFromPool('A');
-  this.board.dropOnCell(0, 0);
+  this.board.dropOnCell(1, 0);
   this.board.pickUpFromPool('Z');
 });
 
@@ -22,7 +24,7 @@ When('Recall All is asked for', function (this: AuditWorld) {
 });
 
 Then('the A stays placed', function (this: AuditWorld) {
-  assert.deepEqual(this.board.rows[0].cells[0], { kind: 'placed', character: 'A' });
+  assert.deepEqual(this.board.rows[1].cells[0], { kind: 'placed', character: 'A' });
 });
 
 Then('the Z is still held', function (this: AuditWorld) {

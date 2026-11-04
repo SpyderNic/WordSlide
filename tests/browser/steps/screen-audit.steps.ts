@@ -22,6 +22,10 @@ async function fillAt(page: Parameters<typeof screen>[0], rect: Rect) {
 
 Given('the player is holding the Z from the pool', async ({ page, scenario }) => {
   scenario.views.push(await open(page, scenario.level, 1, 0));
+  // Z is in ZEBRA's pool (story 23): its row is selected first.
+  const row = (await current(page)).layout.rows[1].cells[1];
+  await page.mouse.click(row.x + row.width / 2, row.y + row.height / 2);
+  await page.waitForTimeout(350);
   const { layout } = await current(page);
   const { x, y } = centre(zTile(layout));
   scenario.pointer = { x: x - 60, y: y - 60 };

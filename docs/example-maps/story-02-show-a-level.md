@@ -2,6 +2,8 @@
 
 **Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-02-show-a-level.feature](../../features/story-02-show-a-level.feature). Built on 2026-10-31.
 
+> *Changed by story 23 on 2026-11-04.* Each row now has its own pool ([story 23](story-23-a-pool-for-each-row.md)). Some of this story's examples changed to use a row's own letters, and scenarios whose rule no longer applies are in `archive/before-story-23/`, with the rule that replaced each.
+
 *As a player, I want to see the level's theme, rows and available letters when it opens, so that I can start working out the words.*
 
 **Key:** 🟦 Rule · 🟩 Example · 🟥 Question

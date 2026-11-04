@@ -40,14 +40,6 @@ Feature: Switch to phase two
 
   Rule: Rows keep their phase-one order, once the reordering tutorial has been shown (changed by story 21)
 
-    Scenario: Words locked in a different order stay there
-      Given the reordering tutorial has been shown
-      And ZEBRA is locked in the top row
-      And LEMUR is locked in the middle row
-      When the ceremony plays
-      Then ZEBRA is in the top row
-      And LEMUR is in the middle row
-
   Rule: The column appears
 
     Scenario: The column is centred on the screen

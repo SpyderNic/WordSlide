@@ -846,7 +846,8 @@ When('the player quickly presses Up, then Down', async ({ page, scenario }) => {
 });
 
 When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({ page, scenario, $uri }, key: string) => {
-  if ($uri.includes('story-12')) {
+  if ($uri.includes('story-12') || $uri.includes('story-23')) {
+    scenario.acted = true;
     await openLevel(page, scenario);
     scenario.before = await current(page);
     await page.keyboard.press(`Arrow${key}`);
@@ -861,9 +862,10 @@ When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({
 });
 
 Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected)$/, async ({ page, scenario, $uri }, word: string) => {
-  if (!scenario.acted) {
-    // Stories 17, 11 and 16 select a row in phase one, by tapping it.
-    if (['story-17', 'story-11', 'story-16'].some((story) => $uri.includes(story))) {
+  const story23Check = $uri.includes('story-23') && scenario.views.length > 0;
+  if (!scenario.acted && !story23Check) {
+    // These stories select a row in phase one, by tapping it.
+    if (['story-02', 'story-03', 'story-04', 'story-17', 'story-11', 'story-16', 'story-23'].some((story) => $uri.includes(story))) {
       scenario.setup.push(async (page) => {
         const { layout } = await current(page);
         const cell = layout.rows.find((row) => row.word === word)!.cells[0];

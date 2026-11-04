@@ -4,8 +4,9 @@
 @browser
 Feature: What the screen shows
 
+  # Z is ZEBRA's letter: its row is selected first (story 23).
   Scenario: A tile is grey exactly while it has no copies left
-    When the level opens
+    When the player selects ZEBRA's row
     Then the Z tile is drawn in its ordinary colour
     When the player places the Z
     Then the Z tile is drawn grey
@@ -23,13 +24,6 @@ Feature: What the screen shows
     Then the Recall All button is drawn in its ordinary colour
     When the player presses Recall All
     Then the Recall All button is drawn grey
-
-  Scenario: The selected row is marked until a drag hides it
-    When the level opens
-    And the player clicks a cell of ZEBRA's row
-    Then ZEBRA's row is marked as selected
-    When the player drags a letter
-    Then no row is drawn as selected
 
   Scenario: A letter under a drag can be seen moving with the pointer
     Given the player is holding the Z from the pool

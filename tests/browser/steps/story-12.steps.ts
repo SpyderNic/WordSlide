@@ -16,8 +16,9 @@ const HAND_DEPTH = 25;
 const TEXT_DEPTH = 22;
 
 const STEP_TEXT: Record<string, string> = {
-  1: 'Drag a letter to complete a word',
-  2: 'Finish the grid!',
+  // Story 23 changed steps 1 and 2.
+  1: 'Drag letters to complete a word',
+  2: 'Each word has its own letters. Finish the grid!',
   // Reordering moved to its own tutorial (story 21), so sliding is step 3.
   3: 'You can drag words side to side to find the word, try it!',
 };
@@ -75,12 +76,13 @@ Then('the text says {string}', async ({ page, scenario }, text: string) => {
 
 // Step 1
 
-Then("a hand animates between the X in the pool and the top word's empty cell", async ({ page, scenario }) => {
+// Story 23: FOX starts as F _ _, so the hand goes from the O to its first empty cell.
+Then("a hand animates between the O in the pool and the top word's first empty cell", async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
   const path = await handPath(page, scenario);
   expect(path.length).toBeGreaterThan(10);
-  expect(visits(path, centreOf(poolTile(layout, 'X')), layout.tileSize * 0.6)).toBe(true);
-  expect(visits(path, centreOf(layout.rows[0].cells[2]), layout.tileSize * 0.6)).toBe(true);
+  expect(visits(path, centreOf(poolTile(layout, 'O')), layout.tileSize * 0.6)).toBe(true);
+  expect(visits(path, centreOf(layout.rows[0].cells[1]), layout.tileSize * 0.6)).toBe(true);
 });
 
 When("the player drags the X to the top word's empty cell", async ({ page, scenario }) => {
@@ -258,8 +260,9 @@ Then('the hand stops', async ({ page, scenario }) => {
 
 // Recall All and keys
 
-When(/^the player presses (X|W|Backspace)$/, async ({ page, scenario }, key: string) => {
+When(/^the player presses (X|W|M|Z|Backspace)$/, async ({ page, scenario }, key: string) => {
   await openLevel(page, scenario);
+  scenario.acted = true;
   scenario.before = await current(page);
   await page.keyboard.press(key.length === 1 ? key.toLowerCase() : key);
   await page.waitForTimeout(300);

@@ -2,7 +2,7 @@ import { cellsOf, compareCells, isCharacter } from './characters';
 import { rowOrder, startingCells, startingPool, type Cell, type Level, type PoolTile } from './level';
 
 export interface RowState {
-  /** The answer designed for this row. Any answer that fits can lock here (D8). */
+  /** The answer designed for this row. An answer made of the same letters can lock here too (D8, story 23 R6). */
   word: string;
   cells: Cell[];
   locked: boolean;
@@ -13,23 +13,25 @@ export type BoardEvent =
   | { type: 'wrong'; row: number }
   | { type: 'alreadyFound'; row: number; lockedRow: number }
   | { type: 'hintsReturned'; row: number; letters: string[] }
-  | { type: 'phaseOneOver' }
-  /** A part of a split word locked on its own (D48). */
-  | { type: 'partLocked'; row: number; cells: number[]; before: Cell['kind'][] };
+  | { type: 'phaseOneOver' };
 
 /** The board after the last change that settled. A drag is never part of it (story 11, R10). */
 export interface BoardSnapshot {
   rows: { cells: Cell[]; locked: boolean }[];
-  pool: PoolTile[];
+  /** Each row's own pool (story 23, R1). */
+  pools: PoolTile[][];
   unlocked: string[];
   lockedIn: [string, number][];
+  selected: number | null;
 }
 
-export type DragSource ='pool' | { row: number; cell: number };
+export type DragSource = 'pool' | { row: number; cell: number };
 
 export interface Drag {
   character: string;
   source: DragSource;
+  /** The row whose letter it is: a letter only goes back to its own row's pool, or into its own row (story 23, R5). */
+  row: number;
 }
 
 const isFixedCell = (cell: Cell) => cell.kind === 'revealed' || cell.kind === 'special' || cell.kind === 'locked';
@@ -42,28 +44,36 @@ function baseOf(character: string): string {
 /** The state of phase one. Pure logic: nothing here knows about the screen. */
 export class Board {
   readonly rows: RowState[];
-  readonly pool: PoolTile[];
+  /** One pool per row, with that row's answer's letters (story 23, R1). */
+  private readonly pools: PoolTile[][];
   private readonly unlocked: string[];
   private readonly lockedIn = new Map<string, number>();
 
-  selectedRow: number | null = null;
-  selectionHidden = false;
+  /** A row is always selected in phase one (story 23, R2). */
+  selectedRow: number | null = 0;
   drag: Drag | null = null;
   phaseOneOver = false;
 
   constructor(level: Level) {
     const answers = rowOrder(level.answers);
     this.rows = answers.map((answer) => ({ word: answer.word, cells: startingCells(answer), locked: false }));
-    this.pool = startingPool(level.answers);
+    // A row's pool has its answer's letters minus revealed ones, so a letter that's only revealed has no tile (story 23, R1).
+    this.pools = answers.map((answer) => startingPool([answer]).filter((tile) => tile.count > 0));
     this.unlocked = answers.map((answer) => answer.word);
+  }
+
+  /** The selected row's pool: the only one on screen. */
+  get pool(): PoolTile[] {
+    return this.selectedRow === null ? [] : this.pools[this.selectedRow];
   }
 
   snapshot(): BoardSnapshot {
     return structuredClone({
       rows: this.rows.map((row) => ({ cells: row.cells, locked: row.locked })),
-      pool: this.pool,
+      pools: this.pools,
       unlocked: this.unlocked,
       lockedIn: [...this.lockedIn],
+      selected: this.selectedRow,
     });
   }
 
@@ -73,29 +83,39 @@ export class Board {
     const rows = snapshot?.rows;
     if (!Array.isArray(rows) || rows.length !== board.rows.length) return null;
     if (rows.some((row, index) => !Array.isArray(row?.cells) || row.cells.length !== board.rows[index].cells.length)) return null;
+    // A board saved before each row had its own pool starts again.
+    if (!Array.isArray(snapshot.pools) || snapshot.pools.length !== board.rows.length) return null;
     const saved = structuredClone(snapshot);
     saved.rows.forEach((row, index) => {
       board.rows[index].cells = row.cells;
       board.rows[index].locked = row.locked;
+      board.pools[index].splice(0, board.pools[index].length, ...saved.pools[index]);
     });
-    board.pool.splice(0, board.pool.length, ...saved.pool);
     board.unlocked.splice(0, board.unlocked.length, ...saved.unlocked);
     saved.lockedIn.forEach(([word, row]) => board.lockedIn.set(word, row));
     board.phaseOneOver = board.unlocked.length === 0;
+    const selected = saved.selected;
+    board.selectedRow = board.phaseOneOver ? null : selected !== null && board.rows[selected] && !board.rows[selected].locked ? selected : board.topUnfinished();
     return board;
+  }
+
+  private topUnfinished(): number | null {
+    const row = this.rows.findIndex((candidate) => !candidate.locked);
+    return row === -1 ? null : row;
   }
 
   countOf(character: string): number {
     return this.pool.find((tile) => tile.character === character)?.count ?? 0;
   }
 
-  private changeCount(character: string, change: number) {
-    const tile = this.pool.find((candidate) => candidate.character === character);
+  private changeCount(row: number, character: string, change: number) {
+    const pool = this.pools[row];
+    const tile = pool.find((candidate) => candidate.character === character);
     if (tile) {
       tile.count += change;
     } else {
-      this.pool.push({ character, count: change });
-      this.pool.sort((a, b) => compareCells(a.character, b.character));
+      pool.push({ character, count: change });
+      pool.sort((a, b) => compareCells(a.character, b.character));
     }
   }
 
@@ -107,34 +127,32 @@ export class Board {
     return this.rows[row].cells.every((cell) => cell.kind !== 'empty');
   }
 
-  private hasEmptyCell(row: number): boolean {
-    return !this.rows[row].locked && !this.isFull(row);
-  }
-
   private wordIn(row: number): string {
     return this.rows[row].cells.map(cellCharacter).join('');
   }
 
+  /** Whether the selected row has letters to recall (story 23, R13). */
   hasPlacedLetters(): boolean {
-    return this.rows.some((row) => !row.locked && row.cells.some((cell) => cell.kind === 'placed'));
+    const row = this.selectedRow === null ? null : this.rows[this.selectedRow];
+    return !!row && !row.locked && row.cells.some((cell) => cell.kind === 'placed');
   }
 
   // Dragging
 
   pickUpFromPool(character: string): boolean {
-    if (this.drag || this.countOf(character) === 0) return false;
-    this.changeCount(character, -1);
-    this.drag = { character, source: 'pool' };
-    this.selectionHidden = true;
+    if (this.drag || this.selectedRow === null || this.countOf(character) === 0) return false;
+    this.changeCount(this.selectedRow, character, -1);
+    this.drag = { character, source: 'pool', row: this.selectedRow };
     return true;
   }
 
+  /** A placed letter in another row selects that row as it's picked up. */
   pickUpFromCell(row: number, cell: number): boolean {
     const target = this.rows[row].cells[cell];
     if (this.drag || this.rows[row].locked || target.kind !== 'placed') return false;
-    this.drag = { character: target.character, source: { row, cell } };
+    this.selectedRow = row;
+    this.drag = { character: target.character, source: { row, cell }, row };
     this.rows[row].cells[cell] = { kind: 'empty' };
-    this.selectionHidden = true;
     return true;
   }
 
@@ -143,37 +161,26 @@ export class Board {
     if (!drag) return [];
     this.drag = null;
 
-    if (this.isCellFixed(row, cell)) {
-      this.changeCount(drag.character, 1);
+    // A letter only goes into its own row (story 23, R5). Anywhere else, it goes back to the pool.
+    if (row !== drag.row || this.isCellFixed(row, cell)) {
+      this.changeCount(drag.row, drag.character, 1);
       return [];
     }
 
     const target = this.rows[row].cells[cell];
     this.rows[row].cells[cell] = { kind: 'placed', character: drag.character };
-    const touched = [row];
 
     if (target.kind === 'placed') {
-      if (drag.source === 'pool') {
-        this.changeCount(target.character, 1);
-      } else {
-        this.rows[drag.source.row].cells[drag.source.cell] = target;
-        touched.push(drag.source.row);
-      }
+      if (drag.source === 'pool') this.changeCount(row, target.character, 1);
+      else this.rows[row].cells[drag.source.cell] = target;
     }
-    return this.afterDrop(touched);
-  }
-
-  private afterDrop(touched: number[]): BoardEvent[] {
-    const events = this.check(touched);
-    const selected = this.selectedRow;
-    if (selected !== null && this.rows[selected].locked) this.moveSelectionOn(selected);
-    return events;
+    return this.check(row);
   }
 
   /** Released away from any cell, or on the pool. */
   dropAway() {
     if (!this.drag) return;
-    this.changeCount(this.drag.character, 1);
+    this.changeCount(this.drag.row, this.drag.character, 1);
     this.drag = null;
   }
 
@@ -183,7 +190,7 @@ export class Board {
     if (!drag) return;
     this.drag = null;
     if (drag.source === 'pool') {
-      this.changeCount(drag.character, 1);
+      this.changeCount(drag.row, drag.character, 1);
     } else {
       this.rows[drag.source.row].cells[drag.source.cell] = { kind: 'placed', character: drag.character };
     }
@@ -199,61 +206,13 @@ export class Board {
     );
   }
 
-  private check(rows: number[]): BoardEvent[] {
-    const events: BoardEvent[] = [];
-    for (const row of [...new Set(rows)].sort((a, b) => a - b)) {
-      if (this.rows[row].locked) continue;
-      if (!this.isFull(row)) {
-        events.push(...this.lockParts(row));
-        continue;
-      }
-      const word = this.wordIn(row);
-      const lockedRow = this.lockedIn.get(word);
-      if (this.unlocked.includes(word)) {
-        events.push(...this.lock(row, word));
-        continue;
-      }
-      // A full row that isn't an answer can still have a right part (D48).
-      events.push(...this.lockParts(row));
-      if (lockedRow !== undefined) {
-        events.push({ type: 'alreadyFound', row, lockedRow });
-      } else {
-        events.push({ type: 'wrong', row });
-      }
-    }
-    return events;
-  }
-
-  /** Runs of letter cells between special characters. A word with none inside it has one part. */
-  private partsOf(row: number): number[][] {
-    const parts: number[][] = [[]];
-    this.rows[row].cells.forEach((cell, index) => {
-      if (cell.kind === 'special') parts.push([]);
-      else parts[parts.length - 1].push(index);
-    });
-    return parts.filter((part) => part.length > 0);
-  }
-
-  /** D48: a filled part locks if it matches that part of any not-yet-locked answer that fits the row. */
-  private lockParts(row: number): BoardEvent[] {
-    const state = this.rows[row];
-    const events: BoardEvent[] = [];
-    for (const part of this.partsOf(row)) {
-      const cells = part.map((index) => state.cells[index]);
-      if (cells.some((cell) => cell.kind === 'empty') || !cells.some((cell) => cell.kind === 'placed')) continue;
-      const letters = cells.map(cellCharacter);
-      const matches = this.unlocked.some((word) => {
-        const answer = cellsOf(word);
-        return this.fits(word, state) && part.every((index, position) => answer[index] === letters[position]);
-      });
-      if (!matches) continue;
-      const before = cells.map((cell) => cell.kind);
-      part.forEach((index, position) => {
-        state.cells[index] = { kind: 'locked', character: letters[position]! };
-      });
-      events.push({ type: 'partLocked', row, cells: part, before });
-    }
-    return events;
+/** A row is checked once it's full, and locks all at once or not at all (story 23, R14). A wrong row stays selected (R7). */
+  private check(row: number): BoardEvent[] {
+    if (this.rows[row].locked || !this.isFull(row)) return [];
+    const word = this.wordIn(row);
+    const lockedRow = this.lockedIn.get(word);
+    if (this.unlocked.includes(word)) return this.lock(row, word);
+    return [lockedRow !== undefined ? { type: 'alreadyFound', row, lockedRow } : { type: 'wrong', row }];
   }
 
   private lock(row: number, word: string): BoardEvent[] {
@@ -265,6 +224,8 @@ export class Board {
       this.phaseOneOver = true;
       this.selectedRow = null;
       events.push({ type: 'phaseOneOver' });
+    } else {
+      this.moveSelectionOn(row);
     }
     return events;
   }
@@ -276,10 +237,9 @@ export class Board {
       if (row.locked || this.unlocked.some((word) => this.fits(word, row))) return;
       const letters: string[] = [];
       row.cells = row.cells.map((cell) => {
-        // Locked parts go back too, so the row can't be left with no way to finish it (D48).
         if (cell.kind !== 'revealed' && cell.kind !== 'locked') return cell;
         letters.push(cell.character);
-        this.changeCount(cell.character, 1);
+        this.changeCount(index, cell.character, 1);
         return { kind: 'empty' };
       });
       if (letters.length > 0) events.push({ type: 'hintsReturned', row: index, letters });
@@ -289,68 +249,52 @@ export class Board {
 
   // Recall All
 
+  /** Empties the selected row (story 23, R13). */
   recallAll(): boolean {
     if (this.drag || !this.hasPlacedLetters()) return false;
-    for (const row of this.rows) {
-      if (row.locked) continue;
-      row.cells = row.cells.map((cell) => {
-        if (cell.kind !== 'placed') return cell;
-        this.changeCount(cell.character, 1);
-        return { kind: 'empty' };
-      });
-    }
+    const index = this.selectedRow!;
+    const row = this.rows[index];
+    row.cells = row.cells.map((cell) => {
+      if (cell.kind !== 'placed') return cell;
+      this.changeCount(index, cell.character, 1);
+      return { kind: 'empty' };
+    });
     return true;
   }
 
   // Selecting, tapping and typing
 
+  /** The selected row always shows (story 23, R2). */
   get markedRow(): number | null {
-    return this.selectionHidden ? null : this.selectedRow;
+    return this.selectedRow;
   }
 
   selectRow(row: number) {
     if (this.drag || this.rows[row].locked) return;
     this.selectedRow = row;
-    this.selectionHidden = false;
   }
 
+  /** After a lock: the next unfinished row below, wrapping to the top (story 23, R8). */
   private moveSelectionOn(from: number) {
-    for (let step = 1; step < this.rows.length; step++) {
+    for (let step = 1; step <= this.rows.length; step++) {
       const row = (from + step) % this.rows.length;
-      if (this.hasEmptyCell(row)) {
+      if (!this.rows[row].locked) {
         this.selectedRow = row;
         return;
       }
     }
-    if (this.rows[from].locked) {
-      const next = this.rows.findIndex((row) => !row.locked);
-      this.selectedRow = next === -1 ? null : next;
-    }
+    this.selectedRow = null;
   }
 
-  /** Tapping a pool letter, or a key that has found its tile. */
+  /** Tapping a pool letter, or a key that has found its tile: it goes to the selected row's first empty cell. */
   input(character: string): BoardEvent[] {
-    if (this.drag || this.countOf(character) === 0) return [];
-
-    if (this.selectedRow === null) {
-      const top = this.rows.findIndex((_, row) => this.hasEmptyCell(row));
-      if (top === -1) return [];
-      this.selectedRow = top;
-    }
-    if (!this.hasEmptyCell(this.selectedRow)) {
-      this.moveSelectionOn(this.selectedRow);
-      if (this.selectedRow === null || !this.hasEmptyCell(this.selectedRow)) return [];
-    }
-    this.selectionHidden = false;
-
     const row = this.selectedRow;
+    if (this.drag || row === null || this.countOf(character) === 0) return [];
     const cell = this.rows[row].cells.findIndex((candidate) => candidate.kind === 'empty');
-    this.changeCount(character, -1);
+    if (this.rows[row].locked || cell === -1) return [];
+    this.changeCount(row, character, -1);
     this.rows[row].cells[cell] = { kind: 'placed', character };
-
-    const events = this.check([row]);
-    if (this.selectedRow !== null && this.isFull(row)) this.moveSelectionOn(row);
-    return events;
+    return this.check(row);
   }
 
   /** Exact keys first. A plain key falls back to its accented letters (story 17, R14). */
@@ -374,30 +318,20 @@ export class Board {
     return [];
   }
 
-  private rightmostPlaced(row: number): number {
-    return this.rows[row].cells.findLastIndex((cell) => cell.kind === 'placed');
-  }
-
+  /** Takes back the selected row's last placed letter (story 23, R9). */
   private backspace() {
-    if (this.selectedRow === null) return;
-    for (let row = this.selectedRow; row >= 0; row--) {
-      if (this.rows[row].locked) continue;
-      const cell = this.rightmostPlaced(row);
-      if (cell === -1) continue;
-      const placed = this.rows[row].cells[cell] as { character: string };
-      this.changeCount(placed.character, 1);
-      this.rows[row].cells[cell] = { kind: 'empty' };
-      this.selectedRow = row;
-      this.selectionHidden = false;
-      return;
-    }
+    const row = this.selectedRow;
+    if (row === null || this.rows[row].locked) return;
+    const cell = this.rows[row].cells.findLastIndex((candidate) => candidate.kind === 'placed');
+    if (cell === -1) return;
+    const placed = this.rows[row].cells[cell] as { character: string };
+    this.changeCount(row, placed.character, 1);
+    this.rows[row].cells[cell] = { kind: 'empty' };
   }
 
   private moveSelection(direction: 1 | -1) {
-    this.selectionHidden = false;
     if (this.selectedRow === null) {
-      const top = this.rows.findIndex((row) => !row.locked);
-      this.selectedRow = top === -1 ? null : top;
+      this.selectedRow = this.topUnfinished();
       return;
     }
     const count = this.rows.length;

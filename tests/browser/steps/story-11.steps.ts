@@ -8,6 +8,7 @@ import { installProbe, screen, startRecording, stopRecording, type Drawn, type F
 import { columnGraphics, openLevel, pitchOf, popupParts, ready, restingX, solve, two, waitForPopup, win } from './phase-two.steps';
 import { watchErrors } from './foundation.steps';
 import { current, useLevelList, useLevels } from './story-02.steps';
+import { layoutNow } from './phase-one.steps';
 import { expectInterstitialHasNoButton, pressPlayAndRecord, themedLevels } from './story-15.steps';
 
 const { Given, When, Then } = createBdd(test);
@@ -357,7 +358,7 @@ Then('the column and handles are showing', async ({ page }) => {
 
 Given('the player is dragging a Z from the pool', async ({ page, scenario }) => {
   await openLevel(page, scenario);
-  const tile = (await current(page)).layout.poolTiles.find((candidate) => candidate.character === 'Z')!;
+  const tile = (await layoutNow(page, scenario, 'Z')).poolTiles.find((candidate) => candidate.character === 'Z')!;
   await page.mouse.move(tile.x + tile.width / 2, tile.y + tile.height / 2);
   await page.mouse.down();
   await page.mouse.move(tile.x - 40, tile.y - 40, { steps: 4 });

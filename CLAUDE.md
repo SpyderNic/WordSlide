@@ -46,6 +46,8 @@ Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find i
 - When a story is built, add it to the `built` list in `cucumber.mjs` and/or `playwright.config.ts`.
 - Tag a scenario `@browser` if it needs the screen, and `@touch` if it needs fingers.
 - In the browser tests, Given and Then share one step registry, so one step can't be defined twice for both uses.
+- `archive/before-story-23/` holds scenarios that story 23 (a pool for each row) made obsolete, with a copy of the test steps from then. They don't run. The game as it was is tagged `before-story-23`.
+- Each row has its own pool (story 23): a test that takes a letter "from the pool" must have that letter's row selected. Browser steps use `layoutNow(page, scenario, letter)`, which taps the row first.
 
 ## Things that have caught us out
 

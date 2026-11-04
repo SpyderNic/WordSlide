@@ -309,6 +309,9 @@ Then(/^the pool order is (.+)$/, async ({ scenario }, order: string) => {
 
 Then(/^the pool shows (\S+) x(\d+)$/, async ({ page, scenario }, character: string, count: string) => {
   if (scenario.views.length === 0) scenario.views.push(await open(page, scenario.level, 1, 0));
+  // Set-up steps such as selecting a row (story 23) come first.
+  for (const step of scenario.setup.splice(0)) await step(page);
+  await page.waitForTimeout(scenario.setup.length === 0 ? 350 : 0);
   const { layout } = await current(page);
   expect(layout.poolTiles.find((tile) => tile.character === character)?.count).toBe(Number(count));
 });

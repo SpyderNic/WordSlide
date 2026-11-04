@@ -19,6 +19,7 @@ export const woodAndBrass: Style = {
   bevel: { edge: 0.09, light: 14, dark: 16 },
   minText: 12,
   pulseScale: 1.15,
+  fadedRow: 0.5,
   timings: {
     letterTravel: 150,
     lockPulseGrow: 150,
@@ -34,5 +35,7 @@ export const woodAndBrass: Style = {
     popupDelay: 1500,
     levelFade: 300,
     interstitial: 2000,
+    rowFade: 200,
+    poolChange: 250,
   },
 };

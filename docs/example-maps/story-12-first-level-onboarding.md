@@ -2,6 +2,8 @@
 
 **Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-12-first-level-tutorial.feature](../../features/story-12-first-level-tutorial.feature). Built on 2026-11-02.
 
+> *Changed by story 23 on 2026-11-04.* Each row now has its own pool ([story 23](story-23-a-pool-for-each-row.md)). Some of this story's examples changed to use a row's own letters, and scenarios whose rule no longer applies are in `archive/before-story-23/`, with the rule that replaced each.
+
 *As a new player, I want the first level to walk me through each step, so that I understand the game within a minute without reading instructions.*
 
 **Key:** 🟦 Rule · 🟩 Example · 🟥 Question

@@ -55,6 +55,8 @@ If the layout at the start of phase two already spells the final word, the playe
 It's accepted as an easy out for the few affected levels and may be revisited. How the instant win looks is for the win story's mapping session.
 
 ### D8. Which row a word can lock in
+*Changed by story 23 on 2026-11-04.* With a pool per row, the only other answer a row can spell is one made of the same letters (such as MEAT for TEAM).
+
 **Rule:** a filled row locks if its word is one of the level's not-yet-locked answers, has the row's length, and matches every revealed (hinted) letter in that row.
 
 | Answers | Revealed letters in the row | Word typed | Result |
@@ -134,6 +136,8 @@ There are no stars. The player gets 1 point per level completed. This replaces t
 From here on, decisions come from the mapping of [story 2](example-maps/story-02-show-a-level.md).
 
 ### D24. Letters with no copies left
+*Changed by story 23 on 2026-11-04.* A row's pool has no tile for a letter that's only revealed in that row.
+
 A letter with no copies left to place stays in the pool as a grey x0 tile, including from the start of a level.
 
 ### D25. Revealed letters look different
@@ -169,13 +173,17 @@ A letter that doesn't land on an empty cell or a placed letter goes to the pool,
 *Changed 2026-10-31.* Sound is parked for the prototype, which has no sound.
 
 ### D35. Pool as a keyboard
+*Changed by story 23 on 2026-11-04.* Each row has its own pool, and a row is always selected, from the moment a level opens. A letter goes to the selected row only. A wrong word keeps the selection, and a lock moves it to the next unfinished row below, wrapping. Backspace works on the selected row only. See [story 23](example-maps/story-23-a-pool-for-each-row.md).
+
 A second way to place letters, alongside dragging. Tapping a row selects it, then tapping a pool letter or pressing its key sends the letter to that row's first empty cell. No row is selected when a level opens, and the first input selects the top row. When an input fills a row, the selection moves to the next row with an empty cell, wrapping to the top. Backspace and the Up and Down arrows also work. The full rules are in [story 17](example-maps/story-17-pool-as-a-keyboard.md).
 
 ### D36. Recall All
+*Changed by story 23 on 2026-11-04.* Recall All empties the selected row only, and is grey when that row has nothing to recall.
+
 Recall All sends every placed letter back to the pool at once, with no confirmation. It's an icon of two arrows pointing down, beside the pool on its right. It's grey with nothing to recall. It has no keyboard shortcut in the prototype.
 
 ### D37. Checking a word
-A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour: each tile grows 15% from its centre in 0.15 seconds, takes the new colour at its biggest, and shrinks back in 0.2 seconds. In a split word (D48), only the parts that didn't lock shake, and special characters stay still. Moving on, say by typing the next letter, never cuts a pulse or a shake short.
+A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour: each tile grows 15% from its centre in 0.15 seconds, takes the new colour at its biggest, and shrinks back in 0.2 seconds. Special characters stay still (story 23, R14: a row shakes as a whole). Moving on, say by typing the next letter, never cuts a pulse or a shake short.
 
 ### D38. The phase-two ceremony
 Details of D6. The ceremony starts after the last word's lock feedback, takes about 1 second and ignores input. The words slide, the rows move to the vertical centre of the space, and the pool and column fade together. The handles appear last. The column is a strip one cell wide and as tall as the rows, with a down-arrow notch at the top and an up-arrow notch at the bottom. The handles sit in a fixed line at the left edge of the screen. An instant win (D7) comes after the ceremony.
@@ -195,6 +203,8 @@ The column is checked each time a word or row settles, and reads top to bottom. 
 Levels come in a fixed order, and winning one unlocks the next. The player's level, points and progress within a level are saved on their device after every change that settles, behind the D32 interface. The game always opens where the player left off. The new point shows at the top of the screen when the popup appears. After the last level, the prototype's popup shows "All levels complete!" with no button. Development builds have a level picker and a progress reset, in the address: `?level=N` opens level N as a peek that saves nothing, and `?reset` clears progress. The next level fades in over about 0.3 seconds.
 
 ### D43. Level 1 is a strict tutorial
+*Changed by story 23 on 2026-11-04.* Level 1 starts as F _ _ and O _ _. Step 1 says "Drag letters to complete a word", and when FOX locks, the pool changes to OWL's letters and the text says "Each word has its own letters. Finish the grid!".
+
 Level 1 walks the player through placing letters and sliding a word, with fixed text and an animated hand. Reordering has its own tutorial, on the first level that needs it (story 21). The player can only do the current step, and Recall All doesn't appear. In steps 1 and 2, typing or tapping the step's letter works too (tapping in step 1 added 2026-11-03). The text sits above the rows and below the theme. Level 2 highlights the theme once, with a short tip. The tutorial is a level marked as such, themed Animals, and its steps come from its solution. A pointing hand, drawn in code, shows each step, and the theme gets a gently pulsing outline in level 2. The full rules are in [story 12](example-maps/story-12-first-level-onboarding.md).
 
 ### D44. Level generator
@@ -212,7 +222,7 @@ The designer wants to play the prototype as a new player, to judge difficulty. C
 40 levels: Animals, Food, Space and Sports, with 10 each, and the tutorial (FOX, OWL, OX) as the first Animals level. Each theme follows the rows 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, as far as its words allow: with no 2-letter final word, those levels use 3 rows, and with no 3-letter words either, Claude flags it and they use 4. From level 2, no letters are revealed. Levels 2 to 20 don't need reordering, so level 21 teaches it, and after that each theme's first level at each row count doesn't need it and the rest do (story 21, R6). A full-screen interstitial naming the new theme fades in and out when the theme changes.
 
 ### D48. A split word's parts lock on their own
-*From playing milestone 5, on 2026-11-02.* A *part* is a run of letters between special characters, or between a special character and the end of the word: HOT DOG has the parts HOT and DOG, and T-REX has T and REX. Once all of a part's cells are filled, it locks if it matches the same part of any not-yet-locked answer that fits the row (D8), even a part of one letter. Only its tiles pulse and take the locked colour, and its letters become fixed, like a locked word's. When the last part completes the word, the parts that had already locked don't pulse again. A full row is still checked as a whole: it locks, or the wrong-word feedback plays, and any locked parts stay. If a row with locked parts can no longer fit any remaining answer, its locked letters go back to the pool, like hints (D9). A word with no special character inside it has one part, so it's unchanged.
+*Replaced on 2026-11-04 by story 23, R14: with a pool per row, a row locks all at once or not at all.* *From playing milestone 5, on 2026-11-02.* A *part* is a run of letters between special characters, or between a special character and the end of the word: HOT DOG has the parts HOT and DOG, and T-REX has T and REX. Once all of a part's cells are filled, it locks if it matches the same part of any not-yet-locked answer that fits the row (D8), even a part of one letter. Only its tiles pulse and take the locked colour, and its letters become fixed, like a locked word's. When the last part completes the word, the parts that had already locked don't pulse again. A full row is still checked as a whole: it locks, or the wrong-word feedback plays, and any locked parts stay. If a row with locked parts can no longer fit any remaining answer, its locked letters go back to the pool, like hints (D9). A word with no special character inside it has one part, so it's unchanged.
 
 ### D49. The tutorial's hand is the designer's image
 *2026-11-03.* The tutorial's pointing hand is `assets/Pointer.png`, the designer's pixel-art hand, in place of the one drawn in code (story 12, Q9). It's about a tile tall, drawn without smoothing, and its fingertip is where the hand points.

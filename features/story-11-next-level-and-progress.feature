@@ -117,12 +117,13 @@ Feature: Unlock the next level and save progress
 
     @browser
     Scenario: A hinted letter that went to the pool stays there
-      Given the answers TART and TREE
-      And R revealed at position 3 of row 1
-      And the player has built TART in row 2
+      # Story 23: with a pool per row, a hint only leaves its row for answers made of the same letters.
+      Given the answers MEAT and TEAM
+      And M revealed at position 1 of row 1
+      And the player has built MEAT in row 2
       When the game closes and opens again
       Then row 1 reads _ _ _ _
-      And the pool holds T, R, E, E
+      And the pool holds A, E, M, T
 
     @browser
     Scenario: Phase-two progress comes back
@@ -132,13 +133,6 @@ Feature: Unlock the next level and save progress
       Then the game is in phase two
       And KANGAROO has its N in the column, in the top row
       And the column and handles are showing
-
-    @browser
-    Scenario: A locked part comes back
-      Given a level containing the answer HOT DOG
-      And HOT is locked in HOT DOG's row
-      When the game closes and opens again
-      Then HOT is still locked in HOT DOG's row
 
     @browser
     Scenario: Closing during a drag restores the board from before it
@@ -151,19 +145,6 @@ Feature: Unlock the next level and save progress
       Given the phase-two ceremony is playing
       When the game closes and opens again
       Then the finished phase-two layout appears
-
-    @browser
-    Scenario: No row is selected after reopening
-      Given ZEBRA's row is selected
-      When the game closes and opens again
-      Then no row is marked as selected
-
-    @browser
-    Scenario: No row is selected after reopening, even with letters placed
-      Given a Z placed in cell 1 of ZEBRA's row
-      And ZEBRA's row is selected
-      When the game closes and opens again
-      Then no row is marked as selected
 
     @browser
     Scenario: Winning clears the level's saved progress

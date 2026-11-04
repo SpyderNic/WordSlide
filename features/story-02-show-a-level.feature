@@ -1,5 +1,6 @@
 # Status: approved by the designer on 2026-10-31.
 # Map: docs/example-maps/story-02-show-a-level.md
+# Story 23 changed this file's examples on 2026-11-04: each row has its own pool, so examples use the row's own letters. The pool shows the selected row's letters (story 23, R1).
 # Unless a scenario says otherwise, the level has the theme "Animals",
 # the answers ZEBRA, LEMUR and KANGAROO, and nothing revealed.
 
@@ -98,22 +99,16 @@ Feature: Show a level
   Rule: The pool shows each of the level's characters once, with its count
 
     Scenario: Copies of a letter share one tile
-      When the level opens
-      Then the pool has 12 tiles holding 18 letters
+      When the player selects KANGAROO's row
+      Then the pool has 6 tiles holding 8 letters
       And the pool shows these tiles in this order:
         | tile | count |
-        | A    | x3    |
-        | B    | x1    |
-        | E    | x2    |
+        | A    | x2    |
         | G    | x1    |
         | K    | x1    |
-        | L    | x1    |
-        | M    | x1    |
         | N    | x1    |
         | O    | x2    |
-        | R    | x3    |
-        | U    | x1    |
-        | Z    | x1    |
+        | R    | x1    |
 
     Scenario: The count is in the tile's bottom-right corner
       When the level opens
@@ -126,18 +121,13 @@ Feature: Show a level
 
       Examples:
         | answers      | order            |
-        | CAFÉ and FEE | A, C, E, É, F    |
-        | CAT and R2D2 | A, C, D, R, T, 2 |
+        | ÉLEVÉ and TROMBONE | E, É, L, V |
+        | R2D2 and CAROUSEL  | D, R, 2    |
 
     Scenario: Digits share a tile too
       Given a level containing the answer R2D2
-      When the level opens
+      When the player selects R2D2's row
       Then the pool shows 2 x2
-
-    Scenario: A letter with no copies left to place gets a grey tile
-      Given L revealed at position 1 of LEMUR
-      When the level opens
-      Then the pool shows a grey L x0 tile between K and M
 
   Rule: The pool area and tiles have fixed sizes
 

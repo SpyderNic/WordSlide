@@ -21,6 +21,8 @@ export interface Style {
   /** How much bigger a pulsing tile gets: 1.15 is 15% (D37). */
   pulseScale: number;
   /** Milliseconds. */
+  /** How strongly rows that aren't selected and aren't finished show (story 23, R3). */
+  fadedRow: number;
   timings: {
     letterTravel: number;
     /** A locking tile grows, takes its new colour at its biggest, then shrinks back (D37). */
@@ -39,5 +41,9 @@ export interface Style {
     popupDelay: number;
     levelFade: number;
     interstitial: number;
+    /** A row fading or coming forward as the selection moves (story 23, Q8). */
+    rowFade: number;
+    /** The pool changing to another row's letters (story 23, Q3). */
+    poolChange: number;
   };
 }

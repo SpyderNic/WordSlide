@@ -73,7 +73,7 @@ export class GameScene extends Phaser.Scene {
   private layoutNow!: LevelLayout;
   private drawn: Phaser.GameObjects.GameObject[] = [];
   private rowObjects = new Map<number, CellPart[]>();
-  /** Each cell's objects, by "row:cell", so a locking part can pulse alone (D48). */
+  /** Each cell's objects, by "row:cell". */
   private cellObjects = new Map<string, CellPart[]>();
   private press: Press | null = null;
   private dragTile: Phaser.GameObjects.Container | null = null;
@@ -82,6 +82,15 @@ export class GameScene extends Phaser.Scene {
   private feedback: BoardEvent[] = [];
   private foundText: Phaser.GameObjects.Container | null = null;
   private poolObjects: Phaser.GameObjects.GameObject[] = [];
+  /** Which pool tile each object belongs to, and where each tile was drawn, so a change of pool can animate (story 23, Q3). */
+  private poolOwner = new Map<Phaser.GameObjects.GameObject, string>();
+  private poolPlaces = new Map<string, { x: number; y: number }>();
+  /** The row whose pool is drawn. */
+  private poolRow: number | null | undefined = undefined;
+  /** Letters fading out of the old pool. */
+  private leavingPool: Phaser.GameObjects.GameObject[] = [];
+  /** How strongly each row was last drawn (story 23, R3). */
+  private rowStrengths = new Map<number, number>();
   private phaseTwo: PhaseTwoView | null = null;
   private levels: Level[] = levels;
   private progress: Progress = NEW_PLAYER;
@@ -163,8 +172,12 @@ export class GameScene extends Phaser.Scene {
           view: () => this.testView(),
           place: (row: number, cell: number, character: string) =>
             this.act(() => {
+              const selected = this.board.selectedRow;
+              this.board.selectRow(row);
               this.board.pickUpFromPool(character);
-              return this.board.dropOnCell(row, cell);
+              const events = this.board.dropOnCell(row, cell);
+              if (selected !== null && !events.some((event) => event.type === 'locked')) this.board.selectRow(selected);
+              return events;
             }),
           solve: () => this.solveForTests(),
           skipCeremony: () => this.phaseTwo?.skipCeremony(),
@@ -275,11 +288,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private fadePoolNow() {
-    this.poolObjects.forEach((object) => {
+    [...this.poolObjects, ...this.leavingPool].forEach((object) => {
       this.tweens.killTweensOf(object);
       object.destroy();
     });
     this.poolObjects = [];
+    this.leavingPool = [];
   }
 
   // Drawing
@@ -305,12 +319,72 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.phaseTwo) return;
 
-    this.fadePoolNow();
     this.drawSelection();
     this.layoutNow.rows.forEach((row, index) => row.cells.forEach((cell, cellIndex) => this.drawCell(cell, index, cellIndex, row.locked)));
+    this.fadeRows();
+    this.drawPool();
+    this.replayEffects();
+  }
+
+  /** Rows that aren't selected and aren't finished show faded, easing in and out as the selection moves (story 23, R3). */
+  private fadeRows() {
+    const strengths = new Map<number, number>();
+    this.layoutNow.rows.forEach((row, index) => {
+      const strength = row.locked || index === this.board.markedRow ? 1 : currentStyle.fadedRow;
+      strengths.set(index, strength);
+      const was = this.rowStrengths.get(index) ?? strength;
+      const parts = (this.rowObjects.get(index) ?? []).filter((part) => (part as unknown as { alpha: number }).alpha > 0);
+      parts.forEach((part) => (part as unknown as Phaser.GameObjects.Components.Alpha).setAlpha(was));
+      if (was !== strength) this.tweens.add({ targets: parts, alpha: strength, duration: timings.rowFade });
+    });
+    this.rowStrengths = strengths;
+  }
+
+  /**
+   * The selected row's pool. When the selection moves to another row, letters both pools have glide to their new
+   * places, letters the new pool doesn't have fade out, and its new letters fade in (story 23, Q3).
+   */
+  private drawPool() {
+    const before = this.poolPlaces;
+    const changed = this.poolRow !== undefined && this.poolRow !== this.board.selectedRow;
+    const staying = new Set(this.layoutNow.poolTiles.map((tile) => tile.character));
+    const leaving = changed
+      ? this.poolObjects.filter((object) => {
+          const owner = this.poolOwner.get(object);
+          return owner !== undefined && !staying.has(owner);
+        })
+      : [];
+    this.poolObjects = this.poolObjects.filter((object) => !leaving.includes(object));
+    this.fadePoolNow();
+    this.poolOwner = new Map();
+    this.poolPlaces = new Map();
     this.layoutNow.poolTiles.forEach((tile) => this.drawPoolTile(tile));
     this.drawRecall();
-    this.replayEffects();
+    this.poolRow = this.board.selectedRow;
+    if (!changed) {
+      leaving.forEach((object) => object.destroy());
+      return;
+    }
+    for (const object of leaving) {
+      this.leavingPool.push(object);
+      this.tweens.add({ targets: object, alpha: 0, duration: timings.poolChange, onComplete: () => object.destroy() });
+    }
+    for (const object of this.poolObjects) {
+      const character = this.poolOwner.get(object);
+      if (character === undefined) continue;
+      const from = before.get(character);
+      const to = this.poolPlaces.get(character)!;
+      const shape = object as unknown as { x: number; y: number; alpha: number };
+      if (from) {
+        shape.x += from.x - to.x;
+        shape.y += from.y - to.y;
+        this.tweens.add({ targets: object, x: shape.x - (from.x - to.x), y: shape.y - (from.y - to.y), duration: timings.poolChange });
+      } else {
+        const alpha = shape.alpha;
+        shape.alpha = 0;
+        this.tweens.add({ targets: object, alpha, duration: timings.poolChange });
+      }
+    }
   }
 
   private keep<T extends Phaser.GameObjects.GameObject>(object: T): T {
@@ -383,10 +457,15 @@ export class GameScene extends Phaser.Scene {
   private drawPoolTile({ character, count: total, x, y, width, height }: PoolTileView) {
     const count = total - (this.incoming.get(character) ?? 0);
     const colour = count === 0 ? colours.tileGrey : colours.tile;
-    this.poolObjects.push(makeTile(this, x + width / 2, y + height / 2, width, colour));
-    this.poolObjects.push(this.drawPoolText(character, x + width / 2, y + height * 0.45, height * 0.55));
-    // Never smaller than the style's minimum, so counts stay readable on small screens (story 16, R4).
-    this.poolObjects.push(this.drawPoolText(`x${count}`, x + width * 0.78, y + height * 0.8, Math.max(height * 0.26, currentStyle.minText)));
+    const objects = [
+      makeTile(this, x + width / 2, y + height / 2, width, colour),
+      this.drawPoolText(character, x + width / 2, y + height * 0.45, height * 0.55),
+      // Never smaller than the style's minimum, so counts stay readable on small screens (story 16, R4).
+      this.drawPoolText(`x${count}`, x + width * 0.78, y + height * 0.8, Math.max(height * 0.26, currentStyle.minText)),
+    ];
+    objects.forEach((object) => this.poolOwner.set(object, character));
+    this.poolPlaces.set(character, { x, y });
+    this.poolObjects.push(...objects);
   }
 
   private drawPoolText(text: string, x: number, y: number, size: number) {
@@ -530,6 +609,8 @@ export class GameScene extends Phaser.Scene {
     } else if (hit.kind === 'cell') {
       this.board.selectRow(hit.row);
       this.redraw();
+      // The selected row is saved, so reopening shows the same pool (story 23, R10).
+      this.saveLevel();
     } else if (hit.kind === 'recall') {
       this.act(() => void this.board.recallAll());
     }
@@ -645,8 +726,8 @@ export class GameScene extends Phaser.Scene {
     if (!shown || shown === 'ceremony') return;
 
     const texts: Record<string, string> = {
-      'step 1': 'Drag a letter to complete a word',
-      'step 2': 'Finish the grid!',
+      'step 1': 'Drag letters to complete a word',
+      'step 2': 'Each word has its own letters. Finish the grid!',
       'step 3': 'You can drag words side to side to find the word, try it!',
       'step reorder': 'To find the vertical final word, you can reorder the words',
       tip: 'All words in a level relate to a theme.',
@@ -705,8 +786,10 @@ export class GameScene extends Phaser.Scene {
   /** Which letters left which cells, and which arrived, and where each one comes from and goes to. */
   private flightsSince(before: BoardSnapshot, origin?: { character: string } & Point) {
     const cellAt = (row: number, cell: number) => centre(this.layoutNow.rows[row].cells[cell]);
+    // A letter going back flies to the pool as it is after the change, which may be another row's (story 23).
+    const poolAfter = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board).poolTiles;
     const poolAt = (character: string) => {
-      const tile = this.layoutNow.poolTiles.find((candidate) => candidate.character === character);
+      const tile = poolAfter.find((candidate) => candidate.character === character);
       return tile ? centre(tile) : null;
     };
     const left: { character: string; from: Point }[] = [];
@@ -764,9 +847,7 @@ export class GameScene extends Phaser.Scene {
 
   private redrawPool() {
     if (this.phaseTwo || this.allDone) return;
-    this.fadePoolNow();
-    this.layoutNow.poolTiles.forEach((tile) => this.drawPoolTile(tile));
-    this.drawRecall();
+    this.drawPool();
   }
 
   // Feedback
@@ -779,11 +860,9 @@ export class GameScene extends Phaser.Scene {
     const wait = travelled ? timings.letterTravel : 0;
     for (const event of events) {
       if (event.type === 'locked') {
-        // Parts that had already locked don't celebrate again (D48).
-        const fresh = this.board.rows[event.row].cells.flatMap((cell, index) => (cell.kind === 'locked' ? [] : [index]));
-        this.pulse(event.row, fresh, fresh.map((cell) => this.board.rows[event.row].cells[cell].kind), wait);
+        const cells = this.board.rows[event.row].cells;
+        this.pulse(event.row, cells.map((_, index) => index), cells.map((cell) => cell.kind), wait);
       }
-      if (event.type === 'partLocked') this.pulse(event.row, event.cells, event.before, wait);
       if (event.type === 'wrong') this.shake(event.row, wait);
       if (event.type === 'alreadyFound') this.time.delayedCall(wait, () => this.showAlreadyFound(event.lockedRow));
       if (event.type === 'phaseOneOver') {
@@ -802,6 +881,7 @@ export class GameScene extends Phaser.Scene {
     answers.forEach((row, index) => {
       Array.from(row.word).forEach((character, cell) => {
         if (this.board.rows[index].cells[cell].kind === 'empty') {
+          this.board.selectRow(index);
           this.board.pickUpFromPool(character);
           this.applied(this.board.dropOnCell(index, cell));
         }
@@ -921,7 +1001,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
-   * A locking word or part (D48): its tiles grow from their centre, take the locked colour at their biggest,
+   * A locking word: its tiles grow from their centre, take the locked colour at their biggest,
    * then shrink back (D37). They're drawn locked already, so they show their old colours while they grow.
    */
   private pulse(row: number, cells: number[], before: Cell['kind'][], wait = 0) {

@@ -2,6 +2,7 @@
 # Map: docs/example-maps/story-05-recall-all.md
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, nothing is revealed, and the rows are LEMUR, ZEBRA, KANGAROO.
+# Story 23 changed this file's examples on 2026-11-04: each row has its own pool, so examples use the row's own letters. Recall All empties the selected row (story 23, R13).
 
 Feature: Recall All
   As a player
@@ -9,12 +10,6 @@ Feature: Recall All
   So that I can start again without losing the words I've solved
 
   Rule: Recall All sends every placed letter back to the pool
-
-    Scenario: Letters in several rows go back
-      Given a Z placed in LEMUR's row
-      And an A and an N placed in KANGAROO's row
-      When the player presses Recall All
-      Then those three cells are empty
 
     Scenario: A full row with a wrong word is cleared
       Given ZEBRA's row is full but wrong
@@ -25,7 +20,7 @@ Feature: Recall All
 
     Scenario: A revealed letter stays
       Given L revealed at position 1 of LEMUR
-      And LEMUR's row reads L E Z _ _
+      And LEMUR's row reads L E M _ _
       When the player presses Recall All
       Then LEMUR's row reads L _ _ _ _
 
@@ -34,22 +29,22 @@ Feature: Recall All
       And a Z placed in ZEBRA's row
       When the player presses Recall All
       Then LEMUR is still locked
-      And the M count hasn't changed
+      And LEMUR's row reads L E M U R
 
     Scenario: A special character stays
       Given a level containing the answer T-REX
-      And T-REX's row reads D - R _ _
+      And T-REX's row reads _ - R E _
       When the player presses Recall All
       Then T-REX's row reads _ - _ _ _
 
   Rule: Counts go back up
 
     Scenario: Each letter goes to its own tile
-      Given a Z, an A and an N placed in cells
-      And the pool shows a grey Z x0, A x2 and a grey N x0
+      Given a K, an A and an N placed in KANGAROO's row
+      And the pool shows a grey K x0, A x1 and a grey N x0
       When the player presses Recall All
-      Then the pool shows Z x1, A x3 and N x1
-      And the Z and N tiles aren't grey
+      Then the pool shows K x1, A x2 and N x1
+      And the K and N tiles aren't grey
 
   Rule: Pool tiles and rows stay in place
 
@@ -126,12 +121,3 @@ Feature: Recall All
       When the player presses Recall All
       Then ZEBRA's row is still selected
       And the next input goes to its cell 1
-
-    # Needs story 17.
-    Scenario: A hidden selection stays hidden
-      Given ZEBRA's row was selected before a drag
-      And a letter was placed by that drag
-      When the player presses Recall All
-      Then no row is marked as selected
-      When the player taps E in the pool
-      Then ZEBRA's row is marked as selected

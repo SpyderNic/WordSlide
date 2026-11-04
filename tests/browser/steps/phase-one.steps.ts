@@ -18,8 +18,19 @@ export async function ready(page: Page, scenario: Scenario) {
   for (const step of scenario.setup.splice(0)) await step(page);
 }
 
-export async function layoutNow(page: Page, scenario: Scenario): Promise<LevelLayout> {
+/**
+ * The layout once the level is open. With a letter, the row whose pool has it is selected first, by tapping it as a
+ * player would: each row has its own pool (story 23).
+ */
+export async function layoutNow(page: Page, scenario: Scenario, letter?: string): Promise<LevelLayout> {
   await ready(page, scenario);
+  const { layout, level } = await current(page);
+  if (!letter || layout.poolTiles.some((tile) => tile.character === letter)) return layout;
+  const row = layout.rows.findIndex((candidate, index) => !candidate.locked && level.answers.some((answer) => answer.word === candidate.word) && [...layout.rows[index].word].includes(letter));
+  if (row === -1) return layout;
+  const cell = layout.rows[row].cells.find(({ cell }) => cell.kind === 'empty') ?? layout.rows[row].cells[0];
+  await page.mouse.click(cell.x + cell.width / 2, cell.y + cell.height / 2);
+  await page.waitForTimeout(350);
   return (await current(page)).layout;
 }
 
@@ -64,7 +75,7 @@ export async function hold(page: Page, from: { x: number; y: number }, to: { x: 
 }
 
 async function holdPoolTile(page: Page, scenario: Scenario, character: string, to: { x: number; y: number }) {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, character);
   await hold(page, centreOf(poolTile(layout, character)), to);
 }
 
@@ -148,15 +159,28 @@ Given(/^an? (\S+) placed in cell (\d+) of (.+)'s row$/, async ({ scenario }, cha
   });
 });
 
+/** Z is ZEBRA's letter: it goes in ZEBRA's first cell, and ZEBRA's row is selected, so its pool is the one shown (story 23). */
+export async function placeZ(page: Page) {
+  const { layout } = await current(page);
+  const row = rowOf(layout, 'ZEBRA');
+  await placeLetter(row, 0, 'Z')(page);
+  const { x, y } = centreOf(layout.rows[row].cells[0]);
+  await page.mouse.click(x, y);
+  await page.waitForTimeout(350);
+}
+
 Given('a Z placed in a cell', async ({ scenario }) => {
-  scenario.setup.push(placeLetter(0, 0, 'Z'));
+  scenario.setup.push(placeZ);
 });
 
+// Each in its own row: Z in ZEBRA's first cell, E in LEMUR's second.
 Given('a Z and an E placed in cells', async ({ scenario }) => {
-  scenario.setup.push(placeLetter(0, 0, 'Z'), placeLetter(1, 1, 'E'));
+  scenario.setup.push(placeLetter(1, 0, 'Z'), placeLetter(0, 1, 'E'));
 });
 
-Given('the pool shows a grey Z x0', async () => {});
+Given('the pool shows a grey Z x0', async ({ scenario }) => {
+  scenario.setup.push(placeZ);
+});
 
 Given('the positions of every pool tile and row', async ({ page, scenario }) => {
   await ready(page, scenario);
@@ -174,7 +198,7 @@ Given("cell 2 of ZEBRA's row is highlighted", async ({ page, scenario }) => {
 });
 
 Given('the player is dragging a letter with one finger', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, 'A');
   const from = centreOf(poolTile(layout, 'A'));
   const to = themePoint(layout);
   await touch(page, scenario, 'touchStart', [from]);
@@ -188,18 +212,19 @@ Given('the player is dragging an A from the pool', async ({ page, scenario }) =>
   await holdPoolTile(page, scenario, 'A', themePoint(layout));
 });
 
-Given("the player is dragging a placed Z from cell 1 of LEMUR's row", async ({ page, scenario }) => {
+Given(/^the player is dragging a placed (\S+) from cell 1 of LEMUR's row$/, async ({ page, scenario }, letter: string) => {
   const layout0 = await layoutNow(page, scenario);
-  await placeLetter(rowOf(layout0, 'LEMUR'), 0, 'Z')(page);
+  await placeLetter(rowOf(layout0, 'LEMUR'), 0, letter)(page);
   const layout = (await current(page)).layout;
   await hold(page, cellPoint(layout, 'LEMUR', 1), themePoint(layout));
 });
 
 Given('the player is dragging a placed Z', async ({ page, scenario }) => {
-  await layoutNow(page, scenario);
-  await placeLetter(0, 0, 'Z')(page);
+  const before = await layoutNow(page, scenario);
+  const row = rowOf(before, 'ZEBRA');
+  if (before.rows[row].cells[0].cell.kind !== 'placed') await placeZ(page);
   const layout = (await current(page)).layout;
-  await hold(page, centreOf(layout.rows[0].cells[0]), themePoint(layout));
+  await hold(page, centreOf(layout.rows[row].cells[0]), themePoint(layout));
 });
 
 
@@ -207,11 +232,11 @@ Given('the player is dragging a placed Z', async ({ page, scenario }) => {
 
 When('the player places the Z', async ({ page, scenario }) => {
   await ready(page, scenario);
-  await placeLetter(1, 0, 'Z')(page);
+  await placeZ(page);
 });
 
 When('the player picks up a tile by its corner', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, 'A');
   const tile = poolTile(layout, 'A');
   scenario.pointer = { x: tile.x + 3, y: tile.y + 3 };
   await page.mouse.move(scenario.pointer.x, scenario.pointer.y);
@@ -254,7 +279,7 @@ When('the player releases it', async ({ page }) => {
 });
 
 When(/^the player drags Z to cell 1 of ZEBRA's row with a (mouse|finger)$/, async ({ page, scenario }, input: string) => {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, 'Z');
   const from = centreOf(poolTile(layout, 'Z'));
   const to = cellPoint(layout, 'ZEBRA', 1);
   if (input === 'mouse') {
@@ -287,7 +312,8 @@ When('the device rotates', async ({ page, scenario }) => {
   await expect.poll(async () => (await current(page)).layout.width).toBe(450);
 });
 
-When(/^the player drags the Z and releases it (over the pool|over the theme|in the gap between two rows|on the revealed R)$/, async ({ page, scenario }, place: string) => {
+// The letter is in cell 1 of LEMUR's row.
+When(/^the player drags the \S+ and releases it (over the pool|over the theme|in the gap between two rows|on the revealed R)$/, async ({ page, scenario }, place: string) => {
   const layout = await layoutNow(page, scenario);
   const points: Record<string, { x: number; y: number }> = {
     'over the pool': centreOf(layout.poolArea),
@@ -302,7 +328,7 @@ When(/^the player drags the Z and releases it (over the pool|over the theme|in t
   await page.mouse.up();
 });
 
-When("the player drags the Z with its centre over the pool, and touching KANGAROO's row", async ({ page, scenario }) => {
+When(/^the player drags the \S+ with its centre over the pool, and touching KANGAROO's row$/, async ({ page, scenario }) => {
   scenario.level = levelWithRows(5);
   const layout = await layoutNow(page, scenario);
   scenario.before = await current(page);
@@ -365,9 +391,9 @@ Then('no cell is highlighted', async ({ page }) => {
 Then(/^the (grey )?Z tile is highlighted$/, async ({ page, scenario }, grey?: string) => {
   if ((await current(page).catch(() => null))?.dragging !== 'Z') {
     await ready(page, scenario);
-    await placeLetter(0, 0, 'Z')(page);
+    await placeZ(page);
     const layout = (await current(page)).layout;
-    await hold(page, centreOf(layout.rows[0].cells[0]), centreOf(layout.poolTiles[0]));
+    await hold(page, centreOf(layout.rows[rowOf(layout, 'ZEBRA')].cells[0]), centreOf(layout.poolTiles[0]));
   }
   const { highlighted, layout, colours } = await current(page);
   expect(highlighted).toEqual({ kind: 'pool', character: 'Z' });
@@ -443,7 +469,7 @@ Then('the first drag carries on', async ({ page, scenario }) => {
 });
 
 Then('the Z stays in its cell', async ({ page }) => {
-  expect((await current(page)).layout.rows[0].cells[0].cell).toEqual({ kind: 'placed', character: 'Z' });
+  expect((await current(page)).layout.rows[1].cells[0].cell).toEqual({ kind: 'placed', character: 'Z' });
 });
 
 Then('the level is redrawn', async ({ page }) => {
@@ -452,8 +478,8 @@ Then('the level is redrawn', async ({ page }) => {
 
 Then('the Z and E are in the same cells', async ({ page }) => {
   const { layout } = await current(page);
-  expect(layout.rows[0].cells[0].cell).toEqual({ kind: 'placed', character: 'Z' });
-  expect(layout.rows[1].cells[1].cell).toEqual({ kind: 'placed', character: 'E' });
+  expect(layout.rows[1].cells[0].cell).toEqual({ kind: 'placed', character: 'Z' });
+  expect(layout.rows[0].cells[1].cell).toEqual({ kind: 'placed', character: 'E' });
 });
 
 Then('the drag is cancelled', async ({ page }) => {
@@ -462,9 +488,9 @@ Then('the drag is cancelled', async ({ page }) => {
   if (view.phaseTwo) expect(view.phaseTwo.dragging).toBe(false);
 });
 
-Then("the Z is back in cell 1 of LEMUR's row", async ({ page, scenario }) => {
+Then(/^the (\S+) is back in cell 1 of LEMUR's row$/, async ({ page, scenario }, letter: string) => {
   const layout = await layoutNow(page, scenario);
-  expect(layout.rows[rowOf(layout, 'LEMUR')].cells[0].cell).toEqual({ kind: 'placed', character: 'Z' });
+  expect(layout.rows[rowOf(layout, 'LEMUR')].cells[0].cell).toEqual({ kind: 'placed', character: letter });
 });
 
 // Recall All
@@ -509,10 +535,10 @@ Given('TEAM is locked in row 1', async ({ scenario }) => {
   scenario.setup.push(fillRow(0, 'TEAM'));
 });
 
-When("the player fills ZEBRA's row with ZEBRE", async ({ page, scenario }) => {
+When(/^the player fills ZEBRA's row with ([A-Z]+)$/, async ({ page, scenario }, word: string) => {
   const layout = await layoutNow(page, scenario);
   await startRecording(page);
-  await fillRow(rowOf(layout, 'ZEBRA'), 'ZEBRE')(page);
+  await fillRow(rowOf(layout, 'ZEBRA'), word)(page);
   scenario.before = await current(page);
 });
 
@@ -526,10 +552,10 @@ Then('the row shakes a little sideways', async ({ page, scenario }) => {
   expect(offsets[offsets.length - 1]).toBeCloseTo(0);
 });
 
-Then('the row still reads Z E B R E', async ({ page }) => {
+Then(/^the row still reads ([A-Z](?: [A-Z])+)$/, async ({ page }, text: string) => {
   const { layout } = await current(page);
   const letters = layout.rows[1].cells.map(({ cell }) => (cell.kind === 'empty' ? '_' : cell.character));
-  expect(letters.join(' ')).toBe('Z E B R E');
+  expect(letters.join(' ')).toBe(text);
 });
 
 Then("the pool hasn't changed", async ({ page, scenario }) => {
@@ -550,7 +576,8 @@ Given(/^the (wrong-word shake|lock pulse|"already found" text) is showing$/, asy
 });
 
 When('the player drags a letter', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
+  let layout = await layoutNow(page, scenario);
+  if (!layout.poolTiles.some((candidate) => candidate.count > 0)) layout = await layoutNow(page, scenario, 'Z');
   const tile = layout.poolTiles.find((candidate) => candidate.count > 0);
   await hold(page, centreOf(tile ?? layout.rows[1].cells[0]), themePoint(layout));
 });
@@ -613,7 +640,12 @@ Then('it gently rises and fades out', async ({ page, scenario }) => {
   expect(Math.min(...seen.map((found) => found.alpha))).toBeLessThan(first.alpha);
 });
 
-When('LEMUR locks', async ({ page, scenario }) => {
+When('LEMUR locks', async ({ page, scenario, $uri }) => {
+  if ($uri.includes('story-23')) {
+    const { layout } = await current(page);
+    expect(layout.rows[rowOf(layout, 'LEMUR')].locked).toBe(true);
+    return;
+  }
   const layout = await layoutNow(page, scenario);
   scenario.pulse = { row: rowOf(layout, 'LEMUR'), cells: layout.rows[rowOf(layout, 'LEMUR')].cells.map((_, cell) => cell) };
   await startRecording(page);
@@ -647,18 +679,18 @@ async function recordedColours(page: Page) {
 // Tapping and dragging stay separate
 
 When('the player presses and releases a pool tile without moving it', async ({ page, scenario }) => {
-  const point = centreOf(poolTile(await layoutNow(page, scenario), 'K'));
+  const point = centreOf(poolTile(await layoutNow(page, scenario), 'B'));
   await page.mouse.click(point.x, point.y);
 });
 
 Then("its letter goes to ZEBRA's row", async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
-  expect(layout.rows[rowOf(layout, 'ZEBRA')].cells[0].cell).toEqual({ kind: 'placed', character: 'K' });
+  expect(layout.rows[rowOf(layout, 'ZEBRA')].cells[0].cell).toEqual({ kind: 'placed', character: 'B' });
 });
 
 When('the player presses a pool tile, wobbles less than 15% of a tile and releases it', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
-  const point = centreOf(poolTile(layout, 'K'));
+  const point = centreOf(poolTile(layout, 'B'));
   await page.mouse.move(point.x, point.y);
   await page.mouse.down();
   await page.mouse.move(point.x + layout.tileSize * 0.1, point.y);
@@ -667,7 +699,7 @@ When('the player presses a pool tile, wobbles less than 15% of a tile and releas
 
 When('the player presses a pool tile and moves it just over 15% of a tile', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
-  const point = centreOf(poolTile(layout, 'K'));
+  const point = centreOf(poolTile(layout, layout.poolTiles[0].character));
   await page.mouse.move(point.x, point.y);
   await page.mouse.down();
   await page.mouse.move(point.x + layout.tileSize * 0.2, point.y);
@@ -681,18 +713,18 @@ Then('a drag starts, as in story 3', async ({ page }) => {
   expect((await current(page)).dragging).not.toBeNull();
 });
 
-When('the player presses and releases the Z without moving it', async ({ page, scenario }) => {
+When(/^the player presses and releases the \S+ without moving it$/, async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
   const point = cellPoint(layout, 'LEMUR', 1);
   await page.mouse.click(point.x, point.y);
   scenario.acted = true;
 });
 
-Then('the Z stays where it is', async ({ page }) => {
-  expect((await current(page)).layout.rows[0].cells[0].cell).toEqual({ kind: 'placed', character: 'Z' });
+Then(/^the (\S+) stays where it is$/, async ({ page }, letter: string) => {
+  expect((await current(page)).layout.rows[0].cells[0].cell).toEqual({ kind: 'placed', character: letter });
 });
 
-When('the player presses the Z and moves it', async ({ page, scenario }) => {
+When(/^the player presses the \S+ and moves it$/, async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
   await hold(page, cellPoint(layout, 'LEMUR', 1), themePoint(layout));
 });
@@ -872,10 +904,10 @@ Then('each tile and its letter keep their centre while they pulse', async ({ pag
   });
 });
 
-When("the player fills HOT DOG's row with HON DOG", async ({ page, scenario }) => {
+When(/^the player fills HOT DOG's row with (HOT GOD|HOT DOG)$/, async ({ page, scenario }, word: string) => {
   const layout = await layoutNow(page, scenario);
   await startRecording(page);
-  await fillRow(rowOf(layout, 'HOT DOG'), 'HON DOG')(page);
+  await fillRow(rowOf(layout, 'HOT DOG'), word)(page);
 });
 
 Then('DOG locks', async ({ page }) => {
@@ -884,7 +916,13 @@ Then('DOG locks', async ({ page }) => {
   expect(row.cells.slice(4).map((cell) => cell.cell)).toEqual([...'DOG'].map((character) => ({ kind: 'locked', character })));
 });
 
-Then("only HON's tiles shake", async ({ page, scenario }) => {
+Then("HOT locks", async ({ page }) => {
+  const { layout } = await current(page);
+  const row = layout.rows[rowOf(layout, 'HOT DOG')];
+  expect(row.cells.slice(0, 3).map((cell) => cell.cell)).toEqual([...'HOT'].map((character) => ({ kind: 'locked', character })));
+});
+
+Then("only GOD's tiles shake", async ({ page, scenario }) => {
   const frames = await recorded(page, scenario);
   const { layout } = await current(page);
   const row = rowOf(layout, 'HOT DOG');
@@ -894,8 +932,8 @@ Then("only HON's tiles shake", async ({ page, scenario }) => {
     const xs = frames.flatMap((frame) => frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && object.depth !== 8 && Math.abs(object.y - y) < 3 && Math.abs(object.x - x) < layout.tileSize / 2).map((object) => object.x));
     return Math.max(...xs) - Math.min(...xs);
   };
-  for (const cell of [0, 1, 2]) expect(movement(cell)).toBeGreaterThan(2);
-  for (const cell of [4, 5, 6]) expect(movement(cell)).toBeLessThan(0.5);
+  for (const cell of [4, 5, 6]) expect(movement(cell)).toBeGreaterThan(2);
+  for (const cell of [0, 1, 2]) expect(movement(cell)).toBeLessThan(0.5);
   const space = centreOf(layout.rows[row].cells[3]);
   const atSpace = frames.flatMap((frame) => frame.screen.filter((object) => object.depth !== 8 && object.kind !== 'bevel' && Math.abs(object.y - space.y) < 3 && Math.abs(object.x - space.x) < layout.tileSize / 2));
   expect(atSpace.every((object) => Math.abs(object.x - space.x) < 0.5)).toBe(true);
@@ -927,14 +965,15 @@ async function typeQuickly(page: Page, scenario: Scenario, keys: string) {
   scenario.frames = await stopRecording(page);
 }
 
-When('the player types H, O, T and then D straight away', async ({ page, scenario }) => {
-  await typeQuickly(page, scenario, 'hotd');
+// LEMUR locks, the selection moves on to ZEBRA's row, and Z goes there straight away (story 23, R8).
+When('the player types LEMUR and then Z straight away', async ({ page, scenario }) => {
+  await typeQuickly(page, scenario, 'lemurz');
 });
 
-Then("HOT's tiles grow 15% and shrink back, without being cut short", async ({ page, scenario }) => {
+Then("LEMUR's tiles grow 15% and shrink back, without being cut short", async ({ page, scenario }) => {
   const { layout } = await current(page);
-  const row = rowOf(layout, 'HOT DOG');
-  for (const samples of pulseSamples(scenario.frames!, layout, row, firstPart(layout, row))) {
+  const row = rowOf(layout, 'LEMUR');
+  for (const samples of pulseSamples(scenario.frames!, layout, row, layout.rows[row].cells.map((_, cell) => cell))) {
     expect(Math.max(...samples.map((sample) => sample.scale))).toBeGreaterThan(1.13);
     expect(samples[samples.length - 1].scale).toBe(1);
     // A pulse cut short drops straight back to its size: a real one shrinks over 0.2 seconds.
@@ -942,8 +981,10 @@ Then("HOT's tiles grow 15% and shrink back, without being cut short", async ({ p
   }
 });
 
-When('the player types LEMAR and then Z straight away', async ({ page, scenario }) => {
-  await typeQuickly(page, scenario, 'lemarz');
+// The selection stays on a wrong word (story 23, R7), so moving on is pressing Down.
+When('the player types LEMRU and then presses Down straight away', async ({ page, scenario }) => {
+  await typeQuickly(page, scenario, 'lemru');
+  await page.keyboard.press('ArrowDown');
 });
 
 Then('the top row shakes for the whole shake, without being cut short', async ({ page, scenario }) => {

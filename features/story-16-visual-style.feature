@@ -100,9 +100,10 @@ Feature: Visual style
 
     @browser
     Scenario: Several letters go back one after another
-      Given letters placed in three cells
+      # Changed by story 23: Recall All empties the selected row.
+      Given letters placed in three cells of KANGAROO's row
       When the player presses Recall All
-      Then they leave one after another, 0.03 seconds apart, from the top row down
+      Then they leave one after another, 0.03 seconds apart, from left to right
 
     @browser
     Scenario: A dragged letter travels from where it was dropped

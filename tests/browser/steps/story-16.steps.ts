@@ -3,7 +3,7 @@ import { createBdd } from 'playwright-bdd';
 import { styles } from '../../../src/style';
 import { makeLevel, reveal } from '../../support/levels';
 import { test, type Scenario } from './fixtures';
-import { centreOf, hold, layoutNow, placeLetter, poolTile, ready, rowOf, themePoint } from './phase-one.steps';
+import { centreOf, hold, layoutNow, placeLetter, poolTile, ready, rowOf, themePoint, placeZ } from './phase-one.steps';
 import { two, waitForPopup, win } from './phase-two.steps';
 import { screen, startRecording, stopRecording, tweens, type Frame } from './probe';
 import { current } from './story-02.steps';
@@ -133,12 +133,13 @@ Then('the letters arrive in order', async ({ scenario }) => {
 // Travel back to the pool
 
 When(/^a letter goes back to the pool through (Recall All|Backspace|a hint leaving its row|a drop on a fixed cell)$/, async ({ page, scenario }, cause: string) => {
+  // With a pool per row, a hint only leaves its row for answers made of the same letters (story 23, R6).
   if (cause === 'a hint leaving its row') {
-    scenario.level = makeLevel(['TART', 'TREE']);
-    reveal(scenario.level, 'TART', 'R', 3);
+    scenario.level = makeLevel(['MEAT', 'TEAM']);
+    reveal(scenario.level, 'MEAT', 'M', 1);
   }
   if (cause === 'a drop on a fixed cell') reveal(scenario.level, 'LEMUR', 'L', 1);
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, cause === 'Recall All' ? 'Z' : undefined);
   const pool = (letter: string) => centreOf(poolTile(layout, letter));
   if (cause === 'Recall All') {
     await placeLetter(rowOf(layout, 'ZEBRA'), 0, 'Z')(page);
@@ -153,19 +154,21 @@ When(/^a letter goes back to the pool through (Recall All|Backspace|a hint leavi
     scenario.travel = { letter: 'L', from: centreOf(layout.rows[rowOf(layout, 'LEMUR')].cells[0]), to: pool('L') };
     await record(page, scenario, () => page.keyboard.press('Backspace'));
   } else if (cause === 'a hint leaving its row') {
-    // Row 1 can only take TART, because of its R. Building TART in row 2 sends the R back (D9).
+    // Row 1 can only take MEAT, because of its M. Building MEAT in row 2 sends the M back (D9).
     const row1 = layout.rows[0];
-    scenario.travel = { letter: 'R', from: centreOf(row1.cells[2]), to: pool('R') };
-    // T, A and R land first, so the R going home can't be mistaken for the R arriving.
-    for (const [cell, letter] of [...'TAR'].entries()) await placeLetter(1, cell, letter)(page);
+    scenario.travel = { letter: 'M', from: centreOf(row1.cells[0]), to: { x: 0, y: 0 } };
+    // M, E and A land first, so the M going home can't be mistaken for the M arriving.
+    for (const [cell, letter] of [...'MEA'].entries()) await placeLetter(1, cell, letter)(page);
     await page.waitForTimeout(400);
     await record(page, scenario, () => placeLetter(1, 3, 'T')(page));
+    // Row 1 is selected after the lock, so its pool is the one shown, with the M back in it.
+    scenario.travel.to = centreOf(poolTile((await current(page)).layout, 'M'));
   } else {
-    // A drop on the revealed L sends the A back to the pool from where it was dropped.
+    // A drop on the revealed L sends the E back to the pool from where it was dropped.
     const target = centreOf(layout.rows[rowOf(layout, 'LEMUR')].cells[0]);
-    scenario.travel = { letter: 'A', from: target, to: pool('A') };
+    scenario.travel = { letter: 'E', from: target, to: pool('E') };
     await record(page, scenario, async () => {
-      await hold(page, pool('A'), target);
+      await hold(page, pool('E'), target);
       await page.mouse.up();
     });
   }
@@ -178,21 +181,22 @@ Then('it travels back to its tile', async ({ page, scenario }) => {
   expect(near(path[path.length - 1], scenario.travel!.to, tileSize / 2), JSON.stringify({ to: scenario.travel!.to, all })).toBe(true);
 });
 
-Given('letters placed in three cells', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
-  // One letter in each row, so the order is easy to see: E in the top row, B in the middle, K at the bottom.
-  await placeLetter(rowOf(layout, 'KANGAROO'), 0, 'K')(page);
-  await placeLetter(rowOf(layout, 'LEMUR'), 1, 'E')(page);
-  await placeLetter(rowOf(layout, 'ZEBRA'), 2, 'B')(page);
+// Recall All empties the selected row (story 23, R13): three letters of KANGAROO's row.
+Given("letters placed in three cells of KANGAROO's row", async ({ page, scenario }) => {
+  const layout = await layoutNow(page, scenario, 'K');
+  const row = rowOf(layout, 'KANGAROO');
+  await placeLetter(row, 0, 'K')(page);
+  await placeLetter(row, 2, 'N')(page);
+  await placeLetter(row, 3, 'G')(page);
   await page.waitForTimeout(400);
   await startRecording(page);
 });
 
-Then(/^they leave one after another, 0\.03 seconds apart, from the top row down$/, async ({ page, scenario }) => {
+Then(/^they leave one after another, 0\.03 seconds apart, from left to right$/, async ({ page, scenario }) => {
   await page.waitForTimeout(600);
   scenario.frames = await stopRecording(page);
   // A letter leaves when it starts to move from its cell.
-  const starts = ['E', 'B', 'K'].map((letter) => {
+  const starts = ['K', 'N', 'G'].map((letter) => {
     const [path] = journeys(scenario.frames!, letter);
     expect(path, letter).toBeDefined();
     return path.find((point) => distance(point, path[0]) > 2)!.t;
@@ -206,7 +210,7 @@ Then(/^they leave one after another, 0\.03 seconds apart, from the top row down$
 // Travel from a drop
 
 When('the player releases a letter with its centre over a cell', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, 'Z');
   const cell = centreOf(layout.rows[rowOf(layout, 'ZEBRA')].cells[0]);
   const drop = { x: cell.x + layout.tileSize * 0.25, y: cell.y + layout.tileSize * 0.25 };
   scenario.travel = { letter: 'Z', from: drop, to: cell };
@@ -223,7 +227,7 @@ Then('it travels from there into the cell', async ({ page, scenario }) => {
 });
 
 When('the player releases a letter away from any cell', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, 'Z');
   const drop = themePoint(layout);
   scenario.travel = { letter: 'Z', from: drop, to: centreOf(poolTile(layout, 'Z')) };
   await record(page, scenario, async () => {
@@ -251,8 +255,8 @@ Then('the pool counts are at least the minimum readable size', async ({ page }) 
 });
 
 When('a letter has no copies left', async ({ page, scenario }) => {
-  const layout = await layoutNow(page, scenario);
-  await placeLetter(rowOf(layout, 'ZEBRA'), 0, 'Z')(page);
+  await layoutNow(page, scenario, 'Z');
+  await placeZ(page);
 });
 
 Then('its tile shows x0', async ({ page }) => {
@@ -324,7 +328,7 @@ function brightness(colour: number) {
 
 async function edgesOfFirstCell(page: Page, scenario: Scenario) {
   const layout = await layoutNow(page, scenario);
-  const cell = layout.rows[0].cells[0];
+  const cell = layout.rows.flatMap((row) => row.cells).find(({ cell }) => cell.kind === 'placed') ?? layout.rows[0].cells[0];
   const { x, y } = centreOf(cell);
   const objects = await screen(page);
   const body = objects.find((object) => object.kind === 'rect' && object.fill !== null && Math.abs(object.x - x) < 2 && Math.abs(object.y - y) < 2)!;
@@ -394,7 +398,7 @@ Then('then it shows x1', async ({ page }) => {
 });
 
 When(/^the player taps the (W|X|Z) in the pool$/, async ({ page, scenario }, letter: string) => {
-  const layout = await layoutNow(page, scenario);
+  const layout = await layoutNow(page, scenario, letter);
   scenario.before = await current(page);
   const { x, y } = centreOf(poolTile(layout, letter));
   await page.mouse.click(x, y);

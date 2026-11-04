@@ -1,5 +1,6 @@
 # Status: approved by the designer on 2026-10-31.
 # Map: docs/example-maps/story-06-check-and-lock-a-word.md
+# Story 23 changed this file's examples on 2026-11-04: each row has its own pool, so examples use the row's own letters.
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, nothing is revealed, and the rows are LEMUR, ZEBRA, KANGAROO.
 
@@ -37,10 +38,6 @@ Feature: Check and lock a word
       When the player fills the top row with LEMUR
       Then the word locks
 
-    Scenario: An answer locks in another row of the same length
-      When the player fills the top row with ZEBRA
-      Then the word locks
-
     Scenario Outline: Revealed letters decide what fits
       Given the answers <answers>
       And a row with T revealed first
@@ -50,7 +47,6 @@ Feature: Check and lock a word
       Examples:
         | answers      | word | result       |
         | TREE and TART | TREE | locks        |
-        | TREE and TART | TART | locks        |
         | TREE and PALM | TREE | locks        |
 
     Scenario: A word that doesn't fit a revealed letter can't be spelled there
@@ -65,14 +61,10 @@ Feature: Check and lock a word
   Rule: Only the level's answers lock
 
     Scenario: A real word that isn't an answer doesn't lock
-      When the player fills the top row with LEMON
+      Given the answers TEAM and ZEBRA
+      When the player fills the top row with MATE
       Then the word doesn't lock
       And the row gets the wrong-word feedback
-
-    Scenario: A plain letter doesn't stand in for an accented one
-      Given a level containing the answer CAFÉ
-      When the player fills its row with CAFE
-      Then the word doesn't lock
 
   Rule: A locked word's cells become fixed
 
@@ -88,10 +80,10 @@ Feature: Check and lock a word
 
     Scenario: A dropped letter goes to the pool
       Given LEMUR is locked
-      And the pool shows A x3
+      And the pool shows A x1
       When the player drags A from the pool onto LEMUR's M
       Then LEMUR is unchanged
-      And the pool shows A x3
+      And the pool shows A x1
 
   Rule: Locking doesn't change the pool
 
@@ -105,23 +97,15 @@ Feature: Check and lock a word
 
     @browser
     Scenario: The row shakes and the letters stay
-      When the player fills ZEBRA's row with ZEBRE
+      When the player fills ZEBRA's row with ZEBAR
       Then the row shakes a little sideways
-      And the row still reads Z E B R E
+      And the row still reads Z E B A R
       And the pool hasn't changed
 
-    @browser
-    Scenario: In a split word, only the wrong part shakes
-      Given a level containing the answer HOT DOG
-      When the player fills HOT DOG's row with HON DOG
-      Then DOG locks
-      And only HON's tiles shake
-
     Scenario: A wrong word can be fixed
-      Given ZEBRA's row reads Z E B R E
-      When the player drags A from the pool onto the last E
+      Given ZEBRA's row reads Z E B A R
+      When the player swaps the A and the R
       Then ZEBRA locks
-      And the E goes back to the pool
 
     Scenario: There's no limit on tries
       Given the player has spelled a wrong word 10 times
@@ -168,66 +152,49 @@ Feature: Check and lock a word
 
   Rule: Hinted letters go back to the pool when no remaining answer fits their row
 
+    # With a pool per row, this only happens with answers made of the same letters (story 23, R6).
+    # MEAT is row 1 and TEAM row 2.
     Background:
-      Given the answers TART and TREE
+      Given the answers MEAT and TEAM
 
     Scenario: A hinted letter goes back
-      Given R revealed at position 3 of row 1
-      When the player builds TART in row 2
-      Then TART locks in row 2
+      Given M revealed at position 1 of row 1
+      When the player builds MEAT in row 2
+      Then MEAT locks in row 2
       And row 1 reads _ _ _ _
-      And the pool holds T, R, E, E
+      And the pool holds A, E, M, T
 
     Scenario: Placed letters stay
-      Given R revealed at position 3 of row 1
+      Given M revealed at position 1 of row 1
       And an E placed in cell 4 of row 1
-      When the player builds TART in row 2
+      When the player builds MEAT in row 2
       Then row 1 reads _ _ _ E
-      And the pool holds T, R, E
+      And the pool holds A, M, T
 
     Scenario: All hinted letters in the row go back
-      Given T revealed at position 1 of row 1
-      And R revealed at position 3 of row 1
-      When the player builds TART in row 2
+      Given M revealed at position 1 of row 1
+      And T revealed at position 4 of row 1
+      When the player builds MEAT in row 2
       Then row 1 reads _ _ _ _
-      And the pool holds T, R, E, E
+      And the pool holds A, E, M, T
 
     Scenario: A hint that still fits a remaining answer stays
-      Given T revealed at position 1 of row 1
-      When the player builds TART in row 2
-      Then row 1 still reads T _ _ _
+      Given E revealed at position 2 of row 1
+      When the player builds MEAT in row 2
+      Then row 1 still reads _ E _ _
 
     Scenario: A returned hint is an ordinary letter
-      Given R revealed at position 3 of row 1
-      And the player has built TART in row 2
-      When the player builds TREE in row 1
-      Then TREE locks
+      Given M revealed at position 1 of row 1
+      And the player has built MEAT in row 2
+      When the player builds TEAM in row 1
+      Then TEAM locks
       And phase one ends
 
     Scenario: A hinted letter disappears from its row for now
-      Given R revealed at position 3 of row 1
-      When the player builds TART in row 2
-      Then the R disappears from row 1
-      And the R count goes up by one
-
-  Rule: Special characters never go to the pool
-
-    Scenario: The space stays when the hint goes
-      Given the answers HOT DOG and ICE TEA
-      And row 1 starts as _ _ T ␣ _ _ _
-      When the player builds HOT DOG in row 2
-      Then HOT DOG locks in row 2
-      And row 1 reads _ _ _ ␣ _ _ _
-      And the pool holds I, C, E, T, E, A
-
-  Rule: If two rows fill at once, they're checked from the top
-
-    Scenario: A swap locks two words
-      Given the top row reads L E M U A
-      And ZEBRA's row reads Z E B R R
-      When the player swaps the A and the last R of ZEBRA's row
-      Then LEMUR locks first
-      And ZEBRA locks second
+      Given M revealed at position 1 of row 1
+      When the player builds MEAT in row 2
+      Then the M disappears from row 1
+      And the M count goes up by one
 
   Rule: When the last word locks, the level moves to phase two
 
@@ -266,126 +233,19 @@ Feature: Check and lock a word
       Then each tile and its letter keep their centre while they pulse
 
     @browser
+    # Changed by story 23, R14: parts don't lock on their own, so a whole word pulses.
     Scenario: Typing on doesn't cut a pulse short
-      Given a level containing the answer HOT DOG
-      And HOT DOG's row is selected
-      When the player types H, O, T and then D straight away
-      Then HOT's tiles grow 15% and shrink back, without being cut short
+      When the player types LEMUR and then Z straight away
+      Then LEMUR's tiles grow 15% and shrink back, without being cut short
 
     @browser
     Scenario: Typing on doesn't cut a shake short
       Given the top row is selected
-      When the player types LEMAR and then Z straight away
+      When the player types LEMRU and then presses Down straight away
       Then the top row shakes for the whole shake, without being cut short
-
-    @browser
-    Scenario: A part pulses the same way
-      Given a level containing the answer HOT DOG
-      When the player places H, O and T in the first three cells of HOT DOG's row
-      Then its tiles keep their colour while they grow
-      And they take the locked colour at their biggest
 
     @browser
     Scenario: Revealed letters change too
       Given L revealed at position 1 of LEMUR
       When LEMUR locks
       Then the L takes the locked colour
-
-  Rule: A split word's parts lock on their own
-
-    Scenario: The first part locks
-      Given a level containing the answer HOT DOG
-      When the player places H, O and T in the first three cells of HOT DOG's row
-      Then HOT locks
-      And DOG's cells stay empty
-
-    Scenario: The last part locks
-      Given a level containing the answer T-REX
-      When the player places R, E and X in the last three cells of T-REX's row
-      Then REX locks
-      And T's cell stays empty
-
-    Scenario: A part of another answer that fits the row locks
-      Given the answers HOT DOG and HOT POT
-      When the player places D, O and G in the last three cells of HOT POT's row
-      Then DOG locks
-
-    Scenario: A part of one letter locks
-      Given a level containing the answer T-REX
-      When the player places T in the first cell of T-REX's row
-      Then T locks
-
-    @browser
-    Scenario: Only the part pulses
-      Given a level containing the answer HOT DOG
-      When the player places H, O and T in the first three cells of HOT DOG's row
-      Then only HOT's tiles pulse
-      And HOT's tiles take the locked colour
-
-    @browser
-    Scenario: A part that's already locked doesn't pulse again
-      Given a level containing the answer HOT DOG
-      And HOT is locked in HOT DOG's row
-      When the player places D, O and G in the last three cells of HOT DOG's row
-      Then only DOG's tiles pulse
-
-    Scenario: A wrong part doesn't lock
-      Given the answers HOT DOG, CAT and PEA
-      When the player places C, A and T in the first three cells of HOT DOG's row
-      Then nothing locks and no feedback appears
-
-    Scenario: A full row with one right part
-      Given a level containing the answer T-REX
-      When the player fills T-REX's row with D-REX
-      Then REX locks
-      And the D stays placed
-      And the row gets the wrong-word feedback
-
-    Scenario: A full row with no right part
-      Given the answers HOT DOG, CAT and PEA
-      When the player fills HOT DOG's row with CAT DOP
-      Then nothing locks
-      And the row gets the wrong-word feedback
-
-    Scenario: A locked part's letter can't be dragged
-      Given a level containing the answer HOT DOG
-      And HOT is locked in HOT DOG's row
-      When the player tries to drag its H
-      Then nothing is picked up
-
-    Scenario: Recall All leaves a locked part
-      Given a level containing the answer HOT DOG
-      And HOT is locked in HOT DOG's row
-      And a D placed in cell 5 of HOT DOG's row
-      When the player presses Recall All
-      Then HOT DOG's row reads H O T ␣ _ _ _
-
-    Scenario: A part goes back to the pool when its row can't fit any remaining answer
-      Given the answers HOT DOG, DOG TAG and CAT
-      And the player has filled HOT DOG's row with CAT DOG, so DOG locked
-      When the player builds HOT DOG in DOG TAG's row
-      Then HOT DOG locks in DOG TAG's row
-      And HOT DOG's row reads C A T ␣ _ _ _
-      And the pool holds D, O, G, T, A, G
-
-    Scenario: A part stays while its row can still fit a remaining answer
-      Given the answers HOT DOG and HOT POT
-      And the player has filled HOT DOG's row with HOT POG, so HOT locked
-      When the player presses Recall All
-      And the player builds HOT DOG in HOT POT's row
-      Then HOT DOG locks in HOT POT's row
-      And HOT DOG's row reads H O T ␣ _ _ _
-      And HOT is still locked in HOT DOG's row
-
-  # Needs story 17.
-  Rule: Filling a row moves the selection on in every case
-
-    Scenario Outline: The selection moves on
-      Given <row> is selected
-      When the player's input fills it with <word>
-      Then the selection moves on, as in story 17
-
-      Examples:
-        | row          | word  |
-        | the top row  | LEMUR |
-        | the top row  | LEMAR |

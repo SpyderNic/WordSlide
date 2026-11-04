@@ -26,7 +26,7 @@ Milestones 1 to 4 are done, and the designer has been told how to play milestone
 
 Milestone 6 is built (2026-11-03): the level generator (story 14) and the 40 levels (story 15), with a full-screen card naming each new theme. The levels are in `src/levels/levels.json`, drafted with `npm run levels:draft` from the word lists in `content/word-lists/`, which the designer doesn't see (D46). Reordering is first needed at level 21, and its tutorial always shows there (story 15, Q14). Handles appear once reordering is taught (D45, `src/game/reordering.ts`). **Next is the designer playing milestones 5 and 6.**
 
-**From playing milestone 6 (2026-11-03):** the designer found level 2 really difficult and couldn't find its 5-letter words. On 2026-11-04, the designer chose to give each row its own pool first (story 23, mapping), with shuffling (story 22) after it. Tests that story 23 makes obsolete are archived, not deleted.
+**From playing milestone 6 (2026-11-03):** the designer found level 2 really difficult and couldn't find its 5-letter words. On 2026-11-04, the designer chose to give each row its own pool (story 23, built on 2026-11-04), with a row locking all at once. The game before it is tagged `before-story-23` in git, and scenarios it made obsolete are in `archive/before-story-23/`. The designer will decide whether shuffling (story 22) is still needed after playing it. **Next is the designer playing story 23.**
 
 Mobile testing on a real device is parked until all milestones are done, at the designer's request.
 

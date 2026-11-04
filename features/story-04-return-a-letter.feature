@@ -2,6 +2,7 @@
 # Map: docs/example-maps/story-04-return-a-letter.md
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, nothing is revealed, and the rows are LEMUR, ZEBRA, KANGAROO.
+# Story 23 changed this file's examples on 2026-11-04: each row has its own pool, so examples use the row's own letters.
 
 Feature: Return a single letter
   As a player
@@ -12,11 +13,11 @@ Feature: Return a single letter
 
     @browser
     Scenario Outline: The letter leaves the board
-      Given a Z placed in cell 1 of LEMUR's row
+      Given an M placed in cell 1 of LEMUR's row
       And R revealed at position 4 of ZEBRA
-      When the player drags the Z and releases it <place>
+      When the player drags the M and releases it <place>
       Then cell 1 of LEMUR's row is empty
-      And the pool shows Z x1
+      And the pool shows M x1
 
       Examples:
         | place                       |
@@ -27,37 +28,41 @@ Feature: Return a single letter
 
     @browser
     Scenario: The pool wins even if the tile touches the bottom row
-      Given a Z placed in cell 1 of LEMUR's row
-      When the player drags the Z with its centre over the pool, and touching KANGAROO's row
+      Given an M placed in cell 1 of LEMUR's row
+      When the player drags the M with its centre over the pool, and touching KANGAROO's row
       And the player releases it
       Then no cell of KANGAROO's row has changed
-      And the pool shows Z x1
+      And the pool shows M x1
 
   Rule: The count goes up when the letter is dropped
 
     Scenario: Picking up a placed letter leaves the count alone
-      Given the pool shows A x2
+      Given KANGAROO's row is selected
+      And the pool shows A x1
       And an A placed in a cell
       When the player picks up the placed A
-      Then the pool shows A x2
+      Then the pool shows A x1
 
     Scenario: Dropping it raises the count
-      Given the pool shows A x2
+      Given KANGAROO's row is selected
+      And the pool shows A x1
       And the player is dragging a placed A
       When the player releases it over the pool
-      Then the pool shows A x3
+      Then the pool shows A x2
 
   Rule: A letter goes back to its own tile
 
     Scenario: Dropping on another tile changes nothing but its own count
-      Given a Z placed in a cell
-      And the pool shows A x3
+      Given ZEBRA's row is selected
+      And a Z placed in a cell
+      And the pool shows A x1
       When the player drags the Z and releases it on the A tile
       Then the pool shows Z x1
-      And the pool shows A x3
+      And the pool shows A x1
 
     Scenario: A grey tile becomes active again
-      Given a Z placed in a cell
+      Given ZEBRA's row is selected
+      And a Z placed in a cell
       And the pool shows a grey Z x0
       When the player returns the Z to the pool
       Then the pool shows Z x1
@@ -67,25 +72,25 @@ Feature: Return a single letter
   Rule: The emptied cell can be used again
 
     Scenario: Another letter can be dropped there
-      Given a Z placed in cell 1 of LEMUR's row
-      When the player returns the Z to the pool
+      Given an M placed in cell 1 of LEMUR's row
+      When the player returns the M to the pool
       And the player drags L from the pool to cell 1 of LEMUR's row
       Then cell 1 of LEMUR's row holds an L
 
     Scenario: The next input can fill it
-      Given LEMUR's row reads Z E _ _ _
+      Given LEMUR's row reads M E _ _ _
       And LEMUR's row is selected
-      When the player returns the Z to the pool
+      When the player returns the M to the pool
       And the player taps L in the pool
       Then LEMUR's row reads L E _ _ _
 
   Rule: A letter's own cell counts as empty during its drag
 
     Scenario: Dropping a letter back on its own cell
-      Given a Z placed in cell 1 of LEMUR's row
-      When the player picks up the Z and releases it over cell 1 of LEMUR's row
-      Then cell 1 of LEMUR's row holds a Z
-      And the pool shows a grey Z x0
+      Given an M placed in cell 1 of LEMUR's row
+      When the player picks up the M and releases it over cell 1 of LEMUR's row
+      Then cell 1 of LEMUR's row holds an M
+      And the pool shows a grey M x0
 
   Rule: Fixed cells can't be returned
 
@@ -110,7 +115,8 @@ Feature: Return a single letter
 
     @browser
     Scenario: A grey tile highlights too
-      Given the pool shows a grey Z x0
+      Given ZEBRA's row is selected
+      And the pool shows a grey Z x0
       And the player is dragging a placed Z
       When the pointer is over the pool
       Then the grey Z tile is highlighted

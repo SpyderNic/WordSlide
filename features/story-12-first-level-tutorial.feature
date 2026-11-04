@@ -12,40 +12,6 @@ Feature: First-level tutorial
   Background:
     Given a new player on level 1
 
-  Rule: Step 1 is completing a word
-
-    Scenario: The step is shown
-      When the level opens
-      Then the text says "Drag a letter to complete a word"
-      And a hand animates between the X in the pool and the top word's empty cell
-
-    Scenario: The right move locks the word
-      When the player drags the X to the top word's empty cell
-      Then FOX locks
-
-    Scenario: The X dropped elsewhere goes back
-      When the player drags the X and releases it anywhere else
-      Then the X is back in the pool
-      And the text says "Drag a letter to complete a word"
-
-    Scenario: The W can't be dragged yet
-      When the player tries to drag the W
-      Then nothing is picked up
-
-  Rule: Step 2 is finishing the grid
-
-    Background:
-      Given FOX is locked
-
-    Scenario: The text changes, with no hand
-      Then the text says "Finish the grid!"
-      And there's no hand
-
-    Scenario: Finishing the grid starts phase two
-      When the player drags the W to the last empty cell
-      Then OWL locks
-      And the phase-two ceremony plays
-
   Rule: Step 3 is sliding the word (changed by story 21: reordering moved to its own tutorial)
 
     Background:
@@ -110,7 +76,7 @@ Feature: First-level tutorial
 
       Examples:
         | step | hand                                                                    |
-        | 1    | a hand animates between the X in the pool and the top word's empty cell |
+        | 1    | a hand animates between the O in the pool and the top word's first empty cell |
         | 2    | there's no hand                                                         |
 
     Scenario: The hand repeats until the step is done
@@ -128,7 +94,7 @@ Feature: First-level tutorial
     Scenario: Reopening mid-tutorial
       Given FOX is locked
       When the game closes and opens again
-      Then the text says "Finish the grid!"
+      Then the text says "Each word has its own letters. Finish the grid!"
       And FOX is still locked
 
   Rule: Recall All doesn't appear, and only the step's letters can be typed
@@ -136,24 +102,6 @@ Feature: First-level tutorial
     Scenario: There's no Recall All button
       When the player finishes step 1
       Then there's no Recall All button
-
-    Scenario: Typing the X completes the word
-      When the player presses X
-      Then FOX locks
-
-    Scenario: Typing the W finishes the grid
-      Given FOX is locked
-      When the player presses W
-      Then OWL locks
-
-    Scenario: Tapping the W finishes the grid
-      Given FOX is locked
-      When the player taps the W in the pool
-      Then OWL locks
-
-    Scenario: Tapping the X completes the word
-      When the player taps the X in the pool
-      Then FOX locks
 
     Scenario Outline: Other keys do nothing
       When the player presses <key>

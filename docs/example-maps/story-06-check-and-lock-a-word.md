@@ -2,6 +2,8 @@
 
 **Status:** 🟢 Approved by the designer on 2026-10-31, along with its scenarios in [story-06-check-and-lock-a-word.feature](../../features/story-06-check-and-lock-a-word.feature). Built on 2026-10-31. R16 (split words) added after playing milestone 5, and built on 2026-11-02.
 
+> *Changed by story 23 on 2026-11-04.* Each row now has its own pool ([story 23](story-23-a-pool-for-each-row.md)). Some of this story's examples changed to use a row's own letters, and scenarios whose rule no longer applies are in `archive/before-story-23/`, with the rule that replaced each.
+
 *As a player, I want the game to check each word I complete, so that correct words lock in and wrong ones can be fixed without penalty.*
 
 **Key:** 🟦 Rule · 🟩 Example · 🟥 Question

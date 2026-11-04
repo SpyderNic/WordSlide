@@ -2,6 +2,8 @@
 
 **Status:** 🟢 Approved by the designer on 2026-11-03, and changed after playing (Q12). Built on 2026-11-03.
 
+> *Changed by story 23 on 2026-11-04.* Each row now has its own pool ([story 23](story-23-a-pool-for-each-row.md)). Some of this story's examples changed to use a row's own letters, and scenarios whose rule no longer applies are in `archive/before-story-23/`, with the rule that replaced each.
+
 *As a new player, I want to learn one move at a time, so that the early levels stay simple and reordering arrives as something new.*
 
 The designer asked for this on 2026-11-03, before playing the content. Level 1 teaches only horizontal sliding. Reordering rows (dragging a handle up or down) is taught by its own tutorial, on **the first level that needs reordering**, whichever level that is. No level number is fixed in the rules or scenarios, because the content will change often until release. The answered questions are at the end.
