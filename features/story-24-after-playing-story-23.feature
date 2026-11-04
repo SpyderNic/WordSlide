@@ -79,6 +79,25 @@ Feature: Changes after playing story 23
       When the player uses the keys Down, Left
       Then nothing moves
 
+  Rule: The reordering tutorial can be played with the keyboard too
+
+    Background:
+      Given the first level that needs reordering is a 2-row test level, whose solution needs its top row moved down
+      And the ceremony has ended
+
+    Scenario: Shift and an arrow make the shown move
+      When the player uses the keys Down, Shift+Down
+      Then the rows have swapped
+      And the text and the hand disappear
+
+    Scenario: Any other row move does nothing
+      When the player uses the keys Down, Down, Shift+Up
+      Then nothing moves
+
+    Scenario: Left and Right don't slide before the move
+      When the player uses the keys Down, Left
+      Then nothing moves
+
   Rule: A dragged letter only highlights cells in its own row
 
     Scenario: A faded row doesn't highlight

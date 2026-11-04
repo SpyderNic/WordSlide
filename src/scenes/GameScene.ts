@@ -658,6 +658,8 @@ export class GameScene extends Phaser.Scene {
     if (this.allDone || this.interstitial) return;
     if (this.phaseTwo) {
       this.phaseTwo.onKey(event);
+      // A tutorial step done with the keyboard ends its text and hand, as a drag does (story 24, R9).
+      this.updateGuide();
       return;
     }
     if (event.key === 'Backspace' || event.key.startsWith('Arrow')) event.preventDefault();
@@ -747,8 +749,8 @@ export class GameScene extends Phaser.Scene {
       handle: (word) => !step() || (step() === 'reorder' && word === move().word),
       slide: (word) => !step() || (step() === 3 && word === this.tutorial!.slide.word),
       slot: (word, slot) => !step() || (step() === 'reorder' && word === move().word && Math.sign(slot - move().from) === Math.sign(move().to - move().from)),
-      // Level 1's slide step can be played with the keyboard (story 24, R8). The reordering step stays drag-only.
-      keys: () => !step() || step() === 3,
+      // Both phase-two steps can be played with the keyboard (story 24, R8 and R9), within the step's rules.
+      keys: () => true,
     };
   }
 

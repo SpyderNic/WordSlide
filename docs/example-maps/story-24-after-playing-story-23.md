@@ -42,11 +42,21 @@ Unless an example says otherwise, the test level has the answers ZEBRA, LEMUR an
 
 ### 🟦 R8. Level 1's slide step can be played with the keyboard
 
-*From the designer, on 2026-11-04, after playing.* As in any level (D39), Up and Down select a row, and Left and Right slide the selected word one letter. The step still only lets FOX slide: an arrow on OWL's row selects it, and nothing slides. The reordering tutorial's step stays drag-only.
+*From the designer, on 2026-11-04, after playing.* As in any level (D39), Up and Down select a row, and Left and Right slide the selected word one letter. The step still only lets FOX slide: an arrow on OWL's row selects it, and nothing slides.
 
 - 🟩 Down, Down, then Left selects FOX's row and slides FOX one letter
 - 🟩 Down, Down, then Left twice puts FOX's X in the column, and the level is won
 - 🟩 Down, then Left selects OWL's row, and nothing moves
+
+**Confirmed:** ☑
+
+### 🟦 R9. The reordering tutorial can be played with the keyboard too
+
+*From the designer, on 2026-11-04.* Up and Down select a row, and Shift with Up or Down moves the selected row (D40). Only the move the hand shows works (story 21, R4): any other row move, or Left and Right, only selects the row. After the move, the player plays freely, keys included.
+
+- 🟩 In the 2-row test level where the top row moves down, Down then Shift+Down makes the move, and the text and hand go
+- 🟩 Down, Down, then Shift+Up, moving the bottom row up, does nothing
+- 🟩 Down, then Left does nothing
 
 **Confirmed:** ☑
 

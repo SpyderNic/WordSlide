@@ -52,6 +52,8 @@ Reordering is taught once the player makes the tutorial's move, and that's saved
 
 ### 🟦 R4. The reordering tutorial is strict, and only in phase two
 
+*Changed by story 24, R9, on 2026-11-04:* the shown move can also be made with Shift and Up or Down.
+
 *From Q2 and Q6.* Phase one plays normally, with no text. After the ceremony, the text says "To find the vertical final word, you can reorder the words". A hand shows one row being dragged by its handle, and only that move works. The hand shows the first move: the top-most row that isn't in its slot goes to its slot, so any level can be the tutorial, however many moves it needs (Q11). After it, the text and the hand go, and the player plays freely to win.
 
 - 🟩 Trying to slide a word before making the shown move does nothing

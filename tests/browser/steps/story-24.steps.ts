@@ -256,7 +256,7 @@ When(/^the player uses the keys (.+)$/, async ({ page, scenario }, keys: string)
   await ready(page, scenario);
   scenario.twoBefore = await two(page);
   for (const key of keys.split(', ')) {
-    await page.keyboard.press(`Arrow${key}`);
+    await page.keyboard.press(key.startsWith('Shift+') ? `Shift+Arrow${key.slice(6)}` : `Arrow${key}`);
     await page.waitForTimeout(150);
   }
   await page.waitForTimeout(300);
