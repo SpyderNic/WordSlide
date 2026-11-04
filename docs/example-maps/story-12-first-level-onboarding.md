@@ -96,6 +96,8 @@ It pauses briefly between repeats, and it stops while the player is dragging.
 
 ### 🟦 R10. Recall All doesn't appear in the tutorial, and only the step's letters can be typed
 
+*Changed by story 24, R7, on 2026-11-04:* in OWL's step, any of OWL's letters can be typed, and Backspace works. Recall All still doesn't appear.
+
 *Changed by the designer, then again after playing milestone 5 (Q11), and again on 2026-11-03.* In steps 1 and 2, typing the step's letter or tapping it in the pool works like dragging it. Arrow keys, Backspace and every other key do nothing, and steps 3 and 4 are dragging only.
 
 - 🟩 In step 1, pressing `X` completes FOX

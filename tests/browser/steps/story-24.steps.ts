@@ -104,7 +104,7 @@ function readsOf(layout: LevelLayout, word: string): string {
 }
 
 // Given and Then share this text: before the level opens it places the letters, after it checks them.
-Given(/^(LEMUR|HOT DOG)'s row reads (.+)$/, async ({ page, scenario }, word: string, text: string) => {
+Given(/^(LEMUR|HOT DOG|OWL)'s row reads (.+)$/, async ({ page, scenario }, word: string, text: string) => {
   if (scenario.views.length === 0 && !scenario.acted) {
     scenario.setup.push(async (page) => {
       const { layout } = await current(page);
@@ -185,4 +185,31 @@ Then('L, E and M slide one cell left in about 0.1 seconds', async ({ page, scena
     expect(moving.length, letter).toBeGreaterThan(0);
     expect(moving[moving.length - 1].t - moving[0].t, letter).toBeLessThan(200);
   }
+});
+
+// OWL's step lets the player make mistakes (R7)
+
+When(/^the player drags the (L|W) to OWL's (second|third) cell$/, async ({ page, scenario }, letter: string, which: string) => {
+  const layout = await layoutNow(page, scenario);
+  scenario.acted = true;
+  await startRecording(page);
+  await hold(page, centreOf(poolTile(layout, letter)), centreOf(layout.rows[rowOf(layout, 'OWL')].cells[CELLS[which]]));
+  await page.mouse.up();
+  await page.waitForTimeout(700);
+  scenario.frames = await stopRecording(page);
+});
+
+// Given and Then share this text: before the level opens it places the L, after it checks it.
+Given("the L is in OWL's second cell", async ({ page, scenario }) => {
+  if (scenario.views.length === 0 && !scenario.acted) {
+    scenario.setup.push(placeLetter(1, 1, 'L'));
+    return;
+  }
+  const { layout } = await current(page);
+  expect(layout.rows[rowOf(layout, 'OWL')].cells[1].cell).toEqual({ kind: 'placed', character: 'L' });
+});
+
+Then("OWL's second cell is empty", async ({ page }) => {
+  const { layout } = await current(page);
+  expect(layout.rows[rowOf(layout, 'OWL')].cells[1].cell.kind).toBe('empty');
 });

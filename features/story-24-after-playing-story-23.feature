@@ -36,6 +36,31 @@ Feature: Changes after playing story 23
         | presses |
         | taps    |
 
+  Rule: OWL's step lets the player make mistakes, and fix them
+
+    Background:
+      Given a new player on level 1
+      And FOX is locked
+
+    Scenario: A letter can go in the wrong cell
+      When the player drags the L to OWL's second cell
+      Then the L is in OWL's second cell
+
+    Scenario: A full wrong row shakes
+      Given the L is in OWL's second cell
+      When the player drags the W to OWL's third cell
+      Then OWL's row shakes
+
+    Scenario: Moving a letter along the row fixes it
+      Given OWL's row reads O L W
+      When the player drags the W onto the L
+      Then OWL locks
+
+    Scenario: Backspace takes a letter back
+      Given the L is in OWL's second cell
+      When the player presses Backspace
+      Then OWL's second cell is empty
+
   Rule: A dragged letter only highlights cells in its own row
 
     Scenario: A faded row doesn't highlight

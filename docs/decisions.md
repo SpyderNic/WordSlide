@@ -207,7 +207,7 @@ The column is checked each time a word or row settles, and reads top to bottom. 
 Levels come in a fixed order, and winning one unlocks the next. The player's level, points and progress within a level are saved on their device after every change that settles, behind the D32 interface. The game always opens where the player left off. The new point shows at the top of the screen when the popup appears. After the last level, the prototype's popup shows "All levels complete!" with no button. Development builds have a level picker and a progress reset, in the address: `?level=N` opens level N as a peek that saves nothing, and `?reset` clears progress. The next level fades in over about 0.3 seconds.
 
 ### D43. Level 1 is a strict tutorial
-*Changed by story 24 on 2026-11-04.* Step 1 shows each letter in turn, the O to FOX's second cell and then the X to its third, and only that move works, dragged, tapped or typed.
+*Changed by story 24 on 2026-11-04.* Step 1 shows each letter in turn, the O to FOX's second cell and then the X to its third, and only that move works, dragged, tapped or typed. OWL's step lets the player make mistakes and fix them, by dragging letters along the row or with Backspace (story 24, R7).
 
 *Changed by story 23 on 2026-11-04.* Level 1 starts as F _ _ and O _ _. Step 1 says "Drag letters to complete a word", and when FOX locks, the pool changes to OWL's letters and the text says "Each word has its own letters. Finish the grid!".
 

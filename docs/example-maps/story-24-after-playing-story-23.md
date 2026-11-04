@@ -29,6 +29,17 @@ Unless an example says otherwise, the test level has the answers ZEBRA, LEMUR an
 
 **Confirmed:** ☑
 
+### 🟦 R7. OWL's step lets the player make mistakes, and fix them
+
+*From the designer, on 2026-11-04, after playing: dropping OWL's L in its second cell left the player stuck.* FOX's step stays guided, with no mistakes possible (R2). In OWL's step, any of OWL's letters can go in any of its empty cells, by dragging, tapping or typing. A mistake can be fixed by dragging a placed letter along the row (R6) or with Backspace, and a full wrong row shakes as usual. Recall All stays hidden in level 1 (story 12, R10).
+
+- 🟩 With FOX locked, the L can go in OWL's second cell
+- 🟩 Then the W in the third cell makes O L W, which shakes
+- 🟩 Dragging the W onto the L gives O W L, which locks
+- 🟩 With the L in the second cell, Backspace takes it back
+
+**Confirmed:** ☑
+
 ### 🟦 R3. A dragged letter only highlights cells in its own row
 
 *From the designer.* Faded rows (story 23, R3) never highlight, since a letter can't land there.

@@ -702,28 +702,33 @@ export class GameScene extends Phaser.Scene {
   /** The letters the current step uses: the answers' letters for its cells. Null outside the tutorial. */
   private tutorialLetters(): string[] | null {
     const cells = this.tutorialCells();
-    if (!this.tutorialStepNow()) return null;
+    if (!this.guidedStep()) return null;
     return (cells ?? []).map(({ row, cell }) => Array.from(this.board.rows[row].word)[cell]);
   }
 
-  /** In steps 1 and 2, typing the step's letter works like dragging it (story 12, R10). */
-  private tutorialAllowsKey(key: string): boolean {
-    const step = this.tutorialStepNow();
-    if (!step) return true;
-    return (step === 1 || step === 2) && key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
+  /**
+   * Whether the current step limits what the player can do. FOX's step is guided and allows no mistakes. OWL's step
+   * lets the player make mistakes and fix them (story 24, R7). Phase two's steps limit moves through phaseTwoRules.
+   */
+  private guidedStep(): boolean {
+    return this.tutorialStepNow() === 1;
   }
 
-  /** In steps 1 and 2, tapping the step's letter in the pool works too (story 12, R10). */
+  /** In FOX's step, typing the step's letter works like dragging it (story 12, R10). */
+  private tutorialAllowsKey(key: string): boolean {
+    if (!this.guidedStep()) return true;
+    return key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
+  }
+
+  /** In FOX's step, tapping the step's letter in the pool works too (story 12, R10). */
   private tutorialAllowsTap(hit: Hit): boolean {
-    const step = this.tutorialStepNow();
-    if (!step) return true;
-    return (step === 1 || step === 2) && hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
+    if (!this.guidedStep()) return true;
+    return hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
   }
 
   private tutorialAllowsCell(row: number, cell: number): boolean {
-    const cells = this.tutorialCells();
-    if (!this.tutorialStepNow()) return true;
-    return (cells ?? []).some((target) => target.row === row && target.cell === cell);
+    if (!this.guidedStep()) return true;
+    return (this.tutorialCells() ?? []).some((target) => target.row === row && target.cell === cell);
   }
 
   /** Saved once the player makes the reordering tutorial's move (story 21, R1). Tests can play as if it were already behind the player. */
