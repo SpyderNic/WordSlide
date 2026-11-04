@@ -153,7 +153,8 @@ When(/^the player drags the (\S) to LEMUR's (fourth) cell$/, async ({ page, scen
   await page.waitForTimeout(400);
 });
 
-When('the player holds the U over the M', async ({ page, scenario }) => {
+// Given and When share this text.
+When(/^the player (?:holds|is holding) the U over the M$/, async ({ page, scenario }) => {
   await layoutNow(page, scenario);
   scenario.before = await current(page);
   await startRecording(page);
@@ -212,4 +213,38 @@ Given("the L is in OWL's second cell", async ({ page, scenario }) => {
 Then("OWL's second cell is empty", async ({ page }) => {
   const { layout } = await current(page);
   expect(layout.rows[rowOf(layout, 'OWL')].cells[1].cell.kind).toBe('empty');
+});
+
+When('the player lets go of it', async ({ page, scenario }) => {
+  scenario.before = await current(page);
+  await startRecording(page);
+  await page.mouse.up();
+  await page.waitForTimeout(600);
+  scenario.frames = await stopRecording(page);
+});
+
+/** Letters drawn as travelling tiles: above the board (story 16 draws them at depth 8). */
+function travelling(frame: Frame, letter: string): boolean {
+  return frame.screen.some((object) => object.kind === 'text' && object.text === letter && object.depth >= 8 && object.depth < 20);
+}
+
+Then('only the U travels to its cell', async ({ page, scenario }) => {
+  expect(scenario.frames!.some((frame) => travelling(frame, 'U'))).toBe(true);
+  const { layout } = await current(page);
+  expect(layout.rows[rowOf(layout, 'LEMUR')].cells[3].cell).toEqual({ kind: 'placed', character: 'U' });
+});
+
+Then('L, E and M stay where they are', async ({ scenario }) => {
+  const layout = scenario.before!.layout;
+  const row = layout.rows[rowOf(layout, 'LEMUR')];
+  const y = centreOf(row.cells[0]).y;
+  for (const [index, letter] of ['L', 'E', 'M'].entries()) {
+    expect(scenario.frames!.some((frame) => travelling(frame, letter)), `${letter} travelled`).toBe(false);
+    // Drawn in its new cell all along.
+    const target = centreOf(row.cells[index]).x;
+    for (const frame of scenario.frames!) {
+      const x = letterX(frame, y, letter, layout.tileSize);
+      if (x !== undefined) expect(Math.abs(x - target), letter).toBeLessThan(1);
+    }
+  }
 });

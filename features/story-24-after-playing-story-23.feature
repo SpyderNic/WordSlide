@@ -103,6 +103,14 @@ Feature: Changes after playing story 23
       When the player holds the U over the M
       Then L, E and M slide one cell left in about 0.1 seconds
 
+    # From playing: the letters that moved aside travelled again from their old cells.
+    Scenario: Letting go, only the dragged letter travels
+      Given LEMUR's row reads U L E M _
+      And the player is holding the U over the M
+      When the player lets go of it
+      Then only the U travels to its cell
+      And L, E and M stay where they are
+
     Scenario: A revealed letter doesn't move
       Given L revealed at position 1 of LEMUR
       And LEMUR's row reads L U E M _

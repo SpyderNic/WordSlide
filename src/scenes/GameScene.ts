@@ -628,11 +628,13 @@ export class GameScene extends Phaser.Scene {
 
     if (press.dragging) {
       const hit = hitTest(this.layoutNow, pointer.x, pointer.y);
+      // Letters that slid aside during the drag are already in their new cells: they don't travel again (story 24, R6).
+      const settled = this.shiftShown !== null && hit.kind === 'cell' ? hit.row : undefined;
       this.endDragVisuals();
       // A dropped letter travels on from where it was released (story 16, R6).
       const origin = { character: this.board.drag!.character, x: pointer.x, y: pointer.y };
       const target = hit.kind === 'cell' && this.tutorialAllowsCell(hit.row, hit.cell) ? hit : null;
-      if (target) this.act(() => this.board.dropOnCell(target.row, target.cell), origin);
+      if (target) this.act(() => this.board.dropOnCell(target.row, target.cell), origin, settled);
       else this.act(() => this.board.dropAway(), origin);
     } else if (!press.dead && this.tutorialAllowsTap(press.hit)) {
       this.tap(press.hit);
@@ -825,10 +827,10 @@ export class GameScene extends Phaser.Scene {
   // Letters travelling (story 16, R6 and R7)
 
   /** Runs a change to the board, then flies each letter that moved from where it was to where it went. */
-  private act(change: () => BoardEvent[] | void, origin?: { character: string } & Point) {
+  private act(change: () => BoardEvent[] | void, origin?: { character: string } & Point, settled?: number) {
     const before = this.board.snapshot();
     const events = change() ?? [];
-    const flights = this.flightsSince(before, origin);
+    const flights = this.flightsSince(before, origin, settled);
     const landing = this.time.now + timings.letterTravel;
     flights.forEach((flight) => {
       if (flight.cell) this.arriving.set(flight.cell, landing);
@@ -838,8 +840,11 @@ export class GameScene extends Phaser.Scene {
     flights.forEach((flight) => this.fly(flight));
   }
 
-  /** Which letters left which cells, and which arrived, and where each one comes from and goes to. */
-  private flightsSince(before: BoardSnapshot, origin?: { character: string } & Point) {
+  /**
+   * Which letters left which cells, and which arrived, and where each one comes from and goes to. In a settled row,
+   * letters that only moved along it are already shown where they are, so they don't fly.
+   */
+  private flightsSince(before: BoardSnapshot, origin?: { character: string } & Point, settled?: number) {
     const cellAt = (row: number, cell: number) => centre(this.layoutNow.rows[row].cells[cell]);
     // A letter going back flies to the pool as it is after the change, which may be another row's (story 23).
     const poolAfter = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board).poolTiles;
@@ -847,14 +852,14 @@ export class GameScene extends Phaser.Scene {
       const tile = poolAfter.find((candidate) => candidate.character === character);
       return tile ? centre(tile) : null;
     };
-    const left: { character: string; from: Point }[] = [];
+    const left: { character: string; from: Point; row: number }[] = [];
     const arrived: { character: string; to: Point; cell: string }[] = [];
     this.board.rows.forEach((row, rowIndex) =>
       row.cells.forEach((cell, cellIndex) => {
         const was = letterIn(before.rows[rowIndex].cells[cellIndex]);
         const now = letterIn(cell);
         if (was === now) return;
-        if (was) left.push({ character: was, from: cellAt(rowIndex, cellIndex) });
+        if (was) left.push({ character: was, from: cellAt(rowIndex, cellIndex), row: rowIndex });
         if (now) arrived.push({ character: now, to: cellAt(rowIndex, cellIndex), cell: `${rowIndex}:${cellIndex}` });
       }),
     );
@@ -868,6 +873,10 @@ export class GameScene extends Phaser.Scene {
         fromHand = undefined;
       } else {
         const swapped = left.findIndex((departure) => departure.character === arrival.character);
+        if (swapped !== -1 && settled !== undefined && arrival.cell.startsWith(`${settled}:`) && left[swapped].row === settled) {
+          left.splice(swapped, 1);
+          continue;
+        }
         if (swapped !== -1) from = left.splice(swapped, 1)[0].from;
         else from = poolAt(arrival.character);
       }

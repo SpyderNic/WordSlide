@@ -74,6 +74,7 @@ Unless an example says otherwise, the test level has the answers ZEBRA, LEMUR an
 - 🟩 LEMUR's row reads M E _ _ _. Dragging the M to the fourth cell gives _ E _ M _
 - 🟩 With L revealed first, LEMUR's row reads L U E M _. Dragging the U onto the M gives L E M U _, and the L doesn't move
 - 🟩 HOT DOG's row reads H O T ␣ D G O. Dragging the last O onto the H gives O H O ␣ T D G: the T jumps the space
+- 🟩 *From playing, on 2026-11-04:* letting go, only the dragged letter travels to its cell. The letters that moved aside stay where they are, and don't travel again
 
 **Confirmed:** ☑
 
