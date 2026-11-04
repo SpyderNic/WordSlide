@@ -61,6 +61,24 @@ Feature: Changes after playing story 23
       When the player presses Backspace
       Then OWL's second cell is empty
 
+  Rule: Level 1's slide step can be played with the keyboard
+
+    Background:
+      Given a new player on level 1
+      And the ceremony has ended
+
+    Scenario: The arrow keys slide FOX
+      When the player uses the keys Down, Down, Left
+      Then FOX slides one letter
+
+    Scenario: Sliding FOX's X into the column wins
+      When the player uses the keys Down, Down, Left, Left
+      Then the level is won
+
+    Scenario: OWL still can't slide
+      When the player uses the keys Down, Left
+      Then nothing moves
+
   Rule: A dragged letter only highlights cells in its own row
 
     Scenario: A faded row doesn't highlight

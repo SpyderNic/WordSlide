@@ -747,7 +747,8 @@ export class GameScene extends Phaser.Scene {
       handle: (word) => !step() || (step() === 'reorder' && word === move().word),
       slide: (word) => !step() || (step() === 3 && word === this.tutorial!.slide.word),
       slot: (word, slot) => !step() || (step() === 'reorder' && word === move().word && Math.sign(slot - move().from) === Math.sign(move().to - move().from)),
-      keys: () => !step(),
+      // Level 1's slide step can be played with the keyboard (story 24, R8). The reordering step stays drag-only.
+      keys: () => !step() || step() === 3,
     };
   }
 

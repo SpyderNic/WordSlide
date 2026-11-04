@@ -40,6 +40,16 @@ Unless an example says otherwise, the test level has the answers ZEBRA, LEMUR an
 
 **Confirmed:** ☑
 
+### 🟦 R8. Level 1's slide step can be played with the keyboard
+
+*From the designer, on 2026-11-04, after playing.* As in any level (D39), Up and Down select a row, and Left and Right slide the selected word one letter. The step still only lets FOX slide: an arrow on OWL's row selects it, and nothing slides. The reordering tutorial's step stays drag-only.
+
+- 🟩 Down, Down, then Left selects FOX's row and slides FOX one letter
+- 🟩 Down, Down, then Left twice puts FOX's X in the column, and the level is won
+- 🟩 Down, then Left selects OWL's row, and nothing moves
+
+**Confirmed:** ☑
+
 ### 🟦 R3. A dragged letter only highlights cells in its own row
 
 *From the designer.* Faded rows (story 23, R3) never highlight, since a letter can't land there.

@@ -527,6 +527,13 @@ export class PhaseTwoView {
     if (!this.ceremonyDone || this.press || this.phase.won || !this.rules.keys()) return;
     if (!event.key.startsWith('Arrow')) return;
     event.preventDefault();
+    // A word the rules don't let slide is only selected by Left or Right (story 24, R8).
+    const sliding = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+    const target = this.phase.selectedRow ?? 0;
+    if (sliding && !this.rules.slide(this.phase.rows[target].word)) {
+      this.select(target);
+      return;
+    }
 
     const order = this.phase.rows.slice();
     const moved = this.phase.key(event.key, event.shiftKey);

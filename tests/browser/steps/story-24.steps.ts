@@ -5,6 +5,7 @@ import { test, type Scenario } from './fixtures';
 import { centreOf, hold, layoutNow, placeLetter, poolTile, rowOf } from './phase-one.steps';
 import { screen, startRecording, stopRecording, type Frame } from './probe';
 import { current } from './story-02.steps';
+import { ready, two } from './phase-two.steps';
 import { handPath, visits } from './story-12.steps';
 
 const { Given, When, Then } = createBdd(test);
@@ -247,4 +248,21 @@ Then('L, E and M stay where they are', async ({ scenario }) => {
       if (x !== undefined) expect(Math.abs(x - target), letter).toBeLessThan(1);
     }
   }
+});
+
+// The slide step with the keyboard (R8)
+
+When(/^the player uses the keys (.+)$/, async ({ page, scenario }, keys: string) => {
+  await ready(page, scenario);
+  scenario.twoBefore = await two(page);
+  for (const key of keys.split(', ')) {
+    await page.keyboard.press(`Arrow${key}`);
+    await page.waitForTimeout(150);
+  }
+  await page.waitForTimeout(300);
+});
+
+Then('FOX slides one letter', async ({ page, scenario }) => {
+  const column = (view: Awaited<ReturnType<typeof two>>) => view.rows.find((row) => row.word === 'FOX')!.columnCell;
+  expect(column(await two(page))).toBe(column(scenario.twoBefore!) + 1);
 });
