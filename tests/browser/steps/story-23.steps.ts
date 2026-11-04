@@ -430,7 +430,7 @@ When(/^the player tries to drag a letter onto (OWL)'s row$/, async ({ page, scen
   await page.waitForTimeout(500);
 });
 
-Then(/^nothing is placed in (OWL)'s row$/, async ({ page }, word: string) => {
+Then(/^nothing is placed in (OWL|FOX)'s row$/, async ({ page }, word: string) => {
   const { layout } = await current(page);
   expect(layout.rows[rowOf(layout, word)].cells.some(({ cell }) => cell.kind === 'placed')).toBe(false);
 });

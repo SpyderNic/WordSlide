@@ -144,6 +144,8 @@ A letter with no copies left to place stays in the pool as a grey x0 tile, inclu
 Revealed letters use a different tile colour from letters the player places.
 
 ### D26. Tile size
+*Changed by story 24 on 2026-11-04.* The pool's tiles fill each line before the next one starts, so a small pool sits on one line.
+
 *Changed 2026-10-31.* On a given screen, tiles are the same size in every level. They're sized for 9 cells across, and only a level with a longer row that wouldn't fit shrinks them. The pool uses more rows on narrow screens. On a portrait screen, the top of the screen has two lines, with the theme on the second.
 
 ### D27. The prototype's look
@@ -165,6 +167,8 @@ The current goal is a working prototype, not a release. If the layout works and 
 The game might later release on web (CrazyGames, Poki, YouTube Playables), Android (Google Play) and PC (Steam). The architecture is Claude's responsibility: game code must never call a platform's SDK directly. Saving, ads, purchases, player identity and similar services go through one interface, with one implementation per platform, chosen at build time. The prototype only has a simple local implementation, and no platform SDK is added until a story asks for it.
 
 ### D33. Placed letters can move
+*Changed by story 24 on 2026-11-04.* A placed letter dropped on another letter in its row makes the letters between move aside, skipping fixed cells, and they slide aside during the drag. A letter from the pool still replaces a placed letter. Other rows never highlight.
+
 A placed letter can be dragged directly to another empty cell, and the pool doesn't change. During a drag, the tile's centre stays on the pointer or finger. The cell under the tile's centre is highlighted and is where the letter lands. If that's a fixed cell, nothing highlights and the letter goes to the pool.
 
 A letter that doesn't land on an empty cell or a placed letter goes to the pool, whether it came from the pool or a cell. A placed letter over the pool highlights its own tile.
@@ -203,6 +207,8 @@ The column is checked each time a word or row settles, and reads top to bottom. 
 Levels come in a fixed order, and winning one unlocks the next. The player's level, points and progress within a level are saved on their device after every change that settles, behind the D32 interface. The game always opens where the player left off. The new point shows at the top of the screen when the popup appears. After the last level, the prototype's popup shows "All levels complete!" with no button. Development builds have a level picker and a progress reset, in the address: `?level=N` opens level N as a peek that saves nothing, and `?reset` clears progress. The next level fades in over about 0.3 seconds.
 
 ### D43. Level 1 is a strict tutorial
+*Changed by story 24 on 2026-11-04.* Step 1 shows each letter in turn, the O to FOX's second cell and then the X to its third, and only that move works, dragged, tapped or typed.
+
 *Changed by story 23 on 2026-11-04.* Level 1 starts as F _ _ and O _ _. Step 1 says "Drag letters to complete a word", and when FOX locks, the pool changes to OWL's letters and the text says "Each word has its own letters. Finish the grid!".
 
 Level 1 walks the player through placing letters and sliding a word, with fixed text and an animated hand. Reordering has its own tutorial, on the first level that needs it (story 21). The player can only do the current step, and Recall All doesn't appear. In steps 1 and 2, typing or tapping the step's letter works too (tapping in step 1 added 2026-11-03). The text sits above the rows and below the theme. Level 2 highlights the theme once, with a short tip. The tutorial is a level marked as such, themed Animals, and its steps come from its solution. A pointing hand, drawn in code, shows each step, and the theme gets a gently pulsing outline in level 2. The full rules are in [story 12](example-maps/story-12-first-level-onboarding.md).

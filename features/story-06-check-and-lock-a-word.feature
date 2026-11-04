@@ -146,8 +146,9 @@ Feature: Check and lock a word
       Then it gently rises and fades out
 
     Scenario: The row can still be fixed
+      # Changed by story 24, R6: dragging a letter onto another moves the letters between aside.
       Given row 2 reads T E A M
-      When the player swaps the T and the M
+      When the player drags the M onto the T, then the T onto the A
       Then MEAT locks
 
   Rule: Hinted letters go back to the pool when no remaining answer fits their row

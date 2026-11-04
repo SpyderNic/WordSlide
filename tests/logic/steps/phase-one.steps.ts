@@ -565,6 +565,12 @@ When('the player swaps the R and the U', function (this: World) {
   swap(this, { row: 0, cell: 3 }, { row: 0, cell: 4 });
 });
 
+// Row 2 reads T E A M. Dropping the M on the T moves T, E and A aside: M T E A. Then the T onto the A: M E A T (story 24, R6).
+When('the player drags the M onto the T, then the T onto the A', function (this: World) {
+  swap(this, { row: 1, cell: 3 }, { row: 1, cell: 0 });
+  swap(this, { row: 1, cell: 1 }, { row: 1, cell: 3 });
+});
+
 // ZEBRA's row reads Z E B A R.
 When('the player swaps the A and the R', function (this: World) {
   const row = rowIndex(this, "ZEBRA's row");

@@ -130,8 +130,9 @@ function layoutRow(word: string, cells: Cell[], locked: boolean, top: number, wi
 
 function layoutPool(pool: PoolTile[], area: Rect, tile: number, across: number): PoolTileView[] {
   const pitch = tile * (1 + GAP);
-  const usedRows = poolRowsFor(pool.length, across);
-  const perRow = Math.ceil(pool.length / usedRows);
+  // Each line takes as many tiles as fit before the next one starts, so a small pool sits on one line (story 24, R4).
+  const usedRows = Math.max(1, Math.ceil(pool.length / across));
+  const perRow = across;
   const rows = Array.from({ length: usedRows }, (_, row) => pool.slice(row * perRow, (row + 1) * perRow));
   const top = area.y + area.height - (usedRows * pitch - tile * GAP);
   return rows.flatMap((tiles, rowIndex) => {

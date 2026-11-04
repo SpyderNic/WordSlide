@@ -256,7 +256,10 @@ When("the tile's centre moves over cell 3", async ({ page, scenario }) => {
 
 When('the player drags a tile with its centre over that cell', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
-  await holdPoolTile(page, scenario, 'A', centreOf(layout.rows[scenario.tileRef!.row].cells[scenario.tileRef!.cell]));
+  // A letter from that row's own pool: other rows never highlight (story 24, R3).
+  const { row, cell } = scenario.tileRef!;
+  const letter = [...layout.rows[row].word].find((character) => layout.poolTiles.some((tile) => tile.character === character && tile.count > 0))!;
+  await holdPoolTile(page, scenario, letter, centreOf(layout.rows[row].cells[cell]));
 });
 
 When('the player drags a tile over the theme', async ({ page, scenario }) => {

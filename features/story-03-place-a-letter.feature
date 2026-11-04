@@ -62,16 +62,6 @@ Feature: Place a letter
       And the pool shows M x1
       And the M tile isn't grey
 
-  Rule: Two placed letters swap
-
-    Scenario: Dropping a placed letter on another swaps them
-      Given an M placed in cell 1 of LEMUR's row
-      And an E placed in cell 2 of LEMUR's row
-      When the player drags the M onto the E
-      Then cell 1 of LEMUR's row holds an E
-      And cell 2 of LEMUR's row holds an M
-      And the pool hasn't changed
-
   Rule: A letter dropped on a fixed cell goes to the pool
 
     Scenario: A pool letter goes back to the pool

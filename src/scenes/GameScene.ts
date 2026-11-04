@@ -89,6 +89,9 @@ export class GameScene extends Phaser.Scene {
   private poolRow: number | null | undefined = undefined;
   /** Letters fading out of the old pool. */
   private leavingPool: Phaser.GameObjects.GameObject[] = [];
+  /** Parts slid aside during a drag, and where they started (story 24, R6). */
+  private shiftedParts = new Map<Phaser.GameObjects.GameObject, number>();
+  private shiftShown: string | null = null;
   /** How strongly each row was last drawn (story 23, R3). */
   private rowStrengths = new Map<number, number>();
   private phaseTwo: PhaseTwoView | null = null;
@@ -554,7 +557,10 @@ export class GameScene extends Phaser.Scene {
     this.highlight = null;
     this.highlighted = null;
 
-    if (hit.kind === 'cell' && !board.isCellFixed(hit.row, hit.cell)) {
+    // A letter only lands in its own row, so other rows never highlight (story 24, R3).
+    const ownRow = hit.kind === 'cell' && (!board.drag || hit.row === board.drag.row);
+    this.previewShift(hit.kind === 'cell' && ownRow ? hit : null);
+    if (hit.kind === 'cell' && ownRow && !board.isCellFixed(hit.row, hit.cell)) {
       this.highlighted = hit;
       this.drawHighlight(this.layoutNow.rows[hit.row].cells[hit.cell]);
     } else if (hit.kind === 'pool' && board.drag && board.drag.source !== 'pool') {
@@ -567,12 +573,42 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * While a placed letter is held over another in its row, the letters between slide aside, as rows make way in phase
+   * two (story 24, R6). Moving elsewhere slides them back.
+   */
+  private previewShift(over: { row: number; cell: number } | null) {
+    const drag = this.board.drag;
+    const source = drag && drag.source !== 'pool' ? drag.source : null;
+    const target = source && over && over.row === source.row && over.cell !== source.cell && this.board.rows[over.row].cells[over.cell].kind === 'placed' ? over : null;
+    const key = target ? `${target.row}:${target.cell}` : null;
+    if (key === this.shiftShown) return;
+    this.shiftShown = key;
+    const moves = new Map<Phaser.GameObjects.GameObject, number>();
+    if (source && target) {
+      const cells = this.layoutNow.rows[target.row].cells;
+      for (const [to, from] of this.board.shift(target.row, source.cell, target.cell)) {
+        for (const part of this.cellObjects.get(`${target.row}:${from}`) ?? []) moves.set(part, cells[to].x - cells[from].x);
+      }
+    }
+    // Every part that was moved, or moves now, goes to its new place in about 0.1 seconds.
+    for (const part of new Set([...this.shiftedParts.keys(), ...moves.keys()])) {
+      if (!part.active) continue;
+      const home = this.shiftedParts.get(part) ?? (part as unknown as { x: number }).x;
+      this.shiftedParts.set(part, home);
+      this.tweens.killTweensOf(part);
+      this.tweens.add({ targets: part, x: home + (moves.get(part) ?? 0), duration: timings.rowMakeWay });
+    }
+  }
+
   private drawHighlight(rect: Rect) {
     const { x, y } = centre(rect);
     this.highlight = this.add.rectangle(x, y, rect.width, rect.height).setStrokeStyle(4, colours.highlight).setDepth(5);
   }
 
   private endDragVisuals() {
+    this.shiftShown = null;
+    this.shiftedParts.clear();
     this.dragTile?.destroy(true);
     this.dragTile = null;
     this.highlight?.destroy();
@@ -642,10 +678,21 @@ export class GameScene extends Phaser.Scene {
     return 'reorder';
   }
 
+  /** Step 1's next empty cell, in order. */
+  private nextFirstCell(): number | null {
+    const plan = this.tutorial;
+    if (!plan) return null;
+    return plan.first.cells.find((cell) => this.board.rows[plan.first.row].cells[cell].kind === 'empty') ?? null;
+  }
+
   /** The empty cells the current step fills. */
   private tutorialCells(): { row: number; cell: number }[] | null {
     const step = this.tutorialStepNow();
-    if (step === 1) return this.tutorial!.first.cells.map((cell) => ({ row: this.tutorial!.first.row, cell }));
+    // Step 1 shows each letter in turn, and only that move works (story 24, R2).
+    if (step === 1) {
+      const next = this.nextFirstCell();
+      return next === null ? [] : [{ row: this.tutorial!.first.row, cell: next }];
+    }
     if (step === 2) {
       return this.board.rows.flatMap((row, rowIndex) => row.cells.flatMap((cell, cellIndex) => (cell.kind === 'empty' ? [{ row: rowIndex, cell: cellIndex }] : [])));
     }
@@ -716,7 +763,8 @@ export class GameScene extends Phaser.Scene {
     const afterTutorial = this.levels[this.levelNumber - 2]?.tutorial === true && !this.tutorial && !view && !this.allDone;
     const tip = afterTutorial && !this.board.rows.some((row) => row.locked);
     const waiting = view && !view.ready;
-    const shown = waiting ? 'ceremony' : step ? `step ${step}` : tip ? 'tip' : '';
+    // Step 1's hand moves on to the next letter once one is placed.
+    const shown = waiting ? 'ceremony' : step === 1 ? `step 1:${this.nextFirstCell()}` : step ? `step ${step}` : tip ? 'tip' : '';
     if (!force && shown === this.guideShown && this.guideText?.active !== false) {
       this.guideText?.setDepth(this.guideText.depth);
       return;
@@ -735,7 +783,8 @@ export class GameScene extends Phaser.Scene {
     const layout = this.layoutNow;
     const rowsTop = view ? view.rowsTopEdge : layout.rows[0].cells[0].y;
     const y = (layout.top.height + rowsTop) / 2;
-    this.guideText = makeGuideText(this, texts[shown], layout.width / 2, y, layout.tileSize * 0.42, layout.width * 0.9);
+    // "step 1:2" is step 1, at its cell 2: the text is the step's.
+    this.guideText = makeGuideText(this, texts[shown.split(':')[0]], layout.width / 2, y, layout.tileSize * 0.42, layout.width * 0.9);
 
     if (shown === 'tip') {
       const theme = layout.topItems.find((item) => item.name === 'theme')!;
@@ -751,10 +800,11 @@ export class GameScene extends Phaser.Scene {
     const move = this.reordering;
     let from: { x: number; y: number } | null = null;
     let to: { x: number; y: number } | null = null;
-    if (step === 1 && plan) {
-      const tile = layout.poolTiles.find((candidate) => candidate.character === plan.first.letters[0]);
+    const next = this.nextFirstCell();
+    if (step === 1 && plan && next !== null) {
+      const tile = layout.poolTiles.find((candidate) => candidate.character === plan.first.letters[plan.first.cells.indexOf(next)]);
       if (tile) from = centre(tile);
-      to = centre(layout.rows[plan.first.row].cells[plan.first.cells[0]]);
+      to = centre(layout.rows[plan.first.row].cells[next]);
     } else if (step === 3 && plan && view) {
       from = view.letterCentre(plan.slide.word, plan.slide.cell);
       to = { x: view.columnCentre, y: from.y };

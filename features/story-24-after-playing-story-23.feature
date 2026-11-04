@@ -1,0 +1,91 @@
+# Status: approved by the designer on 2026-11-04.
+# Map: docs/example-maps/story-24-after-playing-story-23.md
+# Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
+# KANGAROO, and the rows are LEMUR, ZEBRA, KANGAROO.
+
+@browser
+Feature: Changes after playing story 23
+  As a player
+  I want level 1 and the rows to behave the way the per-row pool suggests
+  So that the game feels natural from the first minute
+
+  Rule: Step 1 shows each letter in turn, and only that move works
+
+    Background:
+      Given a new player on level 1
+
+    Scenario: The hand shows the O first
+      When the level opens
+      Then a hand animates between the O in the pool and FOX's second cell
+
+    Scenario: The O can't go in the third cell
+      When the player drags the O onto FOX's third cell
+      Then FOX's third cell is empty
+      And the pool shows O, X
+
+    Scenario: Then the hand shows the X
+      Given the O is in FOX's second cell
+      Then a hand animates between the X in the pool and FOX's third cell
+
+    Scenario Outline: Typing and tapping follow the same order
+      When the player <input> the X first
+      Then nothing is placed in FOX's row
+
+      Examples:
+        | input   |
+        | presses |
+        | taps    |
+
+  Rule: A dragged letter only highlights cells in its own row
+
+    Scenario: A faded row doesn't highlight
+      When the player drags E from LEMUR's pool over ZEBRA's row
+      Then no cell is highlighted
+
+  Rule: A small pool sits on one line
+
+    Scenario: Level 1's pool is on one line
+      Given a new player on level 1
+      When the level opens
+      Then the pool's tiles are side by side, on one line
+
+    # A row has at most eight cells, so only a word of eight different letters can need two lines.
+    Scenario: A pool too wide for one line fills the first line first
+      Given a level containing the answer DOLPHINS
+      And a narrow screen
+      When the player selects DOLPHINS's row
+      Then the pool's first line is full before the next one starts
+
+  Rule: A placed letter dragged along its row makes the others move aside
+
+    Scenario Outline: Letters shift over
+      Given LEMUR's row reads <before>
+      When the player drags the <letter> onto the <target>
+      Then LEMUR's row reads <after>
+
+      Examples:
+        | before    | letter | target | after     |
+        | U L E M _ | U      | M      | L E M U _ |
+        | L E M U _ | U      | L      | U L E M _ |
+
+    Scenario: A letter dropped on an empty cell just moves there
+      Given LEMUR's row reads M E _ _ _
+      When the player drags the M to LEMUR's fourth cell
+      Then LEMUR's row reads _ E _ M _
+
+    Scenario: Letters slide aside during the drag
+      Given LEMUR's row reads U L E M _
+      When the player holds the U over the M
+      Then L, E and M slide one cell left in about 0.1 seconds
+
+    Scenario: A revealed letter doesn't move
+      Given L revealed at position 1 of LEMUR
+      And LEMUR's row reads L U E M _
+      When the player drags the U onto the M
+      Then LEMUR's row reads L E M U _
+
+    Scenario: A special character is jumped
+      Given a level containing the answer HOT DOG
+      And HOT DOG's row reads H O T ␣ D G O
+      When the player drags the last O onto the H
+      Then HOT DOG's row reads O H O ␣ T D G

@@ -171,10 +171,30 @@ export class Board {
     this.rows[row].cells[cell] = { kind: 'placed', character: drag.character };
 
     if (target.kind === 'placed') {
-      if (drag.source === 'pool') this.changeCount(row, target.character, 1);
-      else this.rows[row].cells[drag.source.cell] = target;
+      if (drag.source === 'pool') {
+        this.changeCount(row, target.character, 1);
+      } else {
+        // The letters between move aside, one cell towards where the letter came from (story 24, R6).
+        const cells = this.rows[row].cells;
+        const before = [...cells];
+        for (const [to, from] of this.shift(row, drag.source.cell, cell)) cells[to] = from === cell ? target : before[from];
+      }
     }
     return this.check(row);
+  }
+
+  /**
+   * Moving a placed letter from one cell onto another letter in its row: the cells between move one step towards the
+   * empty one, skipping fixed cells (story 24, R6). Returns pairs of [new cell, old cell] for every cell that moves.
+   */
+  shift(row: number, from: number, to: number): [number, number][] {
+    const cells = this.rows[row].cells;
+    const movable = cells.flatMap((cell, index) => (isFixedCell(cell) ? [] : [index]));
+    const [low, high] = from < to ? [from, to] : [to, from];
+    const path = movable.filter((index) => index >= low && index <= high);
+    if (from > to) path.reverse();
+    // Each cell on the path takes the next one's content; the last, where the letter lands, is set by the caller.
+    return path.slice(0, -1).map((index, step) => [index, path[step + 1]]);
   }
 
   /** Released away from any cell, or on the pool. */
