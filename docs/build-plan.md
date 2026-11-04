@@ -10,7 +10,7 @@ Approved by the designer on 2026-10-31. Each milestone ends with the designer pl
 | 4 | **Phase two** | 7, 8, 9, 10 | Done |
 | 5 | **The whole game**, including the tutorial (FTUE) | 11, 16, 12 | Built: waiting for the designer to play it |
 | 6 | **Content**: generator and the 40 levels | 14, 15 | Built: waiting for the designer to play it |
-| 7 | **Worth playing**: hints, currency and ads, bonus words, sound | 19, 20, 25, 18 | Mapping (2026-11-04) |
+| 7 | **Worth playing**: hints, the economy (coins and rewarded ads), getting hints, bonus words, sound | 19, 20, 27, 25, 18 | Mapping (2026-11-04): hints part 1 first, then the economy discussion |
 
 ## How we work
 

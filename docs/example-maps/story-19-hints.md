@@ -1,10 +1,10 @@
-# Story 19: Hints
+# Story 19: Hints, part 1: how they behave
 
 **Status:** 🟡 Draft, waiting for the designer.
 
-*As a player who's stuck, I want to choose to buy a hint, so that I can keep going without the game deciding for me.*
+*As a player who's stuck, I want a hint that helps without solving the level for me, so that I can keep going.*
 
-Added to the backlog on 2026-11-02, and brought into the prototype on 2026-11-04: "the game is fun, it's time to make it worth playing". Hints cost currency (story 20), so the player asks for one when they want it (from the bonus words discussion). This map replaces story 19's backlog notes, written before each row had its own pool (story 23) and before rows locked all at once (story 23, R14).
+Added to the backlog on 2026-11-02, and brought into the prototype on 2026-11-04: "the game is fun, it's time to make it worth playing". *Split by the designer on 2026-11-04:* this part maps how hints behave, free and unlimited for now, to check they work as intended. How players get hints and what they cost comes after a discussion of the economy (coins and rewarded ads, story 20), in part 2 (story 27). This map replaces story 19's backlog notes, written before each row had its own pool (story 23) and before rows locked all at once (story 23, R14).
 
 **Key:** 🟦 Rule · 🟩 Example · 🟥 Question
 
@@ -14,11 +14,12 @@ Examples use the test level ZEBRA, LEMUR and KANGAROO, with the final word ELK. 
 
 ## Rules and examples
 
-### 🟦 R1. A hint is bought, never given
+### 🟦 R1. A hint only happens when the player asks for it
 
-A hint costs currency (story 20) and only happens when the player asks for it. See Q1 for whether the player confirms first.
+For now, hints are free and unlimited, so their behaviour can be played and checked. Part 2 (story 27) decides how they're earned, what they cost, and how they're limited. A hint that would do nothing isn't offered: its button is grey.
 
-- 🟩 Pressing the hint button with enough currency spends it and gives the hint
+- 🟩 Pressing the hint button gives the hint, as often as the player likes
+- 🟩 With every word in phase two already at its column letter, the "Place a letter" button is grey
 
 **Confirmed:** ☐
 
@@ -56,7 +57,7 @@ Once reordering has been taught (story 21), a hint can move the rows into the so
 
 ### 🟦 R6. Hints are saved
 
-As with the rest of a level (story 11, R10), revealed letters, gold words and locked orders come back after reopening. Currency spent stays spent.
+As with the rest of a level (story 11, R10), revealed letters, gold words and locked orders come back after reopening.
 
 - 🟩 Closing after a hint and opening again shows the hinted letter still in place
 
@@ -81,13 +82,6 @@ When the player seems stuck, the nudge (story 26) pulses the theme, and the hint
 ---
 
 ## Questions
-
-### 🟥 Q1. Does buying a hint ask the player to confirm?
-
-- **A (recommended):** No. The button shows the price, and one press buys it, so it's quick. A hint that would do nothing (R2 with the row already right, for example) isn't offered.
-- **B:** Yes: a small "Spend 1 coin?" confirmation first.
-
-**Answer:**
 
 ### 🟥 Q2. In phase one, which cell gets the letter?
 
@@ -116,7 +110,7 @@ A level can have several arrangements that spell the final word (story 10, R2).
 
 ### 🟥 Q5. Are the phase-two hints separate buttons?
 
-- **A (recommended):** Yes: "Place a letter" and "Order the rows", each with its price, shown in phase two where the pool was. Before reordering is taught, only the first shows.
+- **A (recommended):** Yes: "Place a letter" and "Order the rows", shown in phase two where the pool was. Before reordering is taught, only the first shows.
 - **B:** One button, which orders the rows first if they're wrong, then places letters.
 
 **Answer:**
@@ -125,15 +119,8 @@ A level can have several arrangements that spell the final word (story 10, R2).
 
 Recall All sits beside the pool, on its right (D36).
 
-- **A (recommended):** Beside the pool on its left, mirroring Recall All: a lightbulb with its price under it. It works in portrait too (D28).
+- **A (recommended):** Beside the pool on its left, mirroring Recall All: a lightbulb. Part 2 may add a price or a count to it. It works in portrait too (D28).
 - **B:** In the top bar, next to the points.
-
-**Answer:**
-
-### 🟥 Q7. What if the player can't afford a hint?
-
-- **A (recommended):** The button shows grey with its price. Pressing it offers a rewarded ad to earn some (story 20), where ads are available.
-- **B:** The button is grey and does nothing.
 
 **Answer:**
 
@@ -152,6 +139,13 @@ Story 19's first notes had shuffle and sort buttons among the hints. Story 22 ma
 - **B:** Fold shuffle and sort into this story, as free buttons next to the hint.
 
 **Answer:**
+
+---
+
+## Left for part 2 (story 27)
+
+- Whether buying a hint asks the player to confirm.
+- What happens when the player can't afford one, such as offering a rewarded ad.
 
 ---
 
