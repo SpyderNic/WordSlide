@@ -612,7 +612,11 @@ export class GameScene extends Phaser.Scene {
       const home = this.shiftedParts.get(part) ?? (part as unknown as { x: number }).x;
       this.shiftedParts.set(part, home);
       this.tweens.killTweensOf(part);
-      this.tweens.add({ targets: part, x: home + (moves.get(part) ?? 0), duration: timings.rowMakeWay });
+      // Above the cells it slides over while it's away from its own (story 24, R6), and back down once home.
+      const depth = part as unknown as Phaser.GameObjects.Components.Depth;
+      const away = moves.has(part);
+      depth.setDepth(1);
+      this.tweens.add({ targets: part, x: home + (moves.get(part) ?? 0), duration: timings.rowMakeWay, onComplete: () => !away && part.active && depth.setDepth(0) });
     }
   }
 

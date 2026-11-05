@@ -266,3 +266,26 @@ Then('FOX slides one letter', async ({ page, scenario }) => {
   const column = (view: Awaited<ReturnType<typeof two>>) => view.rows.find((row) => row.word === 'FOX')!.columnCell;
   expect(column(await two(page))).toBe(column(scenario.twoBefore!) + 1);
 });
+
+Then('L, E and M are drawn above the cells they slide over', async ({ scenario }) => {
+  const layout = scenario.before!.layout;
+  const row = layout.rows[rowOf(layout, 'LEMUR')];
+  const y = centreOf(row.cells[0]).y;
+  const frames = scenario.frames!;
+  // Each moving letter's tile, while it moves, is above every other row object it overlaps: tiles and outlines.
+  let checked = 0;
+  for (const frame of frames) {
+    for (const letter of ['L', 'E', 'M']) {
+      const text = frame.screen.find((object) => object.kind === 'text' && object.text === letter && Math.abs(object.y - y) < layout.tileSize / 4 && object.depth < 8);
+      if (!text) continue;
+      const home = [...row.cells.keys()].some((cell) => Math.abs(centreOf(row.cells[cell]).x - text.x) < 1);
+      if (home) continue;
+      checked++;
+      // The row's tiles and outlines. The hovered cell's highlight (depth 5) is meant to be on top.
+      const under = frame.screen.filter((object) => object !== text && object.kind === 'rect' && Math.abs(object.y - y) < 2 && Math.abs(object.x - text.x) < layout.tileSize && object.depth > 0 && object.depth < 5);
+      expect(text.depth, letter).toBeGreaterThan(0);
+      for (const other of under) expect(other.depth, letter).toBeLessThanOrEqual(text.depth);
+    }
+  }
+  expect(checked).toBeGreaterThan(0);
+});

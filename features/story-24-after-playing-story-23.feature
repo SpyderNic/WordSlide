@@ -148,6 +148,12 @@ Feature: Changes after playing story 23
       Then only the U travels to its cell
       And L, E and M stay where they are
 
+    # From playing: a letter moving aside slid under the cells it passed over.
+    Scenario: Letters moving aside slide above the other cells
+      Given LEMUR's row reads U L E M _
+      When the player holds the U over the M
+      Then L, E and M are drawn above the cells they slide over
+
     Scenario: A revealed letter doesn't move
       Given L revealed at position 1 of LEMUR
       And LEMUR's row reads L U E M _
