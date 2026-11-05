@@ -603,6 +603,8 @@ export class GameScene extends Phaser.Scene {
     if (source && target) {
       const cells = this.layoutNow.rows[target.row].cells;
       for (const [to, from] of this.board.shift(target.row, source.cell, target.cell)) {
+        // Only letters move aside: empty cells stay where they are.
+        if (this.board.rows[target.row].cells[from].kind === 'empty') continue;
         for (const part of this.cellObjects.get(`${target.row}:${from}`) ?? []) moves.set(part, cells[to].x - cells[from].x);
       }
     }

@@ -96,6 +96,7 @@ Unless an example says otherwise, the test level has the answers ZEBRA, LEMUR an
 - 🟩 HOT DOG's row reads H O T ␣ D G O. Dragging the last O onto the H gives O H O ␣ T D G: the T jumps the space
 - 🟩 *From playing, on 2026-11-04:* letting go, only the dragged letter travels to its cell. The letters that moved aside stay where they are, and don't travel again
 - 🟩 *From playing, on 2026-11-05:* a letter moving aside is drawn above the cells it slides over, never under them
+- 🟩 *From playing, on 2026-11-05:* only letters move aside: empty cells stay where they are. With M _ _ L _ in LEMUR's row, holding the M over the L slides the L one cell left, and the empty cells don't move
 
 **Confirmed:** ☑
 

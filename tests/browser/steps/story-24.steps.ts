@@ -155,11 +155,11 @@ When(/^the player drags the (\S) to LEMUR's (fourth) cell$/, async ({ page, scen
 });
 
 // Given and When share this text.
-When(/^the player (?:holds|is holding) the U over the M$/, async ({ page, scenario }) => {
+When(/^the player (?:holds|is holding) the (U|M) over the (M|L)$/, async ({ page, scenario }, letter: string, target: string) => {
   await layoutNow(page, scenario);
   scenario.before = await current(page);
   await startRecording(page);
-  await dragOnto(page, scenario, 'U', 'M', false, false);
+  await dragOnto(page, scenario, letter, target, false, false);
   await page.waitForTimeout(400);
   scenario.frames = await stopRecording(page);
 });
@@ -288,4 +288,29 @@ Then('L, E and M are drawn above the cells they slide over', async ({ scenario }
     }
   }
   expect(checked).toBeGreaterThan(0);
+});
+
+Then('the L slides one cell left', async ({ page, scenario }) => {
+  const layout = scenario.before!.layout;
+  const row = layout.rows[rowOf(layout, 'LEMUR')];
+  const y = centreOf(row.cells[0]).y;
+  expect((await current(page)).dragging).toBe('M');
+  const xs = scenario.frames!.map((frame) => letterX(frame, y, 'L', layout.tileSize)).filter((x): x is number => x !== undefined);
+  expect(xs[xs.length - 1]).toBeCloseTo(centreOf(row.cells[2]).x, 0);
+});
+
+Then('no empty cell moves', async ({ scenario }) => {
+  const layout = scenario.before!.layout;
+  const row = layout.rows[rowOf(layout, 'LEMUR')];
+  const y = centreOf(row.cells[0]).y;
+  const homes = row.cells.map((cell) => centreOf(cell).x);
+  // An empty cell is an outline with no fill. In every frame, each one in the row sits on a cell.
+  let seen = 0;
+  for (const frame of scenario.frames!) {
+    for (const outline of frame.screen.filter((object) => object.kind === 'rect' && object.fill === null && object.depth < 5 && Math.abs(object.y - y) < 2)) {
+      seen++;
+      expect(Math.min(...homes.map((x) => Math.abs(x - outline.x)))).toBeLessThan(0.5);
+    }
+  }
+  expect(seen).toBeGreaterThan(0);
 });

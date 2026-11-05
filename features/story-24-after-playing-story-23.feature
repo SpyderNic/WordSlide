@@ -154,6 +154,13 @@ Feature: Changes after playing story 23
       When the player holds the U over the M
       Then L, E and M are drawn above the cells they slide over
 
+    # From playing: the empty cells between slid along with the letters.
+    Scenario: Empty cells don't move aside
+      Given LEMUR's row reads M _ _ L _
+      When the player holds the M over the L
+      Then the L slides one cell left
+      And no empty cell moves
+
     Scenario: A revealed letter doesn't move
       Given L revealed at position 1 of LEMUR
       And LEMUR's row reads L U E M _
