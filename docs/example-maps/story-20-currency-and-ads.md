@@ -8,6 +8,16 @@ Added to the backlog on 2026-11-02, and brought into the prototype on 2026-11-04
 
 **Key:** 🟦 Rule · 🟩 Example · 🟥 Question
 
+**Settings (D52).** Rules name a setting in *italics*, never its value. Each example sets the values it uses, so it stays true whatever the game ships with. The values shipped today are in [D51](../decisions.md):
+
+| Setting | What it is |
+|---|---|
+| *starting coins* | What a new player starts with |
+| *ad reward* | What a rewarded ad watched to the end gives |
+| *bonus word reward* | What a bonus word gives (story 25) |
+| *first midgame level* | The first completed level after which a midgame ad is asked for |
+| *rewarded ad wait* | How long before the rewarded ad offer can be used again (Q4) |
+
 ---
 
 ## CrazyGames' ad rules, checked on 2026-11-05
@@ -30,21 +40,21 @@ Nothing here changes D51. It does shape R6, R7, Q3 and Q4.
 
 Shown as a gold coin icon with a number. Coins buy hints (story 27), and later maybe other things, such as styles (later ideas).
 
-- 🟩 A player with 100 coins sees a coin and "100"
+- 🟩 A player with 120 coins sees a coin and "120"
 
 **Confirmed:** ☐
 
-### 🟦 R2. A new player starts with 100 coins
+### 🟦 R2. A new player starts with the *starting coins*
 
-- 🟩 Opening the game for the first time shows 100 coins
+- 🟩 With *starting coins* of 100, opening the game for the first time shows 100 coins
 
 **Confirmed:** ☐
 
 ### 🟦 R3. Coins come from rewarded ads, bonus words and series
 
-A rewarded ad watched to the end gives 50, a bonus word 10 (once story 25 is built) and finishing a series its reward (story 28). Winning a single level gives none. Every amount, and every price, lives in one place, so it's easy to tune.
+A rewarded ad watched to the end gives the *ad reward*, a bonus word the *bonus word reward* (once story 25 is built) and finishing a series its reward (story 28). Winning a single level gives none.
 
-- 🟩 With 100 coins, watching a rewarded ad to the end makes 150
+- 🟩 With an *ad reward* of 50 and 100 coins, watching a rewarded ad to the end makes 150
 - 🟩 Winning a level that doesn't finish a series leaves the coins as they were
 
 **Confirmed:** ☐
@@ -53,7 +63,7 @@ A rewarded ad watched to the end gives 50, a bonus word 10 (once story 25 is bui
 
 Through the platform interface (D32), like the rest of the progress (story 11). Earning and spending are saved straight away, so closing the game never loses or gives back coins.
 
-- 🟩 Closing right after an ad's reward, and opening again, still shows 150
+- 🟩 With 100 coins and an *ad reward* of 50, closing right after the ad's reward, and opening again, still shows 150
 
 **Confirmed:** ☐
 
@@ -70,7 +80,7 @@ Game code never calls an ad SDK (D32). The interface asks for a rewarded or a mi
 
 No rewarded ad plays unless the player asks for one, on an offer that says what they'll get. One ad gives one reward. The offer can always be closed straight away.
 
-- 🟩 Pressing "Watch an ad for 50 coins" plays one. Nothing else starts a rewarded ad
+- 🟩 With an *ad reward* of 50, pressing "Watch an ad for 50 coins" plays one. Nothing else starts a rewarded ad
 
 **Confirmed:** ☐
 
@@ -84,10 +94,10 @@ On a platform with no ads, during CrazyGames' Basic Launch, or when the platform
 
 ### 🟦 R8. A midgame ad may play between levels, after the first few
 
-When the player presses "Play Level X" on the Level complete popup, the game asks for a midgame ad before the next level starts. The platform decides whether one actually plays (on CrazyGames, at most one every 3 minutes). None are asked for before a first level kept as one setting, level 5 for now, so it can change without changing the tests.
+When the player presses "Play Level X" on the Level complete popup, the game asks for a midgame ad before the next level starts. The platform decides whether one actually plays (on CrazyGames, at most one every 3 minutes). None are asked for before the *first midgame level* is completed.
 
-- 🟩 Completing level 3 and pressing "Play Level 4" goes straight to level 4
-- 🟩 Completing level 5 and pressing "Play Level 6" asks for a midgame ad, then starts level 6 when it ends
+- 🟩 With a *first midgame level* of 5, completing level 3 and pressing "Play Level 4" goes straight to level 4
+- 🟩 With a *first midgame level* of 5, completing level 5 and pressing "Play Level 6" asks for a midgame ad, then starts level 6 when it ends
 - 🟩 If the platform plays no ad, level 6 starts straight away
 
 **Confirmed:** ☐
@@ -104,7 +114,7 @@ Its input is ignored, and it carries on exactly where it was afterwards. Muting 
 
 So the flows can be tested before the CrazyGames SDK is added (out of scope for the prototype), the local platform pretends to play an ad: a short screen that says it's a pretend rewarded or midgame ad, with buttons to finish or close it. Development builds can also pretend no ads are available. Release builds on CrazyGames use their SDK, behind the same interface.
 
-- 🟩 In development, finishing a pretend rewarded ad gives 50 coins, and closing it gives none
+- 🟩 In development, with an *ad reward* of 50, finishing a pretend rewarded ad gives 50 coins, and closing it gives none
 
 **Confirmed:** ☐
 
@@ -126,7 +136,7 @@ The top bar has home, level number, theme, points, shop and settings (D30).
 
 It's visible but does nothing today (D30). Story 27 will also offer an ad from a hint the player can't afford.
 
-- **A (recommended):** It opens a small panel with the balance, "Watch an ad for 50 coins" (when an ad can play, R7) and a close button. It gives a place to earn coins before story 27, and later the place for styles.
+- **A (recommended):** It opens a small panel with the balance, "Watch an ad for [*ad reward*] coins" (when an ad can play, R7) and a close button. It gives a place to earn coins before story 27, and later the place for styles.
 - **B:** Still nothing. Ads are only offered from a hint the player can't afford (story 27).
 
 **Answer:**
@@ -135,14 +145,16 @@ It's visible but does nothing today (D30). Story 27 will also offer an ad from a
 
 CrazyGames asks that rewarded ads aren't offered too often, and that the player can see it. Q4 is how long.
 
-- **A (recommended):** The offer stays, greyed out, with a countdown ("Next ad in 2:30").
+- **A (recommended):** The offer stays, greyed out, with a countdown to the end of the *rewarded ad wait* ("Next ad in 2:30").
 - **B:** The offer is hidden until it's available again.
 
 **Answer:**
 
-### 🟥 Q4. How long between rewarded ads?
+### 🟥 Q4. How long is the *rewarded ad wait* to start with?
 
-- **A (recommended):** 3 minutes from the end of the last one, kept as one setting to tune after playing. That matches CrazyGames' own pace for midgame ads.
+It runs from the end of the last rewarded ad. Its value goes in D51.
+
+- **A (recommended):** 3 minutes, to tune after playing. That matches CrazyGames' own pace for midgame ads.
 - **B:** No wait in the prototype, deciding after playing.
 - **C:** Another length: write it in the answer.
 
@@ -159,8 +171,8 @@ CrazyGames asks that rewarded ads aren't offered too often, and that the player 
 
 Players who saved progress before coins existed (only you, in the prototype).
 
-- **A (recommended):** The starting 100, once, plus 10 for each bonus word already found, if story 25 is built first and saves them.
-- **B:** The starting 100 only.
+- **A (recommended):** The *starting coins*, once, plus the *bonus word reward* for each bonus word already found, if story 25 is built first and saves them.
+- **B:** The *starting coins* only.
 
 **Answer:**
 

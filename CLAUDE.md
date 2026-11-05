@@ -13,6 +13,7 @@ A themed word puzzle, built with Phaser 3, Vite and TypeScript, aiming at CrazyG
 ## How we work
 
 - Build exactly what's agreed. Anything unclear stops the work and goes to the designer as a question, with a few options and a recommendation. Don't fill gaps with defaults.
+- **Tuning values are named settings (D52).** In maps and scenarios, a value about the economy, balance or feel (amounts, prices, waits, starting levels, timings) is named, never written into a rule. Examples set the value they use in a Given, and tests inject it in development builds, so changing a shipped value never changes a rule or test.
 - **Test first, always (BDD/TDD).** For each scenario, one at a time: write the test, run it and see it fail for the right reason, then write just enough code to make it pass. No production code without a failing test that asks for it. A test written after the code tends to check the implementation chosen, not the behaviour agreed.
 - A step that doesn't really check its scenario isn't a test. Don't leave empty steps, or steps that read a value the code just hard-coded. If something can't be tested automatically, say so.
 - One story at a time: when its scenarios pass, report what passed and what couldn't be tested. Be honest about scenarios that check less than they read.
