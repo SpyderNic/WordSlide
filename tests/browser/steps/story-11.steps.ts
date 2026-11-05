@@ -13,7 +13,7 @@ import { expectInterstitialHasNoButton, pressPlayAndRecord, themedLevels } from 
 
 const { Given, When, Then } = createBdd(test);
 
-type View = GameView & { levelNumber: number };
+type View = GameView & { levelNumber: number; points: number };
 
 /** The level every story 11 scenario plays, unless it says otherwise: ELK wins it. */
 function prepareLevel(scenario: Scenario) {
@@ -54,7 +54,8 @@ async function pressPopupButton(page: Page) {
 /** Every top-of-screen item, and the keys a player might try. */
 async function tryEveryWayOut(page: Page) {
   const { layout } = await view(page);
-  for (const item of layout.topItems) await page.mouse.click(item.x + item.width / 2, item.y + item.height / 2);
+  // The ad button plays an ad, which leads nowhere (story 20).
+  for (const item of layout.topItems.filter((candidate) => candidate.name !== 'ad')) await page.mouse.click(item.x + item.width / 2, item.y + item.height / 2);
   for (const key of ['Escape', 'Home', 'PageDown', 'Tab']) await page.keyboard.press(key);
 }
 
@@ -74,9 +75,6 @@ function poolCounts(layout: GameView['layout']) {
   return layout.poolTiles.map((tile) => `${tile.character}x${tile.count}`);
 }
 
-function pointsText(frame: Frame) {
-  return frame.screen.find((object: Drawn) => object.kind === 'text' && object.text?.startsWith('Points'));
-}
 
 // Levels and points
 
@@ -89,10 +87,11 @@ Given('the player is on the last level', async ({ scenario }) => {
   scenario.levelNumber = 3;
 });
 
-// Given and Then share this text: before the game opens it sets the points, after that it checks the saved total.
+// Given and Then share this text: before the game opens it sets the points, after that it checks the saved total, or
+// the game's own when nothing is saved yet. Points aren't in the top bar any more (story 20, R11).
 Given(/^the player has (\d+) points? in total$/, async ({ page, scenario }, points: string) => {
   if (scenario.views.length === 0) scenario.points = Number(points);
-  else await expect.poll(() => savedPoints(page)).toBe(Number(points));
+  else await expect.poll(async () => (await savedPoints(page)) ?? (await view(page)).points).toBe(Number(points));
 });
 
 Given('a level that starts phase two already solved', async ({ scenario }) => {
@@ -193,6 +192,15 @@ Then(/^level 5 appears with a fade of about 0\.3 seconds$/, async ({ page, scena
 
 // In story 12, this opens the level after the tutorial, as a player who has won level 1 would.
 Then(/^level (\d+) opens$/, async ({ page, scenario, $uri }, level: string) => {
+  // In story 20, "When level 6 opens" opens it, and after "Play Level X" it may wait for an ad.
+  if ($uri.includes('story-20')) {
+    if (scenario.views.length === 0) {
+      scenario.levelNumber = Number(level);
+      await openLevel(page, scenario);
+      return;
+    }
+    await expect.poll(async () => (await view(page)).levelNumber, { timeout: 3000 }).toBe(Number(level));
+  }
   if ($uri.includes('story-12') && scenario.views.length === 0) {
     await openGame(page, scenario);
     await page.evaluate(({ key, text }) => localStorage.setItem(key, text), { key: SAVE_KEY, text: writeProgress({ level: Number(level), points: Number(level) - 1, inLevel: null }) });
@@ -404,31 +412,6 @@ Then('the popup shows {string}', async ({ page }, text: string) => {
   await expect.poll(async () => (await popupParts(page)).map((object) => object.text)).toContain(text);
 });
 
-// The new point
-
-Then(/^the points still show (\d+) until the popup appears$/, async ({ page, scenario }, points: string) => {
-  await waitForPopup(page);
-  await page.waitForTimeout(700);
-  scenario.frames = await stopRecording(page);
-  const before = scenario.frames.filter((frame) => frame.two && frame.two.popup === null);
-  expect(before.length).toBeGreaterThan(10);
-  before.forEach((frame) => expect(pointsText(frame)?.text).toBe(`Points ${points}`));
-});
-
-Then(/^the points show (\d+) with a small pulse as it appears$/, async ({ scenario }, points: string) => {
-  const from = scenario.frames!.findIndex((frame) => frame.two?.popup);
-  const after = scenario.frames!.slice(from);
-  expect(pointsText(after[0])?.text).toBe(`Points ${points}`);
-  const scales = after.map((frame) => pointsText(frame)!.scale);
-  expect(Math.max(...scales.slice(0, 30))).toBeGreaterThan(1.05);
-  expect(scales[scales.length - 1]).toBe(1);
-});
-
-Then("it doesn't mention points", async ({ page }) => {
-  expect((await popupParts(page)).filter((object) => /point/i.test(object.text ?? ''))).toEqual([]);
-});
-
-// Development builds
 
 Given('a development build', async ({ page }) => {
   await page.goto('/');

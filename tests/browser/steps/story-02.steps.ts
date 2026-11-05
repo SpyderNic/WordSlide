@@ -5,7 +5,7 @@ import type { Level } from '../../../src/game/level';
 import { rowOrder, startingPool } from '../../../src/game/level';
 import { levelContaining, levelWithRows, makeLevel, parseWords, reveal } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
-import { drawnIn, installProbe, screen, textAt, tileAt } from './probe';
+import { drawnIn, installProbe, screen, textAt, tileAt, type Drawn } from './probe';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -167,7 +167,7 @@ When(/^each level opens(?: on the same screen)?$/, async ({ page, scenario }) =>
   }
 });
 
-When(/^the player presses the (home|shop|settings) button$/, async ({ page, scenario }, name: string) => {
+When(/^the player presses the (home|settings) button$/, async ({ page, scenario }, name: string) => {
   scenario.before = viewOf(scenario);
   const button = layoutOf(scenario).topItems.find((item) => item.name === name)!;
   await page.mouse.click(centreX(button), button.y + button.height / 2);
@@ -202,18 +202,15 @@ Then('the pool is at the bottom of the screen', async ({ scenario }) => {
   expect(layout.poolArea.y).toBeGreaterThan(layout.height / 2);
 });
 
-Then('the top of the screen reads, from left to right: home, level number, theme, points, shop, settings', async ({ scenario }) => {
-  const items = [...layoutOf(scenario).topItems].sort((a, b) => a.x - b.x);
-  expect(items.map((item) => item.name)).toEqual(['home', 'level', 'theme', 'points', 'shop', 'settings']);
+// The theme has its own line below the bar (story 20, R14).
+Then('the top of the screen reads, from left to right: home, level number, ad button, coins, settings', async ({ scenario }) => {
+  const items = layoutOf(scenario).topItems.filter((item) => item.name !== 'theme').sort((a, b) => a.x - b.x);
+  expect(items.map((item) => item.name)).toEqual(['home', 'level', 'ad', 'coins', 'settings']);
   items.slice(1).forEach((item, index) => expect(item.x).toBeGreaterThanOrEqual(right(items[index])));
 });
 
 Then(/^the level number shows (\d+)$/, async ({ page, scenario }, level: string) => {
   expect(await topText(page, scenario, 'level')).toContain(String(level));
-});
-
-Then(/^the points show (\d+)$/, async ({ page, scenario }, points: string) => {
-  expect(await topText(page, scenario, 'points')).toContain(String(points));
 });
 
 Then(/^the rows are (.+) from top to bottom$/, async ({ scenario }, rows: string) => {
@@ -390,15 +387,17 @@ Then('the theme has its own centred line', async ({ scenario }) => {
 
 Then("there's no highlighted column", async ({ page, scenario }) => {
   expect(layoutOf(scenario)).not.toHaveProperty('column');
-  expect((await screen(page)).filter((object) => object.triangles.length > 0)).toEqual([]);
+  // The ad button's video icon has a play triangle, in the top bar (story 20, R12).
+  const below = (object: Drawn) => object.triangles.every((triangle) => triangle[1] > bottom(layoutOf(scenario).top));
+  expect((await screen(page)).filter((object) => object.triangles.length > 0 && below(object))).toEqual([]);
 });
 
 Then('there are no row handles', async ({ page, scenario }) => {
   expect(layoutOf(scenario)).not.toHaveProperty('handles');
-  // The only graphics in phase one are the Recall All arrows and the Letter hint's icon (story 19).
-  const { recall, letterHint } = layoutOf(scenario);
+  // The only graphics in phase one are the Recall All arrows, the Letter hint's icon (story 19) and the top bar's icons (story 20).
+  const { recall, letterHint, top } = layoutOf(scenario);
   const inside = (rect: Rect, x: number, y: number) => x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
-  const others = (await screen(page)).filter((object) => object.kind === 'graphics' && !object.lines.every((line) => inside(recall, line.x1, line.y1) || inside(letterHint, line.x1, line.y1)));
+  const others = (await screen(page)).filter((object) => object.kind === 'graphics' && !object.lines.every((line) => inside(recall, line.x1, line.y1) || inside(letterHint, line.x1, line.y1) || inside(top, line.x1, line.y1)));
   expect(others).toEqual([]);
 });
 

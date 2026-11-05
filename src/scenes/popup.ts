@@ -16,6 +16,8 @@ export interface PopupContent {
   word: string[];
   /** The button's text. The last level's popup has none (story 11, R11). */
   button: string | null;
+  /** The player's points, shown under the golden word (story 20, R11). */
+  points?: number;
 }
 
 /** The popup in the centre of the screen (D41). */
@@ -43,6 +45,12 @@ export function buildPopup(scene: Phaser.Scene, tile: number, content: PopupCont
     );
   });
 
+  let pointsText: Phaser.GameObjects.Text | null = null;
+  if (content.points !== undefined) {
+    addText(`Points: ${content.points}`, size * 0.6, Math.max(size * 0.45, currentStyle.minText), colours.text);
+    pointsText = children[children.length - 1] as Phaser.GameObjects.Text;
+  }
+
   let buttonRect: Rect | null = null;
   if (button) {
     const buttonWidth = size * 5.2;
@@ -53,5 +61,5 @@ export function buildPopup(scene: Phaser.Scene, tile: number, content: PopupCont
   }
 
   const container = scene.add.container(width / 2, height / 2, children).setDepth(POPUP_DEPTH);
-  return { container, buttonRect };
+  return { container, buttonRect, pointsText };
 }

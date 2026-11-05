@@ -416,7 +416,7 @@ Then('the words slide, the rows centre, and the column and pool fade at the same
   expect(between(drawnIn(middle.screen, poolArea)[0].alpha, 0, 1)).toBe(true);
 });
 
-Then('home, level number, theme, points, shop and settings are as they were', async ({ page, scenario }) => {
+Then('home, level number, ad button, coins, settings and theme are as they were', async ({ page, scenario }) => {
   expect((await current(page)).layout.topItems).toEqual(scenario.views[0].layout.topItems);
 });
 
@@ -868,7 +868,7 @@ Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected
   const story23Check = $uri.includes('story-23') && scenario.views.length > 0;
   if (!scenario.acted && !story23Check) {
     // These stories select a row in phase one, by tapping it.
-    if (['story-02', 'story-03', 'story-04', 'story-17', 'story-11', 'story-16', 'story-23'].some((story) => $uri.includes(story))) {
+    if (['story-02', 'story-03', 'story-04', 'story-17', 'story-11', 'story-16', 'story-23', 'story-20'].some((story) => $uri.includes(story))) {
       scenario.setup.push(async (page) => {
         const { layout } = await current(page);
         const cell = layout.rows.find((row) => row.word === word)!.cells[0];
@@ -1399,13 +1399,13 @@ Then('the gold word and the column fade away', async ({ page }) => {
 
 Then('the top of the screen stays', async ({ page, scenario }) => {
   const { layout } = await current(page);
-  // "Stays" means it stays on screen: story 11 (R12) raises the points as the popup appears.
-  const withoutPoints = (items: typeof layout.topItems) => items.map((item) => (item.name === 'points' ? { ...item, text: '' } : item));
-  expect(withoutPoints(layout.topItems)).toEqual(withoutPoints(scenario.views[0].layout.topItems));
+  expect(layout.topItems).toEqual(scenario.views[0].layout.topItems);
+  // Everything drawn in the top bar and the theme's line stays at full strength.
   const objects = await screen(page);
-  for (const item of layout.topItems) {
-    expect(textAt(objects, item.x + item.width / 2, item.y + item.height / 2)?.alpha).toBe(1);
-  }
+  const inside = (object: Drawn) => layout.topItems.some((item) => object.x >= item.x && object.x <= item.x + item.width && object.y >= item.y && object.y <= item.y + item.height);
+  const parts = objects.filter((object) => object.depth < POPUP_DEPTH && object.kind !== 'graphics' && inside(object));
+  expect(parts.length).toBeGreaterThan(layout.topItems.length);
+  parts.forEach((part) => expect(part.alpha).toBe(1));
 });
 
 When(/^the player (presses an arrow key|tries to drag a word)$/, async ({ page, scenario }, action: string) => {

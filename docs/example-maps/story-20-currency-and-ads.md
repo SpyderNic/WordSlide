@@ -1,6 +1,6 @@
 # Story 20: Coins and ads
 
-**Status:** ✅ Approved by the designer on 2026-11-05, after the economy discussion ([D51](../decisions.md)). Scenarios: [story-20-coins-and-ads.feature](../../features/story-20-coins-and-ads.feature), waiting for approval.
+**Status:** ✅ Approved by the designer on 2026-11-05, after the economy discussion ([D51](../decisions.md)). Scenarios: [story-20-coins-and-ads.feature](../../features/story-20-coins-and-ads.feature), approved and built on 2026-11-05.
 
 *As a player, I want to earn coins by playing and by choosing to watch ads, so that getting help is my choice and finishing levels pays off.*
 

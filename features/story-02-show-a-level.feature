@@ -20,13 +20,12 @@ Feature: Show a level
 
     Scenario: The top of the screen is laid out from left to right
       When the level opens
-      Then the top of the screen reads, from left to right: home, level number, theme, points, shop, settings
+      Then the top of the screen reads, from left to right: home, level number, ad button, coins, settings
 
-    Scenario: The level number and points are shown
-      Given the player is on level 4 with 3 points
+    Scenario: The level number is shown
+      Given the player is on level 4
       When the level opens
       Then the level number shows 4
-      And the points show 3
 
   Rule: Rows appear in order, centred on the screen
 
@@ -206,7 +205,6 @@ Feature: Show a level
       Examples:
         | button   |
         | home     |
-        | shop     |
         | settings |
 
   Rule: The layout comes from the screen size

@@ -23,6 +23,8 @@ export interface Style {
   /** Milliseconds. */
   /** How strongly rows that aren't selected and aren't finished show (story 23, R3). */
   fadedRow: number;
+  /** How many coins fly to the counter when coins are earned (story 20, R15). */
+  coinFlights: number;
   timings: {
     letterTravel: number;
     /** A locking tile grows, takes its new colour at its biggest, then shrinks back (D37). */
@@ -45,5 +47,10 @@ export interface Style {
     rowFade: number;
     /** The pool changing to another row's letters (story 23, Q3). */
     poolChange: number;
+    /** Earned coins flying to the counter (story 20, R15): how long each flies, and the gap between one setting off and the next. */
+    coinFlight: number;
+    coinFlightGap: number;
+    /** The points on the Level complete popup counting up (story 20, R11). */
+    pointsCount: number;
   };
 }

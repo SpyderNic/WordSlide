@@ -20,6 +20,7 @@ export const woodAndBrass: Style = {
   minText: 12,
   pulseScale: 1.15,
   fadedRow: 0.5,
+  coinFlights: 6,
   timings: {
     letterTravel: 150,
     lockPulseGrow: 150,
@@ -37,5 +38,8 @@ export const woodAndBrass: Style = {
     interstitial: 2000,
     rowFade: 200,
     poolChange: 250,
+    coinFlight: 600,
+    coinFlightGap: 70,
+    pointsCount: 500,
   },
 };

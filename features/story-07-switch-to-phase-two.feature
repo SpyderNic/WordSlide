@@ -100,7 +100,7 @@ Feature: Switch to phase two
 
     Scenario: Nothing changes along the top
       When the ceremony ends
-      Then home, level number, theme, points, shop and settings are as they were
+      Then home, level number, ad button, coins, settings and theme are as they were
 
   Rule: Phase-one input ends
 

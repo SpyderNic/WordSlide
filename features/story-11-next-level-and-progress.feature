@@ -54,7 +54,7 @@ Feature: Unlock the next level and save progress
       Given the game has never been played on this device
       When the game opens
       Then the level number shows 1
-      And the points show 0
+      And the player has 0 points in total
 
   Rule: Progress is saved as soon as a level is won
 
@@ -65,7 +65,7 @@ Feature: Unlock the next level and save progress
       And the game closes before the popup appears
       And the game opens again
       Then the level number shows 5
-      And the points show 4
+      And the player has 4 points in total
 
   Rule: Reopening the game continues from the saved level
 
@@ -74,7 +74,7 @@ Feature: Unlock the next level and save progress
       Given level 5 reached and 4 points saved
       When the game opens
       Then the level number shows 5
-      And the points show 4
+      And the player has 4 points in total
 
     @browser
     Scenario: Reloading the page keeps progress
@@ -168,20 +168,6 @@ Feature: Unlock the next level and save progress
       When the game closes and opens again
       Then the popup shows "All levels complete!"
 
-  Rule: The new point shows when the popup appears
-
-    @browser
-    Scenario: The points go up with the popup
-      Given the player has 3 points in total
-      When the player wins a level
-      Then the points still show 3 until the popup appears
-      And the points show 4 with a small pulse as it appears
-
-    @browser
-    Scenario: The popup doesn't mention the point
-      When the popup appears
-      Then it doesn't mention points
-
   Rule: Development builds have a level picker and a progress reset
 
     @browser
@@ -198,7 +184,7 @@ Feature: Unlock the next level and save progress
       And the player wins the level
       And the game opens
       Then the level number shows 5
-      And the points show 4
+      And the player has 4 points in total
 
     @browser
     Scenario: The designer can reset progress
@@ -206,7 +192,7 @@ Feature: Unlock the next level and save progress
       And level 5 reached and 4 points saved
       When the designer resets progress
       Then the level number shows 1
-      And the points show 0
+      And the player has 0 points in total
 
     Scenario: Players never see them
       Given a release build

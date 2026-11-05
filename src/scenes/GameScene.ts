@@ -3,7 +3,8 @@ import { Board, type BoardEvent, type BoardSnapshot } from '../game/board';
 import { PhaseTwo, type PhaseTwoSnapshot } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Cell, Level } from '../game/level';
-import { NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
+import { coinsOf, NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
+import { adButtonState, asksForMidgameAd, economyWith, type Economy } from '../game/economy';
 import { pickedLevel, resetAsked } from '../game/startingLevel';
 import { levels } from '../levels';
 import { createPlatform } from '../platform';
@@ -16,11 +17,15 @@ import { firstReorderingMove, tutorialPlan, tutorialStep, type ReorderingMove, t
 import { buildPopup } from './popup';
 import { drawHintButton, type HintButton } from './hintButtons';
 import { makeTile, paintTile } from './tiles';
+import { drawCoin, drawCog, drawHouse, drawVideo } from './topIcons';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
 const SHAKE_DISTANCE = 6;
-const POINTS_PULSE = 1.2;
+/** Coins flying to the counter, above the board and the popup (story 20, R15). */
+const FLIGHT_DEPTH = 26;
+/** The ad button while it waits (story 20, R13). */
+const AD_WAITING_ALPHA = 0.5;
 /** Letters flying between the pool and the cells are drawn above the board, below a dragged tile. */
 const TRAVEL_DEPTH = 8;
 /** Several letters going back to the pool leave this far apart, in milliseconds (story 16, R7). */
@@ -121,7 +126,17 @@ export class GameScene extends Phaser.Scene {
   private guideShown = '';
   /** Pulses and shakes still playing: moving on never cuts them short (D37). */
   private effects: Effect[] = [];
-  private pointsText: Phaser.GameObjects.Text | null = null;
+  /** The economy's settings (D51, D52). */
+  private economy: Economy = economyWith(undefined);
+  /** The top bar's objects, redrawn on their own so a countdown doesn't redraw the board. */
+  private topObjects: Phaser.GameObjects.GameObject[] = [];
+  /** When the last rewarded ad ended, for the ad button's wait (story 20, R13). */
+  private lastAdEnd: number | null = null;
+  /** An ad is playing: the game is paused and ignores input (story 20, R9). */
+  private adPlaying = false;
+  /** While coins fly, the counter shows the balance before them, counting up as they land (story 20, R15). */
+  private coinsShown: number | null = null;
+  private adShownAs = '';
   /** The full-screen card naming a new theme. Input is ignored while it shows (story 15, R11). */
   private interstitial: Phaser.GameObjects.Rectangle | null = null;
   private interstitialText: Phaser.GameObjects.Text | null = null;
@@ -139,6 +154,7 @@ export class GameScene extends Phaser.Scene {
     const testList = (window as unknown as { wordSlideTestLevels?: Level[] }).wordSlideTestLevels;
     if (development && testList) this.levels = testList;
     this.platform = createPlatform();
+    if (development) this.economy = economyWith((window as unknown as { wordSlideEconomy?: Partial<Economy> }).wordSlideEconomy);
     const search = window.location.search;
     void this.platform.load(SAVE_KEY).then((text) => {
       let progress = readProgress(text);
@@ -167,6 +183,8 @@ export class GameScene extends Phaser.Scene {
     this.input.addPointer(1);
     // Straight from the browser: the engine's keyboard queue mishandles keys that land in one frame.
     window.addEventListener('keydown', (event) => this.onKey(event));
+    // The ad button's countdown (story 20, R13).
+    this.time.addEvent({ delay: 250, loop: true, callback: () => this.refreshAdButton() });
 
     if (import.meta.env.DEV) {
       Object.assign(window, {
@@ -209,12 +227,16 @@ export class GameScene extends Phaser.Scene {
       points: this.points,
       phaseTwo: this.phaseTwo?.testView() ?? null,
       hints: this.phaseOneHints(),
+      coins: this.coins(),
+      adButton: this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy) : null,
     };
   }
 
   /** For tests: opens a level as if the player had reached it. */
   private show(level: Level, levelNumber: number, points: number) {
     this.progress = { ...this.progress, level: levelNumber, points, inLevel: null };
+    const coins = (window as unknown as { wordSlideTestCoins?: number }).wordSlideTestCoins;
+    if (typeof coins === 'number') this.progress = { ...this.progress, coins };
     this.startLevel(level);
   }
 
@@ -311,10 +333,8 @@ export class GameScene extends Phaser.Scene {
     this.drawn = [];
     this.rowObjects.clear();
     this.cellObjects.clear();
-    this.layoutNow = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board);
-
-    this.pointsText = null;
-    this.layoutNow.topItems.forEach((item) => this.drawTopItem(item));
+    this.layoutNow = this.layoutFor();
+    this.drawTopBar();
     this.updateGuide();
     if (this.allDone) {
       this.fadePoolNow();
@@ -405,15 +425,59 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
+  private layoutFor(): LevelLayout {
+    const ad = this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy).text : '';
+    return layoutLevel(this.level, this.levelNumber, this.coinsShown ?? this.coins(), this.scale.width, this.scale.height, this.board, ad);
+  }
+
+  /** The top bar, and the theme's line below it (story 20, R14). */
+  private drawTopBar() {
+    this.topObjects.forEach((object) => object.destroy());
+    this.topObjects = [];
+    this.adShownAs = this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy).text : '';
+    this.layoutNow.topItems.forEach((item) => this.drawTopItem(item));
+  }
+
+  private top<T extends Phaser.GameObjects.GameObject>(object: T): T {
+    this.topObjects.push(object);
+    return object;
+  }
+
+  private topText(text: string, x: number, y: number, size: number, colour: number) {
+    return this.top(
+      this.add.text(x, y, text, { fontFamily: currentStyle.font, fontSize: `${Math.round(size)}px`, color: hex(colour) }).setOrigin(0.5),
+    );
+  }
+
   private drawTopItem(item: TopItem) {
-    const size = this.layoutNow.topTileSize * 0.42;
+    const tile = this.layoutNow.topTileSize;
+    const size = tile * 0.42;
+    const icon = tile * 0.5;
     const { x, y } = centre(item);
-    if (item.isButton) {
-      // The buttons do nothing yet (D30).
-      this.keep(this.add.rectangle(x, y, item.width, item.height, colours.tile));
+    if (item.name === 'ad') {
+      if (!this.adShown()) return;
+      const state = adButtonState(this.now(), this.lastAdEnd, this.economy);
+      const parts: Phaser.GameObjects.GameObject[] = [
+        this.top(this.add.rectangle(x, y, item.width, item.height, colours.tile)),
+        this.topText(state.text, x - item.width * 0.23, y, size, colours.text),
+        this.top(drawCoin(this, x + item.width * 0.14, y, icon * 0.7, colours.tileGold)),
+        this.top(drawVideo(this, x + item.width * 0.36, y, icon * 0.7, colours.text)),
+      ];
+      if (!state.ready) parts.forEach((part) => (part as unknown as Phaser.GameObjects.Components.Alpha).setAlpha(AD_WAITING_ALPHA));
+      return;
     }
-    const text = this.drawText(item.text, x, y, size, item.isButton ? colours.text : colours.highlight);
-    if (item.name === 'points') this.pointsText = text;
+    if (item.name === 'home' || item.name === 'settings') {
+      // They do nothing yet (D30).
+      this.top(this.add.rectangle(x, y, item.width, item.height, colours.tile));
+      this.top((item.name === 'home' ? drawHouse : drawCog)(this, x, y, icon, colours.text));
+      return;
+    }
+    if (item.name === 'coins') {
+      this.top(drawCoin(this, item.x + icon * 0.6, y, icon * 0.8, colours.tileGold));
+      this.topText(item.text, x + icon * 0.4, y, size, colours.highlight);
+      return;
+    }
+    this.topText(item.text, x, y, size, colours.highlight);
   }
 
   private drawSelection() {
@@ -511,6 +575,12 @@ export class GameScene extends Phaser.Scene {
   // Input
 
   private onPointerDown(pointer: Phaser.Input.Pointer) {
+    if (this.adPlaying) return;
+    const ad = this.layoutNow?.topItems.find((item) => item.name === 'ad');
+    if (ad && this.adShown() && pointer.x >= ad.x && pointer.x <= ad.x + ad.width && pointer.y >= ad.y && pointer.y <= ad.y + ad.height) {
+      this.pressAd();
+      return;
+    }
     if (this.allDone || this.interstitial) return;
     // The hand stops while the player is dragging (story 12, R9).
     this.hand?.setVisible(false);
@@ -679,7 +749,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onKey(event: KeyboardEvent) {
-    if (this.allDone || this.interstitial) return;
+    if (this.allDone || this.interstitial || this.adPlaying) return;
     if (this.phaseTwo) {
       this.phaseTwo.onKey(event);
       // A tutorial step done with the keyboard ends its text and hand, as a drag does (story 24, R9).
@@ -876,7 +946,7 @@ export class GameScene extends Phaser.Scene {
   private flightsSince(before: BoardSnapshot, origin?: { character: string } & Point, settled?: number) {
     const cellAt = (row: number, cell: number) => centre(this.layoutNow.rows[row].cells[cell]);
     // A letter going back flies to the pool as it is after the change, which may be another row's (story 23).
-    const poolAfter = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board).poolTiles;
+    const poolAfter = this.layoutFor().poolTiles;
     const poolAt = (character: string, tiles = poolAfter) => {
       const tile = tiles.find((candidate) => candidate.character === character);
       return tile ? centre(tile) : null;
@@ -1012,7 +1082,8 @@ export class GameScene extends Phaser.Scene {
       {
         onWon: () => this.won(view),
         onSettled: () => this.saveLevel(),
-        onPopup: () => this.showNewPoints(),
+        onPopup: () => {},
+        points: () => ({ from: this.points, to: this.progress.points }),
         onNextLevel: () => this.nextLevel(),
       },
       this.layoutNow,
@@ -1044,16 +1115,101 @@ export class GameScene extends Phaser.Scene {
     view.celebrate();
   }
 
-  /** The points go up with a small pulse as the popup appears (story 11, R12). */
-  private showNewPoints() {
-    this.points = this.progress.points;
-    this.redraw();
-    if (this.pointsText) {
-      this.tweens.add({ targets: this.pointsText, scale: POINTS_PULSE, duration: timings.lockPulseGrow, yoyo: true });
+  // Coins and ads (story 20)
+
+  /** The clock the ad button's wait runs on. Tests can move it by hand in development builds. */
+  private now(): number {
+    const fixed = (window as unknown as { wordSlideTime?: number }).wordSlideTime;
+    return import.meta.env.DEV && typeof fixed === 'number' ? fixed : Date.now();
+  }
+
+  private coins(): number {
+    return coinsOf(this.progress, this.economy.startingCoins);
+  }
+
+  /** Hidden when no ad can play (R7), and in the tutorials, like the hints (R12). */
+  private adShown(): boolean {
+    if (this.allDone || !this.level || this.tutorial || !this.platform?.adsAvailable()) return false;
+    const teachingReordering = !this.reorderingTaught() && needsReordering(this.level) && !this.reorderingDone && (!this.phaseTwo || this.reordering !== null);
+    return !teachingReordering;
+  }
+
+  private refreshAdButton() {
+    if (!this.layoutNow) return;
+    const shown = this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy).text : '';
+    if (shown === this.adShownAs) return;
+    this.layoutNow = this.layoutFor();
+    this.drawTopBar();
+  }
+
+  /** Plays an ad, with the game paused and ignoring input until it ends (R9). */
+  private async playAd(kind: 'rewarded' | 'midgame') {
+    this.adPlaying = true;
+    this.scene.pause();
+    try {
+      return await this.platform.showAd(kind);
+    } finally {
+      this.scene.resume();
+      this.adPlaying = false;
     }
   }
 
+  /** The ad button plays a rewarded ad straight away. Watched to the end, it gives the ad reward (R3, R12). */
+  private async pressAd() {
+    if (!adButtonState(this.now(), this.lastAdEnd, this.economy).ready) return;
+    const result = await this.playAd('rewarded');
+    if (result !== 'unavailable') this.lastAdEnd = this.now();
+    if (result === 'watched') this.earn(this.economy.adReward, { x: this.scale.width / 2, y: this.scale.height / 2 });
+    this.refreshAdButton();
+  }
+
+  /** Saved straight away (R4). A few coins fly from where they were earned, and the counter counts up as they land (R15). */
+  private earn(amount: number, from: Point) {
+    const before = this.coinsShown ?? this.coins();
+    this.progress = { ...this.progress, coins: this.coins() + amount };
+    this.save();
+    const counter = this.layoutNow.topItems.find((item) => item.name === 'coins')!;
+    const to = { x: counter.x + this.layoutNow.topTileSize * 0.3, y: counter.y + counter.height / 2 };
+    const count = currentStyle.coinFlights;
+    const size = this.layoutNow.topTileSize * 0.4;
+    this.coinsShown = before;
+    this.refreshCoins();
+    let landed = 0;
+    for (let index = 0; index < count; index++) {
+      const coin = drawCoin(this, 0, 0, size, colours.tileGold).setDepth(FLIGHT_DEPTH).setPosition(from.x, from.y);
+      this.tweens.add({
+        targets: coin,
+        x: to.x,
+        y: to.y,
+        delay: index * timings.coinFlightGap,
+        duration: timings.coinFlight,
+        ease: 'Sine.easeIn',
+        onComplete: () => {
+          coin.destroy();
+          // Counted as they land, which on a slow frame isn't always the order they set off in.
+          landed++;
+          this.coinsShown = landed === count ? null : before + Math.round((amount * landed) / count);
+          this.refreshCoins();
+        },
+      });
+    }
+  }
+
+  private refreshCoins() {
+    this.layoutNow = this.layoutFor();
+    this.drawTopBar();
+  }
+
   private nextLevel() {
+    // A midgame ad may play first, once the first midgame level is completed (R8). The platform decides.
+    if (asksForMidgameAd(this.levelNumber, this.economy)) {
+      void this.playAd('midgame').then(() => this.goToNextLevel());
+      return;
+    }
+    this.goToNextLevel();
+  }
+
+  private goToNextLevel() {
     const next = this.levels[this.progress.level - 1];
     if (next && next.theme !== this.level.theme) this.showInterstitial(next.theme);
     else this.startLevel(undefined, true);

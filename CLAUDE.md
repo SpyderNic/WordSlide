@@ -37,6 +37,8 @@ Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find i
 - `npm run dev` serves the game at http://localhost:5173. In development builds only, `?level=N` opens level N as a peek that saves nothing, and `?reset` clears saved progress.
 - Browser tests give the game its levels through `window.wordSlideTestLevels` (see `useLevels` in `tests/browser/steps/story-02.steps.ts`), so they never depend on the prototype's levels.
 - Browser tests play as if the reordering tutorial were already behind the player (`window.wordSlideReorderingTaught`, set in `tests/browser/steps/fixtures.ts`), so handles show in every test level. Stories 12 and 21 turn it off with `reorderingNotTaught`, so that story 21's rule decides.
+- Economy settings (D52) live in `src/game/economy.ts`. Development builds take overrides from `window.wordSlideEconomy`; the fixtures turn midgame ads off (`firstMidgameLevel` out of reach) so levels follow on, and story 20's steps set the values each scenario names.
+- Development builds play pretend ads (story 20, R10): a page element `#pretend-ad` with Finish and Close buttons. `window.wordSlideAds` can make no ad available, the next fail, or midgame ads not play; `window.wordSlideAdLog` lists the ads asked for; `window.wordSlideTime` replaces the clock for the ad button's countdown; `window.wordSlideTestCoins` sets the balance when a test opens a level.
 - `npm run levels:generate -- --theme Animals --words <list> --rows 3 --lengths 3-5 --reordering needed` runs the level generator (story 14) and writes a review file to `content/reviews/`, which git ignores. Tick the boxes, then `npm run levels:approve -- <review file>` adds those levels to `src/levels/levels.json`. The generator lives in `tools/`, so the game never bundles it. Its output only prints counts (D46).
 - The game's levels are `src/levels/levels.json`. `npm run levels:draft` redrafts the prototype's 40 levels (story 15) from `content/word-lists/`, with the generator and Claude's picks, and prints only numbers. Never print, quote or summarise those lists or levels (D46).
 - `npm run build` type-checks and builds.
@@ -48,6 +50,7 @@ Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find i
 - Tag a scenario `@browser` if it needs the screen, and `@touch` if it needs fingers.
 - In the browser tests, Given and Then share one step registry, so one step can't be defined twice for both uses.
 - `archive/before-story-23/` holds scenarios that story 23 (a pool for each row) made obsolete, with a copy of the test steps from then. They don't run. The game as it was is tagged `before-story-23`.
+- `archive/before-story-20/` holds the scenarios story 20 (coins and ads) made obsolete, and the game before it is tagged `before-story-20`. `tools/archive-scenarios.mjs` archives for any story.
 - Each row has its own pool (story 23): a test that takes a letter "from the pool" must have that letter's row selected. Browser steps use `layoutNow(page, scenario, letter)`, which taps the row first.
 
 ## Things that have caught us out

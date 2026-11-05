@@ -58,6 +58,8 @@ export interface PhaseTwoCallbacks {
   onSettled: () => void;
   /** The popup has just appeared after a win (story 11, R12). */
   onPopup: () => void;
+  /** The player's points before and after this level's win, for the popup (story 20, R11). */
+  points: () => { from: number; to: number };
   onNextLevel: () => void;
 }
 
@@ -730,11 +732,24 @@ export class PhaseTwoView {
     this.scene.tweens.add({ targets, alpha: 0, duration: WIN_FADE });
 
     const last = this.nextLevelNumber === null;
-    const { container, buttonRect } = buildPopup(this.scene, this.tile, {
+    const points = this.callbacks.points();
+    const { container, buttonRect, pointsText } = buildPopup(this.scene, this.tile, {
       title: last ? 'All levels complete!' : 'Level complete',
       word: last ? [] : this.phase.rows.map((row) => row.cells[row.columnCell]),
       button: last ? null : `Play Level ${this.nextLevelNumber}`,
+      points: last ? undefined : justWon ? points.from : points.to,
     });
+    // The points count up as the popup opens (story 20, R11).
+    if (pointsText && justWon) {
+      const count = { value: points.from };
+      this.scene.tweens.add({
+        targets: count,
+        value: points.to,
+        duration: timings.pointsCount,
+        onUpdate: () => pointsText.setText(`Points: ${Math.round(count.value)}`),
+        onComplete: () => pointsText.setText(`Points: ${points.to}`),
+      });
+    }
     this.popup = container;
     this.popupInfo = { buttonRect };
     if (justWon) this.callbacks.onPopup();

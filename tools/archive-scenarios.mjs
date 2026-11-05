@@ -1,10 +1,14 @@
-// Moves scenarios or whole rules out of a feature file into archive/before-story-23/, with a note on what replaced them.
-// Usage: node tools/archive-scenarios.mjs <plan.json>, where the plan lists { feature, items: [{ title, kind, note }] }.
+// Moves scenarios or whole rules out of a feature file into archive/before-story-N/, with a note on what replaced them.
+// Usage: node tools/archive-scenarios.mjs <plan.json>. The plan lists { feature, items: [{ title, kind, note }] }, or is
+// { story, about, features: [...] } for a story other than 23, where about says what the story changed.
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-const ARCHIVE = 'archive/before-story-23';
-const plan = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+const given = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+const plan = Array.isArray(given) ? given : given.features;
+const story = Array.isArray(given) ? 23 : given.story;
+const about = Array.isArray(given) ? 'a pool for each row' : given.about;
+const ARCHIVE = `archive/before-story-${story}`;
 mkdirSync(ARCHIVE, { recursive: true });
 
 const indentOf = (line) => line.length - line.trimStart().length;
@@ -30,14 +34,14 @@ for (const { feature, items } of plan) {
       if (kind !== 'rule' && /^\s*Rule:/.test(line)) break;
     }
     while (end > start + 1 && lines[end - 1].trim() === '') end--;
-    archived.push(`  # Archived for story 23: ${note}`, ...lines.slice(first, end), '');
+    archived.push(`  # Archived for story ${story}: ${note}`, ...lines.slice(first, end), '');
     lines = [...lines.slice(0, first), ...lines.slice(end)];
     // No more than one blank line where it was.
     lines = lines.filter((line, index) => !(line.trim() === '' && lines[index - 1]?.trim() === ''));
   }
   writeFileSync(feature, lines.join('\n'));
   const target = join(ARCHIVE, basename(feature));
-  const head = existsSync(target) ? readFileSync(target, 'utf8') : `# Archived from ${feature}, before story 23 (a pool for each row).\n# The game as it was is tagged before-story-23 in git. These scenarios no longer run.\n\nFeature: ${basename(feature, '.feature')} (archived)\n\n`;
+  const head = existsSync(target) ? readFileSync(target, 'utf8') : `# Archived from ${feature}, before story ${story} (${about}).\n# The game as it was is tagged before-story-${story} in git. These scenarios no longer run.\n\nFeature: ${basename(feature, '.feature')} (archived)\n\n`;
   writeFileSync(target, `${head}${archived.join('\n')}\n`);
   console.log(`${feature}: ${items.length} archived`);
 }

@@ -1,4 +1,4 @@
-# Status: draft, waiting for the designer's approval.
+# Status: approved by the designer on 2026-11-05.
 # Map: docs/example-maps/story-20-currency-and-ads.md
 # Economy values are settings (D52): each scenario sets the ones it uses, so
 # these stay true whatever the game ships with.

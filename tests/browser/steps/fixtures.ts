@@ -79,6 +79,8 @@ export const test = base.extend<{ scenario: Scenario }>({
     if (style) await page.addInitScript((name) => Object.assign(window, { wordSlideStyle: name }), style);
     // Most scenarios play as if the reordering tutorial were already behind the player. Stories 12 and 21 turn this off.
     await page.addInitScript(() => Object.assign(window, { wordSlideReorderingTaught: true }));
+    // No midgame ads between levels unless a scenario asks for them (story 20, R8), so other stories' levels follow on.
+    await page.addInitScript(() => Object.assign(window, { wordSlideEconomy: { firstMidgameLevel: Number.MAX_SAFE_INTEGER } }));
     await use(page);
   },
   scenario: async ({}, use) => {

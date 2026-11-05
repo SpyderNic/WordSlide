@@ -8,7 +8,7 @@ export interface Rect {
   height: number;
 }
 
-export type TopItemName = 'home' | 'level' | 'theme' | 'points' | 'shop' | 'settings';
+export type TopItemName = 'home' | 'level' | 'ad' | 'coins' | 'settings' | 'theme';
 
 export interface TopItem extends Rect {
   name: TopItemName;
@@ -60,13 +60,16 @@ export type Hit =
   | { kind: 'pool'; character: string | null }
   | { kind: 'recall' }
   | { kind: 'letterHint' }
+  | { kind: 'ad' }
   | { kind: 'none' };
 
 const GAP = 0.08;
 const CELLS_ACROSS = 9;
-/** The width the top of the screen needs, in tiles: six items on one line, or five on a portrait screen. */
+/** The width the top bar needs, in tiles (story 20, R14). */
 const TOP_TILES_ACROSS = 16;
 const TOP_TILES_ACROSS_PORTRAIT = 9.4;
+/** The theme's line below the top bar, in top tiles. */
+const THEME_LINE = 0.8;
 /** The top of the screen, 5 rows and a two-row pool, with room between them. */
 const TILES_DOWN = 9.6;
 /** The most tiles a pool has to hold: more than this and it could outgrow its area. */
@@ -91,7 +94,11 @@ function poolRowsFor(tiles: number, across: number): number {
   return Math.max(2, Math.ceil(tiles / across));
 }
 
-function layoutTopItems(width: number, tile: number, portrait: boolean, levelNumber: number, points: number, theme: string) {
+/**
+ * The top bar, left to right: home, level number, the ad button (centred), coins, settings. The theme has its own
+ * line just below it (story 20, R14).
+ */
+function layoutTopItems(width: number, tile: number, levelNumber: number, coins: number, adText: string, theme: string) {
   const height = tile;
   const y = tile * 0.1;
   const margin = tile * 0.2;
@@ -100,18 +107,14 @@ function layoutTopItems(width: number, tile: number, portrait: boolean, levelNum
   });
   const button = tile * 1.6;
   const label = tile * 1.6;
-  const pointsX = width - margin * 3 - button * 2 - label;
-  const themeHalfWidth = width / 2 - (width - pointsX) - margin;
-  const themeItem = portrait
-    ? { ...item('theme', theme, margin, width - margin * 2, false), y: y + height }
-    : item('theme', theme, width / 2 - themeHalfWidth, themeHalfWidth * 2, false);
+  const ad = tile * 1.8;
   return [
-    item('home', 'Home', margin, button, true),
+    item('home', '', margin, button, true),
     item('level', `Level ${levelNumber}`, margin * 2 + button, label, false),
-    themeItem,
-    item('points', `Points ${points}`, pointsX, label, false),
-    item('shop', 'Shop', width - margin * 2 - button * 2, button, true),
-    item('settings', 'Settings', width - margin - button, button, true),
+    item('ad', adText, width / 2 - ad / 2, ad, true),
+    item('coins', String(coins), width - margin * 2 - button - label, label, false),
+    item('settings', '', width - margin - button, button, true),
+    { ...item('theme', theme, margin, width - margin * 2, false), y: y + height, height: tile * THEME_LINE },
   ];
 }
 
@@ -154,10 +157,11 @@ function layoutPool(pool: PoolTile[], area: Rect, tile: number, across: number):
 export function layoutLevel(
   level: Level,
   levelNumber: number,
-  points: number,
+  coins: number,
   width: number,
   height: number,
   contents?: LevelContents,
+  adText = '',
 ): LevelLayout {
   const answers = rowOrder(level.answers);
   const longestRow = Math.max(...answers.map((answer) => cellCount(answer.word)));
@@ -168,7 +172,8 @@ export function layoutLevel(
   const pitch = tile * (1 + GAP);
   const margin = tile * 0.2;
 
-  const top: Rect = { x: 0, y: 0, width, height: topTile * (portrait ? 2.2 : 1.2) };
+  // The bar and the theme's line below it.
+  const top: Rect = { x: 0, y: 0, width, height: topTile * (1.2 + THEME_LINE) };
   const recallSize = tile * 1.1;
   const across = poolTilesAcross(width - (portrait ? recallSize : 0), tile);
   const poolRows = poolRowsFor(LARGEST_POOL, across);
@@ -201,7 +206,7 @@ export function layoutLevel(
     poolRows,
     topTileSize: topTile,
     top,
-    topItems: layoutTopItems(width, topTile, portrait, levelNumber, points, level.theme),
+    topItems: layoutTopItems(width, topTile, levelNumber, coins, adText, level.theme),
     rows: answers.map((answer, index) => {
       const row = contents?.rows[index];
       return layoutRow(answer.word, row?.cells ?? startingCells(answer), row?.locked ?? false, rowsTop + index * pitch, width, tile);
@@ -223,6 +228,8 @@ export function hitTest(layout: LevelLayout, x: number, y: number): Hit {
     const cell = layout.rows[row].cells.findIndex((candidate) => isInside(candidate, x, y));
     if (cell !== -1) return { kind: 'cell', row, cell };
   }
+  const ad = layout.topItems.find((item) => item.name === 'ad');
+  if (ad && isInside(ad, x, y)) return { kind: 'ad' };
   if (isInside(layout.recall, x, y)) return { kind: 'recall' };
   if (isInside(layout.letterHint, x, y)) return { kind: 'letterHint' };
   const tile = layout.poolTiles.find((candidate) => isInside(candidate, x, y));
