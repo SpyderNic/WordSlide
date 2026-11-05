@@ -1,6 +1,6 @@
 # Story 20: Currency and ads
 
-**Status:** ⏸ On hold since 2026-11-04: to be redrafted after the economy discussion. The designer's direction so far: the game is on CrazyGames only for now, so it earns through rewarded ads only, which pay best. Coins reward winning levels, so players have a reason to win (maybe a meta later, with no content treadmill). Open: whether an ad gives coins or a hint directly, hint bundles, and different hint types.
+**Status:** To redraft from the economy discussion of 2026-11-05 ([D51](../decisions.md)), which answers most of the questions below. Before that, on hold since 2026-11-04. The designer's direction so far: the game is on CrazyGames only for now, so it earns through rewarded ads only, which pay best. Coins reward winning levels, so players have a reason to win (maybe a meta later, with no content treadmill). Open: whether an ad gives coins or a hint directly, hint bundles, and different hint types.
 
 *As a player, I want to earn a currency by playing and spend it on hints, so that getting help is my choice and being clever pays off.*
 

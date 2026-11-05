@@ -235,3 +235,13 @@ The designer wants to play the prototype as a new player, to judge difficulty. C
 
 ### D50. Hints, part 1
 *2026-11-05.* Each hint has its own button with an icon: stacked above Recall All in phase one, along the bottom in phase two. The Letter hint locks the right letter in a random cell of the selected word, as a revealed letter. The Ordering hint puts the rows in the order with the fewest moves and removes the handles, and is offered whenever the level has handles. The Reveal hint, offered only when the rows can't be reordered, slides a random word that isn't right yet to its column letter, in gold, fixed there. Hints are free and unlimited until part 2 (story 27), never change a level's point, and the tutorials have none. The icons are placeholders drawn in code. The full rules are in [story 19](example-maps/story-19-hints.md).
+
+### D51. The economy
+*2026-11-05, from the economy discussion.* The game is on CrazyGames only for now, and earns through ads.
+
+- **One currency, coins, buys hints.** No hint charges or tokens for now: every hint is paid for in coins.
+- **Prices.** Letter 30, Reveal 40, Ordering 40 (Ordering is only usable once per level). Within a level, each Letter or Reveal bought costs more: each use adds about 50% of the base, rounded to 10, capped at 5× the base. Prices go back to base on the next level. To tune after playing; all numbers live in one place.
+- **Earning.** A new player starts with 100 coins. A rewarded ad gives 50, a bonus word (story 25) 10. Winning a single level gives no coins: finishing a series does (story 28).
+- **Series.** Levels are grouped into named series, separate from themes: at first a series is one theme, later it can be a group of themes. Series lengths start at 10 levels, then 15, then 20, and can vary with the grouping later. Its reward is coins only. When a level is completed, the series' name and a progress bar show; the bar fills from where it was at the start of the level to where it is now, and when it reaches 100% it flashes (with a sound, once story 18 exists) and gives the reward. The prototype's 40 levels make series of 10, 15 and 15, named by Claude after their themes.
+- **Ads.** Rewarded ads, only ever the player's choice, give coins. Midgame ads (CrazyGames' ads at a natural break) also play: after Level complete, when the player moves on, if the platform allows one then. None before a first level that's kept as one setting (level 5 for now), so it can change without changing the tests. All ads go through the platform interface (D32), and are faked in development until the CrazyGames SDK is added.
+- **Later.** Daily rewards or daily tasks, much later (later ideas).
