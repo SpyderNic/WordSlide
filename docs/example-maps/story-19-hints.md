@@ -1,6 +1,6 @@
 # Story 19: Hints, part 1: how they behave
 
-**Status:** 🟡 Draft, waiting for the designer.
+**Status:** 🟢 Approved by the designer on 2026-11-05. Scenarios in [story-19-hints.feature](../../features/story-19-hints.feature), waiting for the designer.
 
 *As a player who's stuck, I want a hint that helps without solving the level for me, so that I can keep going.*
 
@@ -16,7 +16,7 @@ Examples use the test level ZEBRA, LEMUR and KANGAROO, with the final word ELK. 
 
 ### 🟦 R1. There are several hints, each with its own button and icon
 
-*From the designer.* A hint only happens when the player presses its button. For now, hints are free and unlimited, so their behaviour can be played and checked. Part 2 (story 27) decides how they're earned, what they cost, and how they're limited. A hint that would do nothing isn't offered: its button is grey. See Q1 for the icons.
+*From the designer.* A hint only happens when the player presses its button. For now, hints are free and unlimited, so their behaviour can be played and checked. Part 2 (story 27) decides how they're earned, what they cost, and how they're limited. A hint that would do nothing isn't offered: its button is grey. Claude draws placeholder icons in code for now, and the designer can replace them (Q1).
 
 | Phase | Hint | What it does |
 |---|---|---|
@@ -27,7 +27,7 @@ Examples use the test level ZEBRA, LEMUR and KANGAROO, with the final word ELK. 
 
 - 🟩 Pressing the Letter hint's button gives the hint, as often as the player likes
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R2. The buttons are stacked above Recall All in phase one, and along the bottom in phase two
 
@@ -36,17 +36,17 @@ Examples use the test level ZEBRA, LEMUR and KANGAROO, with the final word ELK. 
 - 🟩 In phase one, the Letter hint's button is just above Recall All
 - 🟩 In phase two, the hint buttons are centred along the bottom of the screen
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R3. The Letter hint locks a letter of the selected word, at random
 
-*From the designer.* It picks one of the selected row's cells that isn't fixed yet, at random, and puts the right letter there. The letter then looks and behaves like a letter revealed at the start of a level (D25): it's fixed, and can't be dragged. See Q2 for where the letter comes from.
+*From the designer.* It picks one of the selected row's cells that isn't fixed yet, at random, and puts the right letter there. The letter then looks and behaves like a letter revealed at the start of a level (D25): it's fixed, and can't be dragged. The letter comes from the row's pool if a copy is left there. Otherwise it's placed wrongly in another of the row's cells, and moves from there, leaving that cell empty (Q2).
 
 - 🟩 With LEMUR's row selected and empty, the hint might lock M in its third cell. M's tile in the pool goes to x0
 - 🟩 With U placed in LEMUR's first cell, the hint might pick that cell: U goes back to the pool, and L is locked there
 - 🟩 With L placed in LEMUR's first cell, the hint might pick that cell: the L stays, now locked
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R4. A locked letter can complete the word
 
@@ -54,24 +54,24 @@ If it fills the row's last empty cell and the row spells its word, the row locks
 
 - 🟩 With L E M U _ in LEMUR's row, the hint can only pick the last cell: it locks R there, and LEMUR locks
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R5. The Ordering hint puts the rows in order and removes the handles
 
-*From the designer.* The rows slide up and down into the solution's order, as a moved row does (D40), and the handles fade away: the order is fixed from then on. Words can still slide sideways. It's offered only while the rows can be reordered (the level has handles) and their order isn't the solution's. See Q3 for which solution.
+*From the designer.* The rows slide up and down into the solution's order, as a moved row does (D40), and the handles fade away: the order is fixed from then on. Words can still slide sideways. It's offered whenever the level has handles. *From the designer:* if the rows happen to be in the solution's order already, it just fades the handles out, and it's no longer offered. It uses the order that needs the fewest row moves from the rows as they are (Q3).
 
 - 🟩 With the rows LEMUR, ZEBRA, KANGAROO, the hint swaps the top two rows to ZEBRA, LEMUR, KANGAROO, and the handles go
-- 🟩 With the rows already in the solution's order, the Ordering hint's button is grey
+- 🟩 With the rows already in the solution's order, the hint fades the handles out, and its button goes
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R6. The Reveal hint slides one word to its column letter, in gold
 
-*From the designer.* The word slides sideways to the letter the solution puts in the column, and that letter turns gold. The word can't be slid again. Other words can still slide. See Q4 for which word.
+*From the designer.* The word slides sideways to the letter the solution puts in the column, and that letter turns gold. The word can't be slid again. Other words can still slide. The word is picked at random among those whose column letter isn't right yet (Q4). If it has the right letter twice, it slides to the nearer one.
 
-- 🟩 With the rows ZEBRA, LEMUR, KANGAROO and the column reading Z, L, K, the hint slides ZEBRA to its E, which turns gold, and ZEBRA stays there
+- 🟩 With the rows ZEBRA, LEMUR, KANGAROO and the column reading Z, L, K, only ZEBRA isn't right: the hint slides it to its E, which turns gold, and ZEBRA stays there
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R7. The Reveal hint only appears when the rows can't be reordered
 
@@ -80,15 +80,15 @@ If it fills the row's last empty cell and the row spells its word, the row locks
 - 🟩 Before reordering is taught, phase two shows the Reveal hint and no Ordering hint
 - 🟩 After reordering is taught, phase two shows the Ordering hint. Once it's used, the Ordering hint goes, and the Reveal hint appears
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R8. Revealing every word wins the level
 
-Each Reveal puts one more letter of the final word in place. Once the column spells it, the level is won as usual (story 10).
+Each Reveal puts one more letter of the final word in place. Once the column spells it, the level is won as usual (story 10). Hints never change the level's point (D23, Q5).
 
 - 🟩 With ZEBRA and LEMUR revealed, revealing KANGAROO spells ELK, and the win plays
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R9. Hints are saved
 
@@ -96,7 +96,7 @@ As with the rest of a level (story 11, R10), locked letters, gold words and fixe
 
 - 🟩 Closing after a Letter hint and opening again shows the letter still locked
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R10. The tutorials have no hints
 
@@ -104,7 +104,7 @@ Level 1 and the reordering tutorial's step (story 21, R4) don't show hint button
 
 - 🟩 Level 1 has no hint buttons
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R11. The hint buttons pulse with the gentle nudge
 
@@ -112,49 +112,7 @@ When the player seems stuck, the nudge (story 26) pulses the theme, and the hint
 
 - 🟩 After the nudge's wait, the theme and the hint buttons pulse gently
 
-**Confirmed:** ☐
-
----
-
-## Questions
-
-### 🟥 Q1. Who draws the icons?
-
-- **A (recommended):** Claude draws simple placeholder icons in code for now: a lightbulb for Letter, two arrows up and down for Ordering, and an eye for Reveal. The designer can replace them with pixel art later, as with the pointing hand (D49).
-- **B:** The designer provides them before this story is built.
-
-**Answer:**
-
-### 🟥 Q2. Where does the Letter hint's letter come from?
-
-- **A (recommended):** From the row's pool if a copy is left there. Otherwise, it's placed in another of the row's cells, wrongly: it moves from there, and that cell is left empty.
-- **B:** Always from the pool. If no copy is left there, the hint picks another cell.
-
-**Answer:**
-
-### 🟥 Q3. Which order does the Ordering hint use?
-
-A level can have several arrangements that spell the final word (story 10, R2).
-
-- **A (recommended):** The one that needs the fewest row moves from the rows as they are.
-- **B:** Always the designed one, the generator's.
-
-**Answer:**
-
-### 🟥 Q4. Which word does the Reveal hint slide?
-
-- **A (recommended):** The top-most word whose column letter isn't right yet, for the rows' current order. If a word has the right letter twice, it slides to the nearer one.
-- **B:** The selected word, or the top-most one if none is selected.
-- **C:** A word at random, among those not right yet.
-
-**Answer:**
-
-### 🟥 Q5. Do hints change the point for a level (D23)?
-
-- **A (recommended):** No. Winning always gives 1 point, hints or not, so using one never feels like a penalty.
-- **B:** A level won without hints gives a bonus.
-
-**Answer:**
+**Confirmed:** ☑
 
 ---
 
@@ -171,6 +129,26 @@ A level can have several arrangements that spell the final word (story 10, R2).
 ---
 
 ## Answered questions
+
+### 🟥 Q1. Who draws the icons?
+
+**Answer:** Claude draws placeholders in code for now (R1).
+
+### 🟥 Q2. Where does the Letter hint's letter come from?
+
+**Answer:** The row's pool if a copy is left, otherwise from another of the row's cells (R3).
+
+### 🟥 Q3. Which order does the Ordering hint use?
+
+**Answer:** The one that needs the fewest row moves (R5).
+
+### 🟥 Q4. Which word does the Reveal hint slide?
+
+**Answer:** A word at random, among those not right yet (R6).
+
+### 🟥 Q5. Do hints change the point for a level (D23)?
+
+**Answer:** No (R8).
 
 ### 🟥 Shuffling the pool (story 22)
 
