@@ -1,6 +1,6 @@
 # Story 22: Shuffle the pool
 
-**Status:** 🟡 Draft, waiting for the designer.
+**Status:** ⏸ Parked by the designer on 2026-11-05.
 
 *As a player stuck on a word, I want to shuffle the pool's letters, so that I can see them in a new order and spot the words.*
 
