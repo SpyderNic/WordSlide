@@ -479,6 +479,12 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
+  /** A hint's random pick. Tests can fix it in development builds. */
+  private hintRandom(): number {
+    const fixed = (window as unknown as { wordSlideHintRandom?: number }).wordSlideHintRandom;
+    return import.meta.env.DEV && typeof fixed === 'number' ? fixed : Math.random();
+  }
+
   /** Phase one's hint buttons: the Letter hint, stacked above Recall All. The tutorials have none (story 19, R2, R10). */
   private phaseOneHints(): HintButton[] {
     if (this.tutorial || this.phaseTwo || this.allDone || !this.board) return [];
@@ -661,7 +667,8 @@ export class GameScene extends Phaser.Scene {
     } else if (hit.kind === 'recall') {
       this.act(() => void this.board.recallAll());
     } else if (hit.kind === 'letterHint' && !this.tutorial) {
-      this.act(() => this.board.letterHint());
+      // The hint never shakes a row (story 19, R13).
+      this.act(() => this.board.letterHint(() => this.hintRandom()).filter((event) => event.type !== 'wrong'));
     }
   }
 
@@ -864,10 +871,12 @@ export class GameScene extends Phaser.Scene {
     const cellAt = (row: number, cell: number) => centre(this.layoutNow.rows[row].cells[cell]);
     // A letter going back flies to the pool as it is after the change, which may be another row's (story 23).
     const poolAfter = layoutLevel(this.level, this.levelNumber, this.points, this.scale.width, this.scale.height, this.board).poolTiles;
-    const poolAt = (character: string) => {
-      const tile = poolAfter.find((candidate) => candidate.character === character);
+    const poolAt = (character: string, tiles = poolAfter) => {
+      const tile = tiles.find((candidate) => candidate.character === character);
       return tile ? centre(tile) : null;
     };
+    // A letter coming from the pool leaves the pool that was on screen, even if the selection then moves on (story 19, R14).
+    const poolBefore = this.layoutNow.poolTiles;
     const left: { character: string; from: Point; row: number }[] = [];
     const arrived: { character: string; to: Point; cell: string }[] = [];
     this.board.rows.forEach((row, rowIndex) =>
@@ -894,7 +903,7 @@ export class GameScene extends Phaser.Scene {
           continue;
         }
         if (swapped !== -1) from = left.splice(swapped, 1)[0].from;
-        else from = poolAt(arrival.character);
+        else from = poolAt(arrival.character, poolBefore);
       }
       if (from) flights.push({ character: arrival.character, from, to: arrival.to, cell: arrival.cell, delay: 0 });
     }

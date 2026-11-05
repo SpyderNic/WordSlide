@@ -73,6 +73,30 @@ If it fills the row's last empty cell and the row spells its word, the row locks
 
 **Confirmed:** ☑
 
+### 🟦 R12. A revealed word's other letters fade
+
+*From playing, on 2026-11-05.* Once the Reveal hint puts a word in place, its letters other than the gold one fade to about half strength, like a faded row in phase one (story 23, R3), so the column stands out.
+
+- 🟩 After revealing ZEBRA, its E is gold, and Z, B, R and A show faded
+
+**Confirmed:** ☑
+
+### 🟦 R13. The Letter hint never shakes a row
+
+*From playing, on 2026-11-05.* If the hint fills a row's last cell and the row spells a wrong word, there's no wrong-word feedback: the hint shouldn't feel like a mistake.
+
+- 🟩 With U E M L _ in LEMUR's row, a hint on the last cell puts R there: U E M L R is wrong, and nothing shakes
+
+**Confirmed:** ☑
+
+### 🟦 R14. A letter the Letter hint takes from the pool travels to its cell
+
+*From playing, on 2026-11-05.* As a tapped letter does (story 16, R6), even when it completes the word and the selection moves on to another row.
+
+- 🟩 With L E M U _ in LEMUR's row, a hint on the last cell sends R from the pool to it, and LEMUR locks once it lands
+
+**Confirmed:** ☑
+
 ### 🟦 R7. The Reveal hint only appears when the rows can't be reordered
 
 *From the designer.* That's in levels without handles: before reordering is taught (story 21), or after the Ordering hint (R5). While the rows can still be reordered, only the Ordering hint shows.

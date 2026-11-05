@@ -4,7 +4,7 @@ import type { Rect } from '../../../src/game/layout';
 import { test, type Scenario } from './fixtures';
 import { centreOf, layoutNow, rowOf } from './phase-one.steps';
 import { dragSlowlyAndRelease, ready, two } from './phase-two.steps';
-import { screen, tileAt } from './probe';
+import { screen, startRecording, stopRecording, tileAt, type Frame } from './probe';
 import { current } from './story-02.steps';
 
 const { Given, When, Then } = createBdd(test);
@@ -27,6 +27,7 @@ const NAMES: Record<string, HintName> = { Letter: 'letter', Ordering: 'ordering'
 async function pressHint(page: Page, scenario: Scenario, name: string, times = 1) {
   if (name === 'Letter') await layoutNow(page, scenario);
   scenario.acted = true;
+  await startRecording(page);
   for (let time = 0; time < times; time++) {
     const button = (await hints(page)).find((hint) => hint.name === NAMES[name]);
     expect(button, `No ${name} hint button`).toBeDefined();
@@ -34,6 +35,7 @@ async function pressHint(page: Page, scenario: Scenario, name: string, times = 1
     await page.mouse.click(x, y);
     await page.waitForTimeout(600);
   }
+  scenario.frames = await stopRecording(page);
 }
 
 // Placement (R2)
@@ -201,4 +203,53 @@ Then('the revealed word is still at its column letter, in gold, and can\'t be sl
   const index = now.rows.indexOf(fixed[0]);
   const tile = tileAt(await screen(page), now.column.x + now.column.width / 2, now.rows[index].y);
   expect(tile?.fill).toBe(colours.tileGold);
+});
+
+// R12 to R14, from playing
+
+Given('the Letter hint will pick the last cell', async ({ page }) => {
+  // Development builds only: a fixed pick in place of a random one. The last of the cells it can pick.
+  await page.addInitScript(() => Object.assign(window, { wordSlideHintRandom: 0.999 }));
+});
+
+Then("LEMUR's row doesn't shake", async ({ page, scenario }) => {
+  const { layout, feedback } = await current(page);
+  expect(feedback.some((event) => event.type === 'wrong')).toBe(false);
+  const row = layout.rows[rowOf(layout, 'LEMUR')];
+  const left = centreOf(row.cells[0]).x;
+  const y = centreOf(row.cells[0]).y;
+  for (const frame of scenario.frames!) {
+    const tiles = frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && object.depth < 8 && Math.abs(object.y - y) < 2);
+    if (tiles.length) expect(Math.abs(Math.min(...tiles.map((tile) => tile.x)) - left)).toBeLessThan(0.5);
+  }
+});
+
+Then("the R travels from the pool to LEMUR's last cell", async ({ scenario }) => {
+  const layout = scenario.before!.layout;
+  const pool = centreOf(layout.poolTiles.find((tile) => tile.character === 'R')!);
+  const cell = centreOf(layout.rows[rowOf(layout, 'LEMUR')].cells[4]);
+  const at = (frame: Frame) => frame.screen.find((object) => object.kind === 'text' && object.text === 'R' && object.depth >= 8 && object.depth < 20);
+  const path = scenario.frames!.map(at).filter((object): object is NonNullable<ReturnType<typeof at>> => object !== undefined);
+  expect(path.length).toBeGreaterThan(2);
+  expect(Math.hypot(path[0].x - pool.x, path[0].y - pool.y)).toBeLessThan(layout.tileSize);
+  const last = path[path.length - 1];
+  expect(Math.hypot(last.x - cell.x, last.y - cell.y)).toBeLessThan(layout.tileSize);
+});
+
+Then("the revealed word's letters other than the gold one are faded", async ({ page }) => {
+  await page.waitForTimeout(300);
+  const now = (await two(page)) as Two;
+  const index = now.rows.findIndex((row) => row.fixed);
+  expect(index).not.toBe(-1);
+  const row = now.rows[index];
+  const pitch = now.column.width * 1.08;
+  const objects = await screen(page);
+  const columnX = now.column.x + now.column.width / 2;
+  [...row.word].forEach((letter, cell) => {
+    const x = columnX + (cell - row.columnCell) * pitch;
+    const tile = tileAt(objects, x, row.y);
+    if (!tile || !/[A-Z]/.test(letter)) return;
+    if (cell === row.columnCell) expect(tile.alpha).toBeGreaterThan(0.95);
+    else expect(tile.alpha, letter).toBeLessThan(0.6);
+  });
 });

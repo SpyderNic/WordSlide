@@ -317,11 +317,15 @@ export class PhaseTwoView {
 
   // Hints (story 19)
 
-  /** A word the Reveal hint put in place shows its column letter in gold (R6). */
+  /** A word the Reveal hint put in place shows its column letter in gold (R6), and its other letters faded (R12). */
   private paintFixed() {
     this.rowViews.forEach((view, index) => {
       const row = this.phase.rows[index];
-      if (row.fixed) paintTile(this.tileAtCell(view, row.cells, row.columnCell), colours.tileGold);
+      if (!row.fixed) return;
+      const gold = this.tileAtCell(view, row.cells, row.columnCell);
+      paintTile(gold, colours.tileGold);
+      view.tiles.forEach((tile) => tile.setAlpha(tile === gold ? 1 : currentStyle.fadedRow));
+      view.letters.forEach((letter, cell) => letter.setAlpha(cell === row.columnCell ? 1 : currentStyle.fadedRow));
     });
   }
 

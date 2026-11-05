@@ -55,6 +55,23 @@ Feature: Hints, part 1: how they behave
       When the player uses the Letter hint
       Then LEMUR locks
 
+  # From playing (R13, R14). The tests choose which cell the hint picks.
+  Rule: The Letter hint never shakes a row, and its letter travels
+
+    Scenario: A wrong word made by the hint doesn't shake
+      Given LEMUR's row reads U E M L _
+      And the Letter hint will pick the last cell
+      When the player uses the Letter hint
+      Then LEMUR's row reads U E M L R
+      And LEMUR's row doesn't shake
+
+    Scenario: A letter from the pool travels, even when it completes the word
+      Given LEMUR's row reads L E M U _
+      And the Letter hint will pick the last cell
+      When the player uses the Letter hint
+      Then the R travels from the pool to LEMUR's last cell
+      And LEMUR locks
+
   Rule: The Ordering hint puts the rows in order and removes the handles
 
     Background:
@@ -92,6 +109,11 @@ Feature: Hints, part 1: how they behave
       When the player uses the Reveal hint
       Then one more word has its column letter in place, in gold
       And that word can't be slid
+
+    # From playing (R12).
+    Scenario: The revealed word's other letters fade
+      When the player uses the Reveal hint
+      Then the revealed word's letters other than the gold one are faded
 
     Scenario: Revealing every word wins the level
       When the player uses the Reveal hint 3 times
