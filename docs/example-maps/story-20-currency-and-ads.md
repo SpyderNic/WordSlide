@@ -1,6 +1,6 @@
 # Story 20: Coins and ads
 
-**Status:** 🟨 Redrafted on 2026-11-05 from the economy discussion ([D51](../decisions.md)). The designer answered Q1 to Q7 on 2026-11-05; their answers raise Q8 to Q12. On hold before that, since 2026-11-04.
+**Status:** 🟨 Redrafted on 2026-11-05 from the economy discussion ([D51](../decisions.md)). The designer answered Q1 to Q12 on 2026-11-05. Q13, raised by Q8's answer, is open. On hold before that, since 2026-11-04.
 
 *As a player, I want to earn coins by playing and by choosing to watch ads, so that getting help is my choice and finishing levels pays off.*
 
@@ -17,6 +17,7 @@ Added to the backlog on 2026-11-02, and brought into the prototype on 2026-11-04
 | *bonus word reward* | What a bonus word gives (story 25) |
 | *first midgame level* | The first completed level after which a midgame ad is asked for |
 | *rewarded ad wait* | How long after a rewarded ad before the ad button can be used again |
+| *coin flight* | How many coins fly to the counter, and how fast (R15) |
 
 ---
 
@@ -120,17 +121,18 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 
 ### 🟦 R11. Points move to the Level complete popup
 
-*From Q1.* Points (D23) stay, but a level's top bar shows coins instead. The Level complete popup shows the player's points (see Q11 for how), and the main menu will too, once there is one.
+*From Q1.* *And Q11.* Points (D23) stay, but a level's top bar shows coins instead. The Level complete popup shows a line under the golden word, "Points: N", counting up from the points before the level as the popup opens. The main menu will show them too, once there is one.
 
-- 🟩 With 7 points, completing a level shows 8 points on the Level complete popup
+- 🟩 With 7 points, completing a level shows "Points: 7" under the golden word, counting up to "Points: 8"
 
 **Confirmed:** ☐
 
 ### 🟦 R12. The ad button: "+[ad reward]" in the top bar
 
-*From Q1 and Q2.* The shop button is removed. In its place (see Q8) is an ad button showing "+", the *ad reward*, a coin icon and a video icon. Pressing it plays a rewarded ad straight away; watched to the end, it gives the *ad reward* (R3).
+*From Q1, Q2 and Q9.* The shop button is removed. The top bar has an ad button instead (R14), showing "+", the *ad reward*, a coin icon and a video icon. Pressing it plays a rewarded ad straight away; watched to the end, it gives the *ad reward* (R3). It's hidden in the tutorials (level 1's and the reordering tutorial), like the hints.
 
 - 🟩 With an *ad reward* of 50, the top bar shows "+50", a coin and a video icon, and no shop button
+- 🟩 During level 1's tutorial, there's no ad button
 
 **Confirmed:** ☐
 
@@ -143,58 +145,63 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 
 **Confirmed:** ☐
 
+### 🟦 R14. The top bar, left to right
+
+*From Q8.* Home, as a square button with a house icon; the level number; the ad button, centred on the screen; the coins; settings, as a square button with a cog icon. The icons are placeholders drawn in code, like the hint icons (story 19). Home and settings still do nothing (D30). Where the theme goes is Q13.
+
+- 🟩 In level 6, the top bar reads: house button, "Level 6", "+50" ad button in the middle, the coins, cog button
+
+**Confirmed:** ☐
+
+### 🟦 R15. Earned coins fly to the counter
+
+*From Q10.* A few coins fly to the coin counter from where they were earned, and the number counts up as they land. Coins from a rewarded ad come from the centre of the screen; from a bonus word, from the word (story 25); from a series, from its progress bar (story 28). How many fly, and how fast, is the *coin flight* (D52).
+
+- 🟩 With an *ad reward* of 50 and 100 coins, after an ad is watched, coins fly from the centre of the screen to the counter, which counts up from 100 to 150 as they land
+
+**Confirmed:** ☐
+
 ---
 
 ## Questions
 
-Raised by the answers to Q1 to Q7.
+### 🟥 Q13. Where does the theme go?
 
-### 🟥 Q8. Where in the top bar does the ad button go?
+Q8's top bar has no theme, which today sits in the top bar between the level number and the points (D30). The theme matters to play: every word relates to it, and story 26's nudge will pulse it.
 
-Today, left to right: home, level number, theme, points, shop, settings (D30).
-
-- **A (recommended):** Home, level number, theme, coins, ad button, settings: the ad button takes the shop's place, right next to the coins it adds to.
-- **B:** Home, level number, theme, ad button, coins, settings: the "+" reads as part of the coin counter, like the later "+" for the shop (Q1).
-
-**Answer:**
-
-### 🟥 Q9. Is the ad button there in the tutorials?
-
-Hints aren't in the tutorials (story 19), and nothing there costs coins.
-
-- **A (recommended):** No: hidden in level 1's tutorial and the reordering tutorial, like the hints.
-- **B:** Yes, everywhere.
-
-**Answer:**
-
-### 🟥 Q10. Do earned coins travel to the counter?
-
-- **A (recommended):** Yes: a few coins fly from where they were earned (the ad button, a bonus word, the series bar) to the counter, and the number counts up as they land. How many and how fast are settings (D52).
-- **B:** No: the number just counts up.
-
-**Answer:**
-
-### 🟥 Q11. How do points show on the Level complete popup?
-
-It shows "Level complete", the golden word and the "Play Level X" button (story 10).
-
-- **A (recommended):** A line under the golden word, "Points: 8", counting up from 7 as the popup opens.
-- **B:** Just the number, with no counting up.
-
-**Answer:**
-
-### 🟥 Q12. Where does the later shop idea go?
-
-*From Q1:* if and when there are in-app purchases, the coin counter becomes the shop: a "+" next to it, and the whole panel opens the shop when tapped.
-
-- **A (recommended):** In later ideas, with the existing styles idea, so the code doesn't rule it out.
-- **B:** Nowhere for now.
+- **A (recommended):** Just below the top bar, centred above the rows, in the same style as now. The bar keeps the order Q8 gave.
+- **B:** In the top bar after all, with the level number: "Level 6 · Animals".
+- **C:** Somewhere else: write it in the answer.
 
 **Answer:**
 
 ---
 
 ## Answered questions
+
+### Q8. Where in the top bar does the ad button go?
+
+**Answer:** Home (square button with house icon), Level Number, ad button (centred), coins, settings (square button with a cog icon).
+
+→ R14. It leaves the theme out: Q13.
+
+### Q9. Is the ad button there in the tutorials?
+
+**Answer:** Left empty, so the recommendation: no, hidden in the tutorials like the hints. → R12.
+
+### Q10. Do earned coins travel to the counter?
+
+**Answer:** A, except when watching an ad, the coins spawn from the centre of the screen.
+
+→ R15.
+
+### Q11. How do points show on the Level complete popup?
+
+**Answer:** Left empty, so the recommendation: "Points: N" under the golden word, counting up. → R11.
+
+### Q12. Where does the later shop idea go?
+
+**Answer:** Left empty, so the recommendation: in later ideas.
 
 ### Q1. Where's the balance shown?
 

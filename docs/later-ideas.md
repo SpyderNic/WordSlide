@@ -18,5 +18,6 @@ Ideas the designer wants to remember for after the prototype. None of these are 
 - **Level selector grouped by theme.** A main menu or level selector could group levels by theme. From [story 15, Q7](example-maps/story-15-draft-the-first-levels.md).
 - **Full art style.** Once the game proves fun, the look could use a licensed asset pack, or an artist or AI image tool. From [story 16, Q4](example-maps/story-16-visual-style.md).
 - **Daily rewards or daily tasks**, much later: from the economy discussion on 2026-11-05 (D51).
+- **A shop, if there are in-app purchases.** The coin counter becomes the shop: a "+" next to it, and the whole panel opens the shop when tapped. The ad button is built to be reused there. From [story 20, Q1 and Q12](example-maps/story-20-currency-and-ads.md).
 - **Choosing styles.** Players could change the game's style, and maybe unlock styles with a currency. From [story 16, R2](example-maps/story-16-visual-style.md). The prototype has one style, but it's built so that this is easy to add.
 - **Phase 2 typing.** Typing a letter in phase 2 should make the selected word's typed letter travel to the cryptex location, if it exists within the word. Nothing happens if it's not in.
