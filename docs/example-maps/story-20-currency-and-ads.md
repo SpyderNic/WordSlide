@@ -1,6 +1,6 @@
 # Story 20: Coins and ads
 
-**Status:** 🟨 Redrafted on 2026-11-05 from the economy discussion ([D51](../decisions.md)), waiting for the designer. On hold before that, since 2026-11-04.
+**Status:** 🟨 Redrafted on 2026-11-05 from the economy discussion ([D51](../decisions.md)). The designer answered Q1 to Q7 on 2026-11-05; their answers raise Q8 to Q12. On hold before that, since 2026-11-04.
 
 *As a player, I want to earn coins by playing and by choosing to watch ads, so that getting help is my choice and finishing levels pays off.*
 
@@ -16,7 +16,7 @@ Added to the backlog on 2026-11-02, and brought into the prototype on 2026-11-04
 | *ad reward* | What a rewarded ad watched to the end gives |
 | *bonus word reward* | What a bonus word gives (story 25) |
 | *first midgame level* | The first completed level after which a midgame ad is asked for |
-| *rewarded ad wait* | How long before the rewarded ad offer can be used again (Q4) |
+| *rewarded ad wait* | How long after a rewarded ad before the ad button can be used again |
 
 ---
 
@@ -38,9 +38,9 @@ Nothing here changes D51. It does shape R6, R7, Q3 and Q4.
 
 ### 🟦 R1. There's one currency: coins
 
-Shown as a gold coin icon with a number. Coins buy hints (story 27), and later maybe other things, such as styles (later ideas).
+In a level, the top bar shows a gold coin icon with the player's balance, in place of the points (Q1). Coins buy hints (story 27), and later maybe other things, such as styles (later ideas).
 
-- 🟩 A player with 120 coins sees a coin and "120"
+- 🟩 A player with 120 coins sees a coin and "120" in the top bar, and no points
 
 **Confirmed:** ☐
 
@@ -80,21 +80,21 @@ Game code never calls an ad SDK (D32). The interface asks for a rewarded or a mi
 
 No rewarded ad plays unless the player asks for one, on an offer that says what they'll get. One ad gives one reward. The offer can always be closed straight away.
 
-- 🟩 With an *ad reward* of 50, pressing "Watch an ad for 50 coins" plays one. Nothing else starts a rewarded ad
+- 🟩 With an *ad reward* of 50, pressing the "+50" ad button plays one. Nothing else starts a rewarded ad
 
 **Confirmed:** ☐
 
 ### 🟦 R7. Ad offers only show when an ad can play
 
-On a platform with no ads, during CrazyGames' Basic Launch, or when the platform says none is available (an ad blocker, for example), no rewarded ad offer appears. The game is fully playable on coins alone.
+On a platform with no ads, during CrazyGames' Basic Launch, or when the platform says none is available (an ad blocker, for example), no rewarded ad offer appears: the ad button (R12) is hidden. The game is fully playable on coins alone.
 
-- 🟩 With ads off, the shop shows no "Watch an ad" offer (see Q2)
+- 🟩 With ads off, there's no ad button in the top bar
 
 **Confirmed:** ☐
 
 ### 🟦 R8. A midgame ad may play between levels, after the first few
 
-When the player presses "Play Level X" on the Level complete popup, the game asks for a midgame ad before the next level starts. The platform decides whether one actually plays (on CrazyGames, at most one every 3 minutes). None are asked for before the *first midgame level* is completed.
+When the player presses "Play Level X" on the Level complete popup, the game asks for a midgame ad before the next level starts. Going home from a level, or replaying one, asks too (Q7), once those exist: today the home button does nothing and there's no replay, so only "Play Level X" is built and tested now. The platform decides whether one actually plays (on CrazyGames, at most one every 3 minutes). None are asked for before the *first midgame level* is completed.
 
 - 🟩 With a *first midgame level* of 5, completing level 3 and pressing "Play Level 4" goes straight to level 4
 - 🟩 With a *first midgame level* of 5, completing level 5 and pressing "Play Level 6" asks for a midgame ad, then starts level 6 when it ends
@@ -118,75 +118,122 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 
 **Confirmed:** ☐
 
+### 🟦 R11. Points move to the Level complete popup
+
+*From Q1.* Points (D23) stay, but a level's top bar shows coins instead. The Level complete popup shows the player's points (see Q11 for how), and the main menu will too, once there is one.
+
+- 🟩 With 7 points, completing a level shows 8 points on the Level complete popup
+
+**Confirmed:** ☐
+
+### 🟦 R12. The ad button: "+[ad reward]" in the top bar
+
+*From Q1 and Q2.* The shop button is removed. In its place (see Q8) is an ad button showing "+", the *ad reward*, a coin icon and a video icon. Pressing it plays a rewarded ad straight away; watched to the end, it gives the *ad reward* (R3).
+
+- 🟩 With an *ad reward* of 50, the top bar shows "+50", a coin and a video icon, and no shop button
+
+**Confirmed:** ☐
+
+### 🟦 R13. After a rewarded ad, the ad button waits, with a countdown
+
+*From Q3 and Q4.* For the *rewarded ad wait* after a rewarded ad ends (watched or closed), the button stays in place, greyed out, showing a countdown instead of its reward, and pressing it does nothing. Then it's back to normal. It's built as one reusable piece, so a shop can later use the same button and behave the same.
+
+- 🟩 With a *rewarded ad wait* of 3 minutes, the button reads "2:30" 30 seconds after an ad, and pressing it plays nothing
+- 🟩 With a *rewarded ad wait* of 3 minutes, 3 minutes after an ad, the button shows "+50" again and plays an ad when pressed
+
+**Confirmed:** ☐
+
 ---
 
 ## Questions
 
-### 🟥 Q1. Where's the balance shown?
+Raised by the answers to Q1 to Q7.
 
-The top bar has home, level number, theme, points, shop and settings (D30).
+### 🟥 Q8. Where in the top bar does the ad button go?
 
-- **A (recommended):** Next to the points, as a coin with a number. Coins earned fly to it from where they came from, like a letter travelling to the pool (story 16), and the number counts up.
-- **B:** Inside the shop button, as its label.
-- **C:** In place of the points, if points (D23) go now that coins exist. See Q5.
+Today, left to right: home, level number, theme, points, shop, settings (D30).
 
-**Answer:**
-
-### 🟥 Q2. What does the shop button do?
-
-It's visible but does nothing today (D30). Story 27 will also offer an ad from a hint the player can't afford.
-
-- **A (recommended):** It opens a small panel with the balance, "Watch an ad for [*ad reward*] coins" (when an ad can play, R7) and a close button. It gives a place to earn coins before story 27, and later the place for styles.
-- **B:** Still nothing. Ads are only offered from a hint the player can't afford (story 27).
+- **A (recommended):** Home, level number, theme, coins, ad button, settings: the ad button takes the shop's place, right next to the coins it adds to.
+- **B:** Home, level number, theme, ad button, coins, settings: the "+" reads as part of the coin counter, like the later "+" for the shop (Q1).
 
 **Answer:**
 
-### 🟥 Q3. How does the offer show it can't be used again yet?
+### 🟥 Q9. Is the ad button there in the tutorials?
 
-CrazyGames asks that rewarded ads aren't offered too often, and that the player can see it. Q4 is how long.
+Hints aren't in the tutorials (story 19), and nothing there costs coins.
 
-- **A (recommended):** The offer stays, greyed out, with a countdown to the end of the *rewarded ad wait* ("Next ad in 2:30").
-- **B:** The offer is hidden until it's available again.
-
-**Answer:**
-
-### 🟥 Q4. How long is the *rewarded ad wait* to start with?
-
-It runs from the end of the last rewarded ad. Its value goes in D51.
-
-- **A (recommended):** 3 minutes, to tune after playing. That matches CrazyGames' own pace for midgame ads.
-- **B:** No wait in the prototype, deciding after playing.
-- **C:** Another length: write it in the answer.
+- **A (recommended):** No: hidden in level 1's tutorial and the reordering tutorial, like the hints.
+- **B:** Yes, everywhere.
 
 **Answer:**
 
-### 🟥 Q5. Do points (D23) stay now that there are coins?
+### 🟥 Q10. Do earned coins travel to the counter?
 
-- **A (recommended):** Yes, for now: points still count levels completed, and coins are spent. Decide after playing whether both are needed.
-- **B:** No: coins replace points in the top bar.
-
-**Answer:**
-
-### 🟥 Q6. What do players who already have progress get?
-
-Players who saved progress before coins existed (only you, in the prototype).
-
-- **A (recommended):** The *starting coins*, once, plus the *bonus word reward* for each bonus word already found, if story 25 is built first and saves them.
-- **B:** The *starting coins* only.
+- **A (recommended):** Yes: a few coins fly from where they were earned (the ad button, a bonus word, the series bar) to the counter, and the number counts up as they land. How many and how fast are settings (D52).
+- **B:** No: the number just counts up.
 
 **Answer:**
 
-### 🟥 Q7. Is a midgame ad asked for anywhere else?
+### 🟥 Q11. How do points show on the Level complete popup?
 
-R8 asks after "Play Level X". CrazyGames recommends asking at every natural break.
+It shows "Level complete", the golden word and the "Play Level X" button (story 10).
 
-- **A (recommended):** Only there, for now.
-- **B:** Also when the player goes home from a level, or replays one.
+- **A (recommended):** A line under the golden word, "Points: 8", counting up from 7 as the popup opens.
+- **B:** Just the number, with no counting up.
+
+**Answer:**
+
+### 🟥 Q12. Where does the later shop idea go?
+
+*From Q1:* if and when there are in-app purchases, the coin counter becomes the shop: a "+" next to it, and the whole panel opens the shop when tapped.
+
+- **A (recommended):** In later ideas, with the existing styles idea, so the code doesn't rule it out.
+- **B:** Nowhere for now.
 
 **Answer:**
 
 ---
 
 ## Answered questions
+
+### Q1. Where's the balance shown?
+
+**Answer:** In place of the points in a level, we'll show the points on the level completed screen, and the main menu. Remove the shop button. If and when IAPs are a thing, the shop button will be the coins counter: we'll add a "+" button next to it, the whole panel will be tappable to open the shop.
+
+→ R1, R11, R12, Q12.
+
+### Q2. What does the shop button do?
+
+**Answer:** B, but there should be a "+50 [coin icon] [video icon]" button at the top of the screen that would trigger an ad watch.
+
+→ R12, with the *ad reward* in place of 50 (D52). Q8 asks where it goes.
+
+### Q3. How does the offer show it can't be used again yet?
+
+**Answer:** A for the new button I've asked to add in Q2, and make it a reusable thing that can behave the same in the shop, if and when we have a shop.
+
+→ R13.
+
+### Q4. How long is the rewarded ad wait to start with?
+
+**Answer:** Left empty, so the recommendation: 3 minutes, to tune after playing. → R13, and D51's settings.
+
+### Q5. Do points (D23) stay now that there are coins?
+
+**Answer:** Left empty, so the recommendation: yes, for now. With Q1's answer, they move to the Level complete popup (R11).
+
+### Q6. What do players who already have progress get?
+
+**Answer:** B, let's only worry about saved progress once the game is live, not during prototyping.
+
+→ Saves from before this story get the *starting coins*, like a new player. No special handling.
+
+### Q7. Is a midgame ad asked for anywhere else?
+
+**Answer:** B, although we don't have a main menu yet.
+
+→ R8: going home or replaying asks too, once those exist.
+
+### From the economy discussion
 
 Answered in the economy discussion of 2026-11-05 ([D51](../decisions.md)): one currency, coins, which only buys hints, with no charges; the amounts (start 100, ad 50, bonus word 10, nothing for a single level, coins for a series); and midgame ads from level 5, kept as a setting. This replaces the first draft's questions on the currency's name, how it's earned and how much things give and cost.
