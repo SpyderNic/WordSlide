@@ -50,7 +50,7 @@ export interface Style {
     /** Earned coins flying to the counter (story 20, R15): how long each flies, and the gap between one setting off and the next. */
     coinFlight: number;
     coinFlightGap: number;
-    /** The points on the Level complete popup counting up (story 20, R11). */
-    pointsCount: number;
+    /** How long the Level complete popup shows the old points before the new ones pulse in (story 20, R11). */
+    pointsPause: number;
   };
 }

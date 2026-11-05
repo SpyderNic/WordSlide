@@ -217,6 +217,7 @@ export class GameScene extends Phaser.Scene {
       layout: this.layoutNow,
       level: this.level,
       colours,
+      timings,
       markedRow: board.markedRow,
       dragging: board.drag?.character ?? null,
       dragTile: this.dragTile ? { x: this.dragTile.x, y: this.dragTile.y } : null,

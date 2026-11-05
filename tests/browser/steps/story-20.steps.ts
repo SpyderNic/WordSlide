@@ -444,3 +444,30 @@ Then('it counts up to "Points: {int}"', async ({ scenario }, points: number) => 
   const shown = scenario.frames!.filter((frame) => popupText(frame, /^Points: /).length > 0);
   expect(popupText(shown[shown.length - 1], /^Points: /)[0].text).toBe(`Points: ${points}`);
 });
+
+// From playing: a pause, then a pulse
+
+async function pointsPause(page: Page): Promise<number> {
+  const pause = ((await current(page)) as unknown as { timings: { pointsPause?: number } }).timings.pointsPause;
+  expect(pause, 'the style has a points pause').toBeGreaterThan(0);
+  return pause!;
+}
+
+Then('the popup shows "Points: {int}" until the points pause has passed', async ({ page, scenario }, points: number) => {
+  await waitForPopup(page);
+  const pause = await pointsPause(page);
+  await page.waitForTimeout(pause + 1500);
+  scenario.frames = await stopRecording(page);
+  const shown = scenario.frames.filter((frame) => popupText(frame, /^Points: /).length > 0);
+  const start = shown[0].t;
+  const waiting = shown.filter((frame) => frame.t < start + pause * 0.9);
+  expect(waiting.length).toBeGreaterThan(5);
+  waiting.forEach((frame) => expect(popupText(frame, /^Points: /)[0].text).toBe(`Points: ${points}`));
+});
+
+Then('then "Points: {int}", with a small pulse', async ({ scenario }, points: number) => {
+  const after = scenario.frames!.map((frame) => popupText(frame, /^Points: /)[0]).filter((text) => text?.text === `Points: ${points}`);
+  expect(after.length).toBeGreaterThan(5);
+  expect(Math.max(...after.map((text) => text.scale))).toBeGreaterThan(1.05);
+  expect(after[after.length - 1].scale).toBeCloseTo(1, 2);
+});

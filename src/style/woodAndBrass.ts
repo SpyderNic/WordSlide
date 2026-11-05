@@ -40,6 +40,6 @@ export const woodAndBrass: Style = {
     poolChange: 250,
     coinFlight: 600,
     coinFlightGap: 70,
-    pointsCount: 500,
+    pointsPause: 800,
   },
 };

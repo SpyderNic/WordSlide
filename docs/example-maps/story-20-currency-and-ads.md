@@ -124,6 +124,7 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 *From Q1.* *And Q11.* Points (D23) stay, but a level's top bar shows coins instead. The Level complete popup shows a line under the golden word, "Points: N", counting up from the points before the level as the popup opens. The main menu will show them too, once there is one.
 
 - 🟩 With 7 points, completing a level shows "Points: 7" under the golden word, counting up to "Points: 8"
+- 🟩 *From playing, on 2026-11-05:* the count was too quick to see. The popup opens showing the old points; after the *points pause*, a feel setting (D52), they change to the new points with a small pulse, like a locking tile (D37)
 
 **Confirmed:** ☑
 

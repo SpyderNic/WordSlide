@@ -739,15 +739,12 @@ export class PhaseTwoView {
       button: last ? null : `Play Level ${this.nextLevelNumber}`,
       points: last ? undefined : justWon ? points.from : points.to,
     });
-    // The points count up as the popup opens (story 20, R11).
+    // The old points show for a moment, then the new ones pulse in, like a locking tile (story 20, R11).
     if (pointsText && justWon) {
-      const count = { value: points.from };
-      this.scene.tweens.add({
-        targets: count,
-        value: points.to,
-        duration: timings.pointsCount,
-        onUpdate: () => pointsText.setText(`Points: ${Math.round(count.value)}`),
-        onComplete: () => pointsText.setText(`Points: ${points.to}`),
+      this.scene.time.delayedCall(timings.pointsPause, () => {
+        if (!pointsText.active) return;
+        pointsText.setText(`Points: ${points.to}`);
+        this.scene.tweens.add({ targets: pointsText, scale: currentStyle.pulseScale, duration: timings.lockPulseGrow, yoyo: true });
       });
     }
     this.popup = container;

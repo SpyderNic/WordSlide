@@ -171,3 +171,10 @@ Feature: Coins and ads
       When the player wins the level
       Then the Level complete popup shows "Points: 7" under the golden word
       And it counts up to "Points: 8"
+
+    # From playing: the count was too quick to see.
+    Scenario: The points wait, then change with a pulse
+      Given the player has 7 points
+      When the player wins the level
+      Then the popup shows "Points: 7" until the points pause has passed
+      And then "Points: 8", with a small pulse
