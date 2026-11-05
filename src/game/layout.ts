@@ -45,6 +45,8 @@ export interface LevelLayout {
   poolArea: Rect;
   poolTiles: PoolTileView[];
   recall: Rect;
+  /** The Letter hint's button, just above Recall All (story 19, R2). */
+  letterHint: Rect;
 }
 
 /** What's in the rows and pool right now, when it's not the start of the level. */
@@ -57,6 +59,7 @@ export type Hit =
   | { kind: 'cell'; row: number; cell: number }
   | { kind: 'pool'; character: string | null }
   | { kind: 'recall' }
+  | { kind: 'letterHint' }
   | { kind: 'none' };
 
 const GAP = 0.08;
@@ -184,6 +187,7 @@ export function layoutLevel(
     width: recallSize,
     height: recallSize,
   };
+  const letterHint: Rect = { ...recall, y: recall.y - recallSize * 1.1 };
 
   const rowsSpace = poolArea.y - (top.y + top.height);
   const rowsHeight = answers.length * pitch - tile * GAP;
@@ -205,6 +209,7 @@ export function layoutLevel(
     poolArea,
     poolTiles: layoutPool(contents?.pool ?? startingPool(level.answers), poolArea, tile, across),
     recall,
+    letterHint,
   };
 }
 
@@ -219,6 +224,7 @@ export function hitTest(layout: LevelLayout, x: number, y: number): Hit {
     if (cell !== -1) return { kind: 'cell', row, cell };
   }
   if (isInside(layout.recall, x, y)) return { kind: 'recall' };
+  if (isInside(layout.letterHint, x, y)) return { kind: 'letterHint' };
   const tile = layout.poolTiles.find((candidate) => isInside(candidate, x, y));
   if (tile) return { kind: 'pool', character: tile.character };
   if (isInside(layout.poolArea, x, y)) return { kind: 'pool', character: null };

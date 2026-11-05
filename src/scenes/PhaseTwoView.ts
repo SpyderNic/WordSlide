@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { drawHintButton, isInside, type HintButton } from './hintButtons';
 import { layoutLevel, type LevelLayout, type Rect } from '../game/layout';
 import type { Level } from '../game/level';
 import type { PhaseTwo, PhaseTwoSnapshot } from '../game/phaseTwo';
@@ -44,9 +45,11 @@ export interface PhaseTwoRules {
   /** Whether a row lifted by its handle may go to this slot. */
   slot: (word: string, slot: number) => boolean;
   keys: () => boolean;
+  /** Whether hints are offered: not during a tutorial's step (story 19, R10). */
+  hints: () => boolean;
 }
 
-const FREE: PhaseTwoRules = { handle: () => true, slide: () => true, slot: () => true, keys: () => true };
+const FREE: PhaseTwoRules = { handle: () => true, slide: () => true, slot: () => true, keys: () => true, hints: () => true };
 
 export interface PhaseTwoCallbacks {
   /** The ceremony has finished, or a word or row has settled, and the column spells the word. */
@@ -60,10 +63,11 @@ export interface PhaseTwoCallbacks {
 
 export interface PhaseTwoTestView {
   column: Rect;
-  rows: { word: string; columnCell: number; x: number; y: number; scale: number; depth: number; selected: boolean }[];
+  rows: { word: string; columnCell: number; x: number; y: number; scale: number; depth: number; selected: boolean; fixed: boolean }[];
   handles: Rect[];
   handlesVisible: boolean;
   ceremonyDone: boolean;
+  hints: HintButton[];
   columnText: string;
   won: boolean;
   dragging: boolean;
@@ -84,6 +88,9 @@ export class PhaseTwoView {
   private columnX = 0;
   private rowsTop = 0;
   private handlesVisible = false;
+  /** The hint buttons along the bottom (story 19, R2), and what's drawn for them. */
+  private hintButtons: HintButton[] = [];
+  private hintObjects: Phaser.GameObjects.GameObject[] = [];
   private ceremonyDone = false;
   private popup: Phaser.GameObjects.Container | null = null;
   private popupInfo: PhaseTwoTestView['popup'] = null;
@@ -196,6 +203,7 @@ export class PhaseTwoView {
       this.handlesVisible = true;
       this.rowViews.forEach((view) => view.handle.setVisible(true));
     }
+    this.drawHints();
     onFinished();
   }
 
@@ -303,6 +311,79 @@ export class PhaseTwoView {
       view.handle.setPosition(this.handleRect().x, this.rowY(index));
       view.selection.setVisible(this.phase.markedRow === index);
     });
+    this.paintFixed();
+    if (this.ceremonyDone) this.drawHints();
+  }
+
+  // Hints (story 19)
+
+  /** A word the Reveal hint put in place shows its column letter in gold (R6). */
+  private paintFixed() {
+    this.rowViews.forEach((view, index) => {
+      const row = this.phase.rows[index];
+      if (row.fixed) paintTile(this.tileAtCell(view, row.cells, row.columnCell), colours.tileGold);
+    });
+  }
+
+  /** The buttons along the bottom: Ordering while the rows can be reordered, Reveal once they can't (R2, R7). */
+  drawHints() {
+    this.hintObjects.forEach((object) => object.destroy());
+    this.hintObjects = [];
+    this.hintButtons = [];
+    if (!this.ceremonyDone || this.phase.won || !this.rules.hints()) return;
+    const names: HintButton['name'][] = this.phase.canReorder ? ['ordering'] : ['reveal'];
+    const { size } = this.handleRect();
+    const gap = size * 0.25;
+    const { width, height } = this.scene.scale;
+    const total = names.length * size + (names.length - 1) * gap;
+    names.forEach((name, index) => {
+      const rect = { x: width / 2 - total / 2 + index * (size + gap), y: height - size - this.tile * 0.2, width: size, height: size };
+      const enabled = name === 'ordering' ? this.phase.orderingHintAvailable : this.phase.revealHintAvailable;
+      const button: HintButton = { name, rect, enabled };
+      this.hintButtons.push(button);
+      // Above the handles (depth 3).
+      this.hintObjects.push(...drawHintButton(this.scene, button, 4));
+    });
+  }
+
+  private useHint(button: HintButton) {
+    if (!button.enabled) return;
+    if (button.name === 'ordering') this.orderRows();
+    else this.revealWord();
+  }
+
+  /** The rows glide into the solution's order, and the handles fade away (R5). */
+  private orderRows() {
+    const order = this.phase.rows.slice();
+    if (!this.phase.orderingHint()) return;
+    const views = this.phase.rows.map((row) => this.rowViews[order.indexOf(row)]);
+    this.rowViews.splice(0, this.rowViews.length, ...views);
+    this.updateSelection();
+    this.handlesVisible = false;
+    this.rowViews.forEach((view, index) => {
+      this.scene.tweens.add({ targets: [view.container, view.handle], y: this.rowY(index), duration: timings.snap * 2, ease: 'Sine.easeInOut' });
+      this.scene.tweens.add({ targets: view.handle, alpha: 0, duration: timings.snap * 2, onComplete: () => view.handle.setVisible(false).setAlpha(1) });
+    });
+    this.drawHints();
+    this.scene.time.delayedCall(timings.snap * 2, () => this.checkWin());
+  }
+
+  /** A word glides to its column letter, which turns gold, and stays there (R6). */
+  private revealWord() {
+    const row = this.phase.revealHint();
+    if (row === null) return;
+    const view = this.rowViews[row];
+    this.drawHints();
+    this.scene.tweens.add({
+      targets: view.container,
+      x: this.wordX(this.phase.rows[row].columnCell),
+      duration: timings.snap * 2,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        this.paintFixed();
+        this.checkWin();
+      },
+    });
   }
 
   private updateSelection() {
@@ -378,6 +459,11 @@ export class PhaseTwoView {
       return;
     }
     if (this.press || !this.ceremonyDone || this.phase.won) return;
+    const hint = this.hintButtons.find((button) => isInside(button.rect, pointer.x, pointer.y));
+    if (hint) {
+      this.useHint(hint);
+      return;
+    }
     const handle = this.hitHandle(pointer.x, pointer.y);
     if (handle !== null && !this.rules.handle(this.phase.rows[handle].word)) return;
     if (handle !== null) {
@@ -385,7 +471,8 @@ export class PhaseTwoView {
       return;
     }
     const row = this.hitRow(pointer.x, pointer.y);
-    if (row === null || !this.rules.slide(this.phase.rows[row].word)) return;
+    // A word the Reveal hint put in place can't slide again (story 19, R6).
+    if (row === null || !this.rules.slide(this.phase.rows[row].word) || this.phase.rows[row].fixed) return;
     const position = this.phase.rows[row].columnCell;
     this.press = {
       kind: 'slide',
@@ -564,8 +651,13 @@ export class PhaseTwoView {
 
   private checkWin() {
     if (this.phase.won) return;
-    if (this.phase.checkWin()) this.callbacks.onWon();
-    else this.callbacks.onSettled();
+    if (this.phase.checkWin()) {
+      this.drawHints();
+      this.callbacks.onWon();
+    } else {
+      this.drawHints();
+      this.callbacks.onSettled();
+    }
   }
 
   snapshot(): PhaseTwoSnapshot {
@@ -645,6 +737,7 @@ export class PhaseTwoView {
   }
 
   destroy() {
+    this.hintObjects.forEach((object) => object.destroy());
     this.celebrating?.remove();
     this.column?.destroy();
     this.columnSides?.destroy();
@@ -693,6 +786,7 @@ export class PhaseTwoView {
         scale: view.container.scale,
         depth: view.container.depth,
         selected: view.selection.visible,
+        fixed: !!this.phase.rows[index].fixed,
       })),
       handles: this.rowViews.map((view) => ({
         x: handle.x - handle.size / 2,
@@ -701,6 +795,7 @@ export class PhaseTwoView {
         height: handle.size,
       })),
       handlesVisible: this.rowViews.some((view) => view.handle.visible),
+      hints: this.hintButtons.map((button) => ({ ...button, rect: { ...button.rect } })),
       ceremonyDone: this.ceremonyDone,
       columnText: this.phase.columnText(),
       won: this.phase.won,

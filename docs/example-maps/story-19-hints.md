@@ -1,6 +1,6 @@
 # Story 19: Hints, part 1: how they behave
 
-**Status:** 🟢 Approved by the designer on 2026-11-05. Scenarios in [story-19-hints.feature](../../features/story-19-hints.feature), waiting for the designer.
+**Status:** 🟢 Approved by the designer on 2026-11-05. Approved along with its scenarios in [story-19-hints.feature](../../features/story-19-hints.feature). Built on 2026-11-05.
 
 *As a player who's stuck, I want a hint that helps without solving the level for me, so that I can keep going.*
 

@@ -267,6 +267,45 @@ export class Board {
     return events;
   }
 
+  // Hints (story 19)
+
+  /** The selected row's cells the Letter hint can pick: those that aren't fixed yet. */
+  private openCells(): number[] {
+    const row = this.selectedRow;
+    if (row === null || this.drag || this.rows[row].locked) return [];
+    return this.rows[row].cells.flatMap((cell, index) => (isFixedCell(cell) ? [] : [index]));
+  }
+
+  get letterHintAvailable(): boolean {
+    return this.openCells().length > 0;
+  }
+
+  /**
+   * Locks the right letter in one of the selected row's cells, picked at random (story 19, R3). A wrong letter there
+   * goes back to the pool. The right letter comes from the pool, or from another cell where it's placed wrongly (Q2).
+   */
+  letterHint(random: () => number = Math.random): BoardEvent[] {
+    const open = this.openCells();
+    if (open.length === 0) return [];
+    const row = this.selectedRow!;
+    const cells = this.rows[row].cells;
+    const answer = cellsOf(this.rows[row].word);
+    const cell = open[Math.floor(random() * open.length)];
+    const right = answer[cell];
+    const there = cells[cell];
+    if (there.kind !== 'placed' || there.character !== right) {
+      if (there.kind === 'placed') this.changeCount(row, there.character, 1);
+      if (this.countOf(right) > 0) {
+        this.changeCount(row, right, -1);
+      } else {
+        const other = cells.findIndex((candidate, index) => index !== cell && candidate.kind === 'placed' && candidate.character === right && answer[index] !== right);
+        if (other !== -1) cells[other] = { kind: 'empty' };
+      }
+    }
+    cells[cell] = { kind: 'revealed', character: right };
+    return this.check(row);
+  }
+
   // Recall All
 
   /** Empties the selected row (story 23, R13). */

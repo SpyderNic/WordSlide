@@ -14,6 +14,7 @@ import { loadHand, makeGuideText, makeHand, moveHand } from './guide';
 import { designedOrder, needsReordering, rowsInDesignedOrder, spellsBySliding } from '../game/reordering';
 import { firstReorderingMove, tutorialPlan, tutorialStep, type ReorderingMove, type TutorialPlan, type TutorialStep } from '../game/tutorial';
 import { buildPopup } from './popup';
+import { drawHintButton, type HintButton } from './hintButtons';
 import { makeTile, paintTile } from './tiles';
 
 const colours = currentStyle.colours;
@@ -207,6 +208,7 @@ export class GameScene extends Phaser.Scene {
       levelNumber: this.levelNumber,
       points: this.points,
       phaseTwo: this.phaseTwo?.testView() ?? null,
+      hints: this.phaseOneHints(),
     };
   }
 
@@ -477,9 +479,16 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
+  /** Phase one's hint buttons: the Letter hint, stacked above Recall All. The tutorials have none (story 19, R2, R10). */
+  private phaseOneHints(): HintButton[] {
+    if (this.tutorial || this.phaseTwo || this.allDone || !this.board) return [];
+    return [{ name: 'letter', rect: this.layoutNow.letterHint, enabled: this.board.letterHintAvailable }];
+  }
+
   private drawRecall() {
     // Each tutorial step is dragging only, so there's no Recall All in it (story 12, R10).
     if (this.tutorial) return;
+    for (const button of this.phaseOneHints()) this.poolObjects.push(...drawHintButton(this, button));
     const { recall } = this.layoutNow;
     const active = this.board.hasPlacedLetters();
     const { x, y } = centre(recall);
@@ -651,6 +660,8 @@ export class GameScene extends Phaser.Scene {
       this.saveLevel();
     } else if (hit.kind === 'recall') {
       this.act(() => void this.board.recallAll());
+    } else if (hit.kind === 'letterHint' && !this.tutorial) {
+      this.act(() => this.board.letterHint());
     }
   }
 
@@ -751,6 +762,8 @@ export class GameScene extends Phaser.Scene {
       slot: (word, slot) => !step() || (step() === 'reorder' && word === move().word && Math.sign(slot - move().from) === Math.sign(move().to - move().from)),
       // Both phase-two steps can be played with the keyboard (story 24, R8 and R9), within the step's rules.
       keys: () => true,
+      // No hints during a tutorial's step (story 19, R10).
+      hints: () => !step(),
     };
   }
 

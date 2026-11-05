@@ -644,7 +644,9 @@ Then('it gently rises and fades out', async ({ page, scenario }) => {
 });
 
 When('LEMUR locks', async ({ page, scenario, $uri }) => {
-  if ($uri.includes('story-23')) {
+  // A check in stories 23 and 19, an action elsewhere.
+  if ($uri.includes('story-23') || $uri.includes('story-19')) {
+    await page.waitForTimeout(400);
     const { layout } = await current(page);
     expect(layout.rows[rowOf(layout, 'LEMUR')].locked).toBe(true);
     return;

@@ -232,3 +232,6 @@ The designer wants to play the prototype as a new player, to judge difficulty. C
 
 ### D49. The tutorial's hand is the designer's image
 *2026-11-03.* The tutorial's pointing hand is `assets/Pointer.png`, the designer's pixel-art hand, in place of the one drawn in code (story 12, Q9). It's about a tile tall, drawn without smoothing, and its fingertip is where the hand points.
+
+### D50. Hints, part 1
+*2026-11-05.* Each hint has its own button with an icon: stacked above Recall All in phase one, along the bottom in phase two. The Letter hint locks the right letter in a random cell of the selected word, as a revealed letter. The Ordering hint puts the rows in the order with the fewest moves and removes the handles, and is offered whenever the level has handles. The Reveal hint, offered only when the rows can't be reordered, slides a random word that isn't right yet to its column letter, in gold, fixed there. Hints are free and unlimited until part 2 (story 27), never change a level's point, and the tutorials have none. The icons are placeholders drawn in code. The full rules are in [story 19](example-maps/story-19-hints.md).

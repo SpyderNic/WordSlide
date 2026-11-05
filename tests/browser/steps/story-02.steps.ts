@@ -395,8 +395,11 @@ Then("there's no highlighted column", async ({ page, scenario }) => {
 
 Then('there are no row handles', async ({ page, scenario }) => {
   expect(layoutOf(scenario)).not.toHaveProperty('handles');
-  // The only graphics in phase one are the Recall All arrows.
-  expect((await screen(page)).filter((object) => object.kind === 'graphics')).toHaveLength(1);
+  // The only graphics in phase one are the Recall All arrows and the Letter hint's icon (story 19).
+  const { recall, letterHint } = layoutOf(scenario);
+  const inside = (rect: Rect, x: number, y: number) => x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+  const others = (await screen(page)).filter((object) => object.kind === 'graphics' && !object.lines.every((line) => inside(recall, line.x1, line.y1) || inside(letterHint, line.x1, line.y1)));
+  expect(others).toEqual([]);
 });
 
 Then('the level stays exactly as it was', async ({ page, scenario }) => {

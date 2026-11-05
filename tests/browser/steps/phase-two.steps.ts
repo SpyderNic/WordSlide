@@ -383,7 +383,10 @@ Then('each handle is level with its row', async ({ page }) => {
 
 Then('the pool is gone', async ({ page }) => {
   const { poolArea } = (await current(page)).layout;
-  await expect.poll(async () => drawnIn(await screen(page), poolArea).length).toBe(0);
+  // Phase two's hint buttons sit along the bottom, where the pool was (story 19): they aren't the pool.
+  const hints = (await two(page)).hints.map((hint) => hint.rect);
+  const isHint = (x: number, y: number) => hints.some((rect) => x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height);
+  await expect.poll(async () => drawnIn(await screen(page), poolArea).filter((object) => !isHint(object.x, object.y)).length).toBe(0);
 });
 
 Then('the rows are vertically centred between the top of the screen and its bottom edge', async ({ page }) => {

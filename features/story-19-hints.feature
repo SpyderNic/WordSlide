@@ -1,4 +1,4 @@
-# Status: draft, waiting for the designer.
+# Status: approved by the designer on 2026-11-05.
 # Map: docs/example-maps/story-19-hints.md
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
 # KANGAROO, with the final word ELK, and the rows start as LEMUR, ZEBRA, KANGAROO.
