@@ -1,6 +1,6 @@
 # Story 20: Coins and ads
 
-**Status:** 🟨 Redrafted on 2026-11-05 from the economy discussion ([D51](../decisions.md)). The designer answered Q1 to Q12 on 2026-11-05. Q13, raised by Q8's answer, is open. On hold before that, since 2026-11-04.
+**Status:** ✅ Approved by the designer on 2026-11-05, after the economy discussion ([D51](../decisions.md)). Scenarios: [story-20-coins-and-ads.feature](../../features/story-20-coins-and-ads.feature), waiting for approval.
 
 *As a player, I want to earn coins by playing and by choosing to watch ads, so that getting help is my choice and finishing levels pays off.*
 
@@ -43,13 +43,13 @@ In a level, the top bar shows a gold coin icon with the player's balance, in pla
 
 - 🟩 A player with 120 coins sees a coin and "120" in the top bar, and no points
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R2. A new player starts with the *starting coins*
 
 - 🟩 With *starting coins* of 100, opening the game for the first time shows 100 coins
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R3. Coins come from rewarded ads, bonus words and series
 
@@ -58,7 +58,7 @@ A rewarded ad watched to the end gives the *ad reward*, a bonus word the *bonus 
 - 🟩 With an *ad reward* of 50 and 100 coins, watching a rewarded ad to the end makes 150
 - 🟩 Winning a level that doesn't finish a series leaves the coins as they were
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R4. Coins are saved with the player's progress
 
@@ -66,7 +66,7 @@ Through the platform interface (D32), like the rest of the progress (story 11). 
 
 - 🟩 With 100 coins and an *ad reward* of 50, closing right after the ad's reward, and opening again, still shows 150
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R5. All ads go through the platform interface
 
@@ -75,7 +75,7 @@ Game code never calls an ad SDK (D32). The interface asks for a rewarded or a mi
 - 🟩 A rewarded ad closed early gives nothing
 - 🟩 A rewarded ad that fails to load gives nothing, and the game carries on
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R6. Rewarded ads are only ever the player's choice
 
@@ -83,7 +83,7 @@ No rewarded ad plays unless the player asks for one, on an offer that says what 
 
 - 🟩 With an *ad reward* of 50, pressing the "+50" ad button plays one. Nothing else starts a rewarded ad
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R7. Ad offers only show when an ad can play
 
@@ -91,7 +91,7 @@ On a platform with no ads, during CrazyGames' Basic Launch, or when the platform
 
 - 🟩 With ads off, there's no ad button in the top bar
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R8. A midgame ad may play between levels, after the first few
 
@@ -101,7 +101,7 @@ When the player presses "Play Level X" on the Level complete popup, the game ask
 - 🟩 With a *first midgame level* of 5, completing level 5 and pressing "Play Level 6" asks for a midgame ad, then starts level 6 when it ends
 - 🟩 If the platform plays no ad, level 6 starts straight away
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R9. While any ad plays, the game pauses and is muted
 
@@ -109,7 +109,7 @@ Its input is ignored, and it carries on exactly where it was afterwards. Muting 
 
 - 🟩 Keys pressed during an ad do nothing
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R10. The prototype fakes ads in development
 
@@ -117,7 +117,7 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 
 - 🟩 In development, with an *ad reward* of 50, finishing a pretend rewarded ad gives 50 coins, and closing it gives none
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R11. Points move to the Level complete popup
 
@@ -125,7 +125,7 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 
 - 🟩 With 7 points, completing a level shows "Points: 7" under the golden word, counting up to "Points: 8"
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R12. The ad button: "+[ad reward]" in the top bar
 
@@ -134,7 +134,7 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 - 🟩 With an *ad reward* of 50, the top bar shows "+50", a coin and a video icon, and no shop button
 - 🟩 During level 1's tutorial, there's no ad button
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R13. After a rewarded ad, the ad button waits, with a countdown
 
@@ -143,15 +143,16 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 - 🟩 With a *rewarded ad wait* of 3 minutes, the button reads "2:30" 30 seconds after an ad, and pressing it plays nothing
 - 🟩 With a *rewarded ad wait* of 3 minutes, 3 minutes after an ad, the button shows "+50" again and plays an ad when pressed
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R14. The top bar, left to right
 
-*From Q8.* Home, as a square button with a house icon; the level number; the ad button, centred on the screen; the coins; settings, as a square button with a cog icon. The icons are placeholders drawn in code, like the hint icons (story 19). Home and settings still do nothing (D30). Where the theme goes is Q13.
+*From Q8.* Home, as a square button with a house icon; the level number; the ad button, centred on the screen; the coins; settings, as a square button with a cog icon. The icons are placeholders drawn in code, like the hint icons (story 19). Home and settings still do nothing (D30). *From Q13:* the theme moves out of the bar, to just below it, centred above the rows, in the same style as now.
 
 - 🟩 In level 6, the top bar reads: house button, "Level 6", "+50" ad button in the middle, the coins, cog button
+- 🟩 The theme shows centred just below the top bar, above the rows
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R15. Earned coins fly to the counter
 
@@ -159,25 +160,21 @@ So the flows can be tested before the CrazyGames SDK is added (out of scope for 
 
 - 🟩 With an *ad reward* of 50 and 100 coins, after an ad is watched, coins fly from the centre of the screen to the counter, which counts up from 100 to 150 as they land
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ---
 
 ## Questions
 
-### 🟥 Q13. Where does the theme go?
-
-Q8's top bar has no theme, which today sits in the top bar between the level number and the points (D30). The theme matters to play: every word relates to it, and story 26's nudge will pulse it.
-
-- **A (recommended):** Just below the top bar, centred above the rows, in the same style as now. The bar keeps the order Q8 gave.
-- **B:** In the top bar after all, with the level number: "Level 6 · Animals".
-- **C:** Somewhere else: write it in the answer.
-
-**Answer:**
+None left.
 
 ---
 
 ## Answered questions
+
+### Q13. Where does the theme go?
+
+**Answer:** Below the top bar (A). → R14.
 
 ### Q8. Where in the top bar does the ad button go?
 

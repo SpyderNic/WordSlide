@@ -158,7 +158,7 @@ Landscape stays the orientation for the CrazyGames launch (D2), but layouts must
 When a device rotates during a level, the layout adapts live. The level redraws for the new orientation and keeps the player's progress. A drag in progress is cancelled and its letter goes back to where it came from.
 
 ### D30. Top of the screen
-Along the top, left to right: home, level number, theme, points, shop, settings. The home, shop and settings buttons are visible but do nothing for now. The shop button is provisional.
+*Replaced on 2026-11-05 by D53 (story 20, R14).* Along the top, left to right: home, level number, theme, points, shop, settings. The home, shop and settings buttons are visible but do nothing for now. The shop button is provisional.
 
 ### D31. Working towards a prototype
 The current goal is a working prototype, not a release. If the layout works and the game is fun, stories for a path to release get added then.
@@ -250,3 +250,6 @@ The designer wants to play the prototype as a new player, to judge difficulty. C
 
 ### D52. Tuning values are named settings
 *2026-11-05, from the designer.* From now on, any value that's about the economy, balance or feel (coin amounts, prices, waits, which level something starts at, fade and travel timings…) is a named setting. Rules name the setting, never its value: "a rewarded ad gives the *ad reward*". Examples and scenarios set the value they use themselves ("Given a rewarded ad gives 50 coins"), so they stay true whatever the game ships with. The shipped values live in one tuning place in the code (timings and looks stay in `src/style`, D27), and the decision that owns them (D51 for the economy) lists them. Changing a value then changes that place and its decision only, not a rule, scenario or test. Whether the game ships the right value is checked by playing, not by tests. Rules written before this aren't rewritten unless they change for another reason.
+
+### D53. Coins and ads
+*2026-11-05, from [story 20](example-maps/story-20-currency-and-ads.md).* The top bar is, left to right: home (a square house button), the level number, the ad button (centred), the coins, and settings (a square cog button); home and settings still do nothing. The theme sits just below it, centred above the rows. There's no shop button, and points move to the Level complete popup ("Points: N", counting up). The ad button shows "+", the *ad reward*, a coin and a video icon, and plays a rewarded ad straight away; it's hidden in the tutorials and when no ad can play, and waits greyed out with a countdown for the *rewarded ad wait* after each ad. It's one reusable piece, for a shop later. Earned coins fly to the counter (from the centre of the screen for an ad). A midgame ad is asked for when the player presses "Play Level X", once the *first midgame level* is completed; the platform decides whether it plays. All ads go through the platform interface, pause and mute the game, and are faked in development.
