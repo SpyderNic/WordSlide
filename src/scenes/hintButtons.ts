@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Rect } from '../game/layout';
 import { currentStyle } from '../style';
+import { drawCoin } from './topIcons';
 
 const colours = currentStyle.colours;
 
@@ -11,17 +12,22 @@ export interface HintButton {
   name: HintName;
   rect: Rect;
   enabled: boolean;
+  /** What the next use costs, shown under the icon (M07-03, R2). */
+  price?: number;
 }
 
 /**
  * Draws a hint's button with its icon: placeholders drawn in code, which the designer can replace (M07-01, Q1).
  * A lightbulb for the Letter hint, arrows up and down for the Ordering hint, and an eye for the Reveal hint.
  */
-export function drawHintButton(scene: Phaser.Scene, { name, rect, enabled }: HintButton, depth = 0): Phaser.GameObjects.GameObject[] {
+export function drawHintButton(scene: Phaser.Scene, { name, rect, enabled, price }: HintButton, depth = 0): Phaser.GameObjects.GameObject[] {
   const x = rect.x + rect.width / 2;
-  const y = rect.y + rect.height / 2;
-  const size = Math.min(rect.width, rect.height);
-  const background = scene.add.rectangle(x, y, rect.width, rect.height, enabled ? colours.tile : colours.tileGrey).setDepth(depth);
+  const middle = rect.y + rect.height / 2;
+  const full = Math.min(rect.width, rect.height);
+  // With a price, the icon is smaller and higher, and the price sits under it.
+  const y = price === undefined ? middle : middle - full * 0.15;
+  const size = price === undefined ? full : full * 0.7;
+  const background = scene.add.rectangle(x, middle, rect.width, rect.height, enabled ? colours.tile : colours.tileGrey).setDepth(depth);
   const icon = scene.add.graphics({ lineStyle: { width: 3, color: colours.text } }).setDepth(depth);
   // Drawn from straight lines, so every icon is easy to draw again in another style.
   const outline = (points: [number, number][]) => points.forEach(([px, py], index) => {
@@ -45,6 +51,17 @@ export function drawHintButton(scene: Phaser.Scene, { name, rect, enabled }: Hin
     // An eye: an almond outline and a square pupil.
     outline([[-0.3, 0], [-0.15, -0.14], [0.15, -0.14], [0.3, 0], [0.15, 0.14], [-0.15, 0.14]]);
     parts.push(scene.add.rectangle(x, y, size * 0.14, size * 0.14, colours.text).setDepth(depth));
+  }
+  if (price !== undefined) {
+    const priceY = middle + full * 0.3;
+    const fontSize = Math.max(full * 0.24, currentStyle.minText);
+    parts.push(drawCoin(scene, x - full * 0.2, priceY, full * 0.16, colours.tileGold).setDepth(depth));
+    parts.push(
+      scene.add
+        .text(x + full * 0.08, priceY, String(price), { fontFamily: currentStyle.font, fontSize: `${Math.round(fontSize)}px`, color: `#${colours.text.toString(16).padStart(6, '0')}` })
+        .setOrigin(0.5)
+        .setDepth(depth),
+    );
   }
   return parts;
 }

@@ -1,6 +1,6 @@
 # M07-03: Hints, part 2: buying them (was story 27)
 
-**Status:** ✅ Approved by the designer on 2026-11-06. Scenarios: [m07-03-buying-hints.feature](../../../features/7-worth-playing/m07-03-buying-hints.feature), waiting for approval.
+**Status:** ✅ Approved by the designer on 2026-11-06. Scenarios: [m07-03-buying-hints.feature](../../../features/7-worth-playing/m07-03-buying-hints.feature), approved and built on 2026-11-06.
 
 *As a player who's stuck, I want to buy a hint with coins I've earned, so that getting help is my choice and has a cost I can see.*
 
@@ -127,6 +127,7 @@ Like the rest of the level (M05-01, R10), so closing and reopening mid-level doe
 
 - 🟩 In the reordering tutorial, after the shown move, there are no handles, and the rows stay in that order
 - 🟩 In the next level that has handles, they're there as usual
+- 🟩 *From the designer, on 2026-11-06, while building:* on a level that needs two moves, the hand shows each move in turn, and the handles go once the rows are in a solving order. This replaces M05-04's "after the first move, the player makes the rest freely"
 
 **Confirmed:** ☑
 

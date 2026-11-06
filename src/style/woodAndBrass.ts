@@ -41,5 +41,6 @@ export const woodAndBrass: Style = {
     coinFlight: 600,
     coinFlightGap: 70,
     pointsPause: 800,
+    coinCount: 400,
   },
 };

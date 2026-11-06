@@ -4,7 +4,7 @@ import { PhaseTwo, type PhaseTwoSnapshot } from '../game/phaseTwo';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Cell, Level } from '../game/level';
 import { coinsOf, NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
-import { adButtonState, asksForMidgameAd, economyWith, type Economy } from '../game/economy';
+import { adButtonState, asksForMidgameAd, economyWith, NO_HINT_USES, priceOf, type Economy, type HintUses, type PricedHint } from '../game/economy';
 import { pickedLevel, resetAsked } from '../game/startingLevel';
 import { levels } from '../levels';
 import { createPlatform } from '../platform';
@@ -17,15 +17,16 @@ import { firstReorderingMove, tutorialPlan, tutorialStep, type ReorderingMove, t
 import { buildPopup } from './popup';
 import { drawHintButton, type HintButton } from './hintButtons';
 import { makeTile, paintTile } from './tiles';
-import { drawCoin, drawCog, drawHouse, drawVideo } from './topIcons';
+import { drawCoin, drawCog, drawHouse } from './topIcons';
+import { drawAdButton } from './adButton';
 
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
 const SHAKE_DISTANCE = 6;
 /** Coins flying to the counter, above the board and the popup (M07-02, R15). */
 const FLIGHT_DEPTH = 26;
-/** The ad button while it waits (M07-02, R13). */
-const AD_WAITING_ALPHA = 0.5;
+/** "Not enough coins", above the board and the level's popup (M07-03, R9). */
+const NO_COINS_DEPTH = 35;
 /** Letters flying between the pool and the cells are drawn above the board, below a dragged tile. */
 const TRAVEL_DEPTH = 8;
 /** Several letters going back to the pool leave this far apart, in milliseconds (M05-02, R7). */
@@ -137,6 +138,12 @@ export class GameScene extends Phaser.Scene {
   /** While coins fly, the counter shows the balance before them, counting up as they land (M07-02, R15). */
   private coinsShown: number | null = null;
   private adShownAs = '';
+  /** The Letter and Reveal hints bought in this level (M07-03, R3). */
+  private hintUses: HintUses = NO_HINT_USES;
+  /** This level teaches reordering: no hints in its phase two (M07-03, R8). */
+  private reorderingLesson = false;
+  /** "Not enough coins", while it's open (M07-03, R9). */
+  private noCoins: { objects: Phaser.GameObjects.GameObject[]; close: Rect; ad: Rect | null; lines: string[]; shownAs: string } | null = null;
   /** The full-screen card naming a new theme. Input is ignored while it shows (M06-02, R11). */
   private interstitial: Phaser.GameObjects.Rectangle | null = null;
   private interstitialText: Phaser.GameObjects.Text | null = null;
@@ -202,6 +209,11 @@ export class GameScene extends Phaser.Scene {
               return events;
             }),
           solve: () => this.solveForTests(),
+          setCoins: (coins: number) => {
+            this.progress = { ...this.progress, coins };
+            this.save();
+            this.refreshCoins();
+          },
           skipCeremony: () => this.phaseTwo?.skipCeremony(),
           arrange: (order: string[], cells: Record<string, number>) => this.phaseTwo?.arrange(order, cells),
           select: (row: number) => this.phaseTwo?.select(row),
@@ -230,6 +242,7 @@ export class GameScene extends Phaser.Scene {
       hints: this.phaseOneHints(),
       coins: this.coins(),
       adButton: this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy) : null,
+      noCoins: this.noCoins ? { lines: this.noCoins.lines, close: this.noCoins.close, ad: this.noCoins.ad, adButton: this.noCoins.ad ? this.noCoinsAdState() : null } : null,
     };
   }
 
@@ -266,6 +279,9 @@ export class GameScene extends Phaser.Scene {
     }
     this.level = level;
     const saved = this.progress.inLevel;
+    this.closeNoCoins();
+    this.hintUses = saved?.hintUses ?? NO_HINT_USES;
+    this.reorderingLesson = saved?.reorderingLesson === true;
     this.board = (saved && Board.restore(level, saved.board)) || new Board(level);
     this.redraw();
     if (this.board.phaseOneOver) this.startCeremony(saved?.phaseTwo ?? null, true);
@@ -293,7 +309,11 @@ export class GameScene extends Phaser.Scene {
   /** After every change that settles (M05-01, R10). */
   private saveLevel() {
     if (this.allDone || this.board.drag) return;
-    this.progress = { ...this.progress, inLevel: { board: this.board.snapshot(), phaseTwo: this.phaseTwo?.snapshot() ?? null } };
+    // The coins spent on a hint are saved with what it did, never one without the other (M07-03, R7).
+    this.progress = {
+      ...this.progress,
+      inLevel: { board: this.board.snapshot(), phaseTwo: this.phaseTwo?.snapshot() ?? null, hintUses: this.hintUses, reorderingLesson: this.reorderingLesson },
+    };
     this.save();
   }
 
@@ -458,13 +478,7 @@ export class GameScene extends Phaser.Scene {
     if (item.name === 'ad') {
       if (!this.adShown()) return;
       const state = adButtonState(this.now(), this.lastAdEnd, this.economy);
-      const parts: Phaser.GameObjects.GameObject[] = [
-        this.top(this.add.rectangle(x, y, item.width, item.height, colours.tile)),
-        this.topText(state.text, x - item.width * 0.23, y, size, colours.text),
-        this.top(drawCoin(this, x + item.width * 0.14, y, icon * 0.7, colours.tileGold)),
-        this.top(drawVideo(this, x + item.width * 0.36, y, icon * 0.7, colours.text)),
-      ];
-      if (!state.ready) parts.forEach((part) => (part as unknown as Phaser.GameObjects.Components.Alpha).setAlpha(AD_WAITING_ALPHA));
+      drawAdButton(this, item, state.text, state.ready, size).forEach((part) => this.top(part));
       return;
     }
     if (item.name === 'home' || item.name === 'settings') {
@@ -553,7 +567,7 @@ export class GameScene extends Phaser.Scene {
   /** Phase one's hint buttons: the Letter hint, stacked above Recall All. The tutorials have none (M07-01, R2, R10). */
   private phaseOneHints(): HintButton[] {
     if (this.tutorial || this.phaseTwo || this.allDone || !this.board) return [];
-    return [{ name: 'letter', rect: this.layoutNow.letterHint, enabled: this.board.letterHintAvailable }];
+    return [{ name: 'letter', rect: this.layoutNow.letterHint, enabled: this.board.letterHintAvailable, price: this.priceOf('letter') }];
   }
 
   private drawRecall() {
@@ -577,6 +591,10 @@ export class GameScene extends Phaser.Scene {
 
   private onPointerDown(pointer: Phaser.Input.Pointer) {
     if (this.adPlaying) return;
+    if (this.noCoins) {
+      this.noCoinsPress(pointer.x, pointer.y);
+      return;
+    }
     const ad = this.layoutNow?.topItems.find((item) => item.name === 'ad');
     if (ad && this.adShown() && pointer.x >= ad.x && pointer.x <= ad.x + ad.width && pointer.y >= ad.y && pointer.y <= ad.y + ad.height) {
       this.pressAd();
@@ -743,13 +761,18 @@ export class GameScene extends Phaser.Scene {
       this.saveLevel();
     } else if (hit.kind === 'recall') {
       this.act(() => void this.board.recallAll());
-    } else if (hit.kind === 'letterHint' && !this.tutorial) {
+    } else if (hit.kind === 'letterHint' && !this.tutorial && this.board.letterHintAvailable) {
+      if (!this.buy('letter')) return;
       // The hint never shakes a row (M07-01, R13).
       this.act(() => this.board.letterHint(() => this.hintRandom()).filter((event) => event.type !== 'wrong'));
     }
   }
 
   private onKey(event: KeyboardEvent) {
+    if (this.noCoins) {
+      if (event.key === 'Escape') this.closeNoCoins();
+      return;
+    }
     if (this.allDone || this.interstitial || this.adPlaying) return;
     if (this.phaseTwo) {
       this.phaseTwo.onKey(event);
@@ -769,9 +792,16 @@ export class GameScene extends Phaser.Scene {
     const phase = this.phaseTwo?.phaseState;
     if (!this.reordering || this.reorderingDone || !phase || phase.won) return null;
     if (phase.rows[this.reordering.to]?.word === this.reordering.word) {
+      // Each move in turn, until the rows are in the designed order (M07-03, R13).
+      const next = firstReorderingMove(phase.rows.map((row) => row.word), designedOrder(this.level));
+      if (next) {
+        this.reordering = next;
+        return 'reorder';
+      }
       this.reorderingDone = true;
       this.progress = { ...this.progress, reorderingTaught: true };
       this.save();
+      this.phaseTwo?.endReordering();
       return null;
     }
     return 'reorder';
@@ -846,8 +876,10 @@ export class GameScene extends Phaser.Scene {
       slot: (word, slot) => !step() || (step() === 'reorder' && word === move().word && Math.sign(slot - move().from) === Math.sign(move().to - move().from)),
       // Both phase-two steps can be played with the keyboard (M06-04, R8 and R9), within the step's rules.
       keys: () => true,
-      // No hints during a tutorial's step (M07-01, R10).
-      hints: () => !step(),
+      // No hints during a tutorial's step (M07-01, R10), nor in the reordering tutorial's phase two at all (M07-03, R8).
+      hints: () => !step() && !this.reorderingLesson,
+      price: (hint) => this.priceOf(hint),
+      buy: (hint) => this.buy(hint),
     };
   }
 
@@ -871,7 +903,8 @@ export class GameScene extends Phaser.Scene {
     const tip = afterTutorial && !this.board.rows.some((row) => row.locked);
     const waiting = view && !view.ready;
     // Step 1's hand moves on to the next letter once one is placed.
-    const shown = waiting ? 'ceremony' : step === 1 ? `step 1:${this.nextFirstCell()}` : step ? `step ${step}` : tip ? 'tip' : '';
+    const reorderingMove = step === 'reorder' && this.reordering ? `:${this.reordering.word}:${this.reordering.to}` : '';
+    const shown = waiting ? 'ceremony' : step === 1 ? `step 1:${this.nextFirstCell()}` : step ? `step ${step}${reorderingMove}` : tip ? 'tip' : '';
     if (!force && shown === this.guideShown && this.guideText?.active !== false) {
       this.guideText?.setDepth(this.guideText.depth);
       return;
@@ -1065,7 +1098,10 @@ export class GameScene extends Phaser.Scene {
     const lockedSpells = spellsBySliding(words, this.level.finalWord);
     const teachHere = !taught && !this.tutorial && needsReordering(this.level) && !lockedSpells;
     // The move comes from the rows' starting order, so reopening after it was made doesn't show it again.
-    if (teachHere) this.reordering = firstReorderingMove(words, designedOrder(this.level));
+    if (teachHere) {
+      this.reordering = firstReorderingMove(words, designedOrder(this.level));
+      this.reorderingLesson = true;
+    }
     const canReorder = taught || teachHere;
     if (!canReorder && !lockedSpells) {
       // Each row glides from where it was in phase one to its designed slot.
@@ -1137,6 +1173,7 @@ export class GameScene extends Phaser.Scene {
 
   private refreshAdButton() {
     if (!this.layoutNow) return;
+    if (this.noCoins && this.noCoins.ad && this.noCoinsAdState().text !== this.noCoins.shownAs) this.openNoCoins();
     const shown = this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy).text : '';
     if (shown === this.adShownAs) return;
     this.layoutNow = this.layoutFor();
@@ -1193,6 +1230,114 @@ export class GameScene extends Phaser.Scene {
           this.refreshCoins();
         },
       });
+    }
+  }
+
+  // Buying hints (M07-03)
+
+  private priceOf(hint: PricedHint): number {
+    return priceOf(hint, this.hintUses, this.economy);
+  }
+
+  /**
+   * Takes a hint's price from the coins, or opens "Not enough coins" (R9). The caller then uses the hint, and the
+   * level is saved once it settles, coins and hint together (R7).
+   */
+  private buy(hint: PricedHint): boolean {
+    const price = this.priceOf(hint);
+    const before = this.coinsShown ?? this.coins();
+    if (this.coins() < price) {
+      this.openNoCoins();
+      return false;
+    }
+    this.progress = { ...this.progress, coins: this.coins() - price };
+    if (hint !== 'ordering') this.hintUses = { ...this.hintUses, [hint]: this.hintUses[hint] + 1 };
+    this.countCoins(before, this.coins());
+    return true;
+  }
+
+  /** The counter counts down to the new balance (R10). The spending sound waits for M07-07. */
+  private countCoins(from: number, to: number) {
+    const count = { value: from };
+    this.coinsShown = from;
+    this.tweens.add({
+      targets: count,
+      value: to,
+      duration: timings.coinCount,
+      onUpdate: () => {
+        const shown = Math.round(count.value);
+        if (shown === this.coinsShown) return;
+        this.coinsShown = shown;
+        this.refreshCoins();
+      },
+      onComplete: () => {
+        this.coinsShown = null;
+        this.refreshCoins();
+      },
+    });
+  }
+
+  private noCoinsAdState(): { ready: boolean; text: string } {
+    const state = adButtonState(this.now(), this.lastAdEnd, this.economy);
+    return state.ready ? { ready: true, text: `Watch an ad for +${this.economy.adReward}` } : state;
+  }
+
+  /** "Not enough coins", with the ad button or, with no ads, how to earn coins, and Close (R9). */
+  private openNoCoins() {
+    this.closeNoCoins();
+    const { width, height } = this.scale;
+    const size = Math.min(this.layoutNow.tileSize, 46);
+    const panelWidth = Math.min(width * 0.9, size * 9);
+    const panelHeight = size * 5.2;
+    const top = height / 2 - panelHeight / 2;
+    const objects: Phaser.GameObjects.GameObject[] = [
+      this.add.rectangle(width / 2, height / 2, width, height, colours.background).setAlpha(0.6).setDepth(NO_COINS_DEPTH),
+      this.add.rectangle(width / 2, height / 2, panelWidth, panelHeight, colours.tile).setDepth(NO_COINS_DEPTH),
+    ];
+    const text = (line: string, y: number, fontSize: number, wrap = panelWidth * 0.85) => {
+      const object = this.add
+        .text(width / 2, y, line, { fontFamily: currentStyle.font, fontSize: `${Math.round(Math.max(fontSize, currentStyle.minText))}px`, color: hex(colours.text), align: 'center', wordWrap: { width: wrap } })
+        .setOrigin(0.5)
+        .setDepth(NO_COINS_DEPTH);
+      objects.push(object);
+      return object;
+    };
+    const lines = ['Not enough coins'];
+    text('Not enough coins', top + size * 0.9, size * 0.6);
+    let ad: Rect | null = null;
+    let shownAs = '';
+    if (this.platform.adsAvailable()) {
+      const state = this.noCoinsAdState();
+      ad = { x: width / 2 - panelWidth * 0.4, y: top + size * 1.8, width: panelWidth * 0.8, height: size * 1.2 };
+      drawAdButton(this, ad, state.text, state.ready, Math.max(size * 0.42, currentStyle.minText), NO_COINS_DEPTH, true).forEach((part) => objects.push(part));
+      lines.push(state.text);
+      shownAs = state.text;
+    } else {
+      const line = 'Finish a series or find bonus words to earn coins, or try watching an ad later.';
+      text(line, top + size * 2.4, size * 0.4);
+      lines.push(line);
+    }
+    const close: Rect = { x: width / 2 - size * 1.6, y: top + panelHeight - size * 1.6, width: size * 3.2, height: size * 1.1 };
+    objects.push(this.add.rectangle(close.x + close.width / 2, close.y + close.height / 2, close.width, close.height, colours.background).setDepth(NO_COINS_DEPTH));
+    const closeText = text('Close', close.y + close.height / 2, size * 0.5);
+    closeText.setColor(hex(colours.highlight));
+    lines.push('Close');
+    this.noCoins = { objects, close, ad, lines, shownAs };
+  }
+
+  private closeNoCoins() {
+    this.noCoins?.objects.forEach((object) => object.destroy());
+    this.noCoins = null;
+  }
+
+  private noCoinsPress(x: number, y: number) {
+    const popup = this.noCoins!;
+    const inside = (rect: Rect) => x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
+    if (inside(popup.close)) {
+      this.closeNoCoins();
+    } else if (popup.ad && inside(popup.ad) && this.noCoinsAdState().ready) {
+      this.closeNoCoins();
+      void this.pressAd();
     }
   }
 

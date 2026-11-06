@@ -22,10 +22,6 @@ Feature: Hints, part 1: how they behave
       When phase two starts
       Then the hint buttons are centred along the bottom of the screen
 
-    Scenario: Hints are free and unlimited for now
-      When the player uses the Letter hint 3 times
-      Then 3 of LEMUR's cells are locked
-
   Rule: The Letter hint locks a letter of the selected word, at random
 
     Scenario: It locks the right letter in one of the row's cells
@@ -115,12 +111,16 @@ Feature: Hints, part 1: how they behave
       When the player uses the Reveal hint
       Then the revealed word's letters other than the gold one are faded
 
+    # Changed by M07-03: hints cost coins, so the player has enough for three.
     Scenario: Revealing every word wins the level
+      Given the player has 1000 coins to spend
       When the player uses the Reveal hint 3 times
       Then the level is won
 
+    # Changed by M07-03: hints cost coins, so the player has enough for three.
     Scenario: Hints don't change the point
       Given the player has 0 points in total
+      And the player has 1000 coins to spend
       When the player uses the Reveal hint 3 times
       Then the player has 1 point in total
 

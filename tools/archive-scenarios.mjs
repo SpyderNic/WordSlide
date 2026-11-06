@@ -8,7 +8,7 @@ const given = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const plan = Array.isArray(given) ? given : given.features;
 const story = Array.isArray(given) ? 23 : given.story;
 const about = Array.isArray(given) ? 'a pool for each row' : given.about;
-const ARCHIVE = `archive/before-story-${story}`;
+const ARCHIVE = typeof story === "number" ? `archive/before-story-${story}` : `archive/before-${story.toLowerCase()}`;
 mkdirSync(ARCHIVE, { recursive: true });
 
 const indentOf = (line) => line.length - line.trimStart().length;
@@ -34,14 +34,15 @@ for (const { feature, items } of plan) {
       if (kind !== 'rule' && /^\s*Rule:/.test(line)) break;
     }
     while (end > start + 1 && lines[end - 1].trim() === '') end--;
-    archived.push(`  # Archived for story ${story}: ${note}`, ...lines.slice(first, end), '');
+    archived.push(`  # Archived for ${typeof story === 'number' ? `story ${story}` : story}: ${note}`, ...lines.slice(first, end), '');
     lines = [...lines.slice(0, first), ...lines.slice(end)];
     // No more than one blank line where it was.
     lines = lines.filter((line, index) => !(line.trim() === '' && lines[index - 1]?.trim() === ''));
   }
   writeFileSync(feature, lines.join('\n'));
   const target = join(ARCHIVE, basename(feature));
-  const head = existsSync(target) ? readFileSync(target, 'utf8') : `# Archived from ${feature}, before story ${story} (${about}).\n# The game as it was is tagged before-story-${story} in git. These scenarios no longer run.\n\nFeature: ${basename(feature, '.feature')} (archived)\n\n`;
+  const label = typeof story === 'number' ? `story ${story}` : story;
+  const head = existsSync(target) ? readFileSync(target, 'utf8') : `# Archived from ${feature}, before ${label} (${about}).\n# The game as it was is tagged ${basename(ARCHIVE)} in git. These scenarios no longer run.\n\nFeature: ${basename(feature, '.feature')} (archived)\n\n`;
   writeFileSync(target, `${head}${archived.join('\n')}\n`);
   console.log(`${feature}: ${items.length} archived`);
 }

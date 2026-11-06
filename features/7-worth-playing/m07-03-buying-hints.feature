@@ -1,4 +1,4 @@
-# Status: draft, waiting for the designer's approval.
+# Status: approved by the designer on 2026-11-06.
 # Map: docs/milestones/7-worth-playing/m07-03-buying-hints.md
 # Economy values are settings (D52): each scenario sets the ones it uses.
 # Unless a scenario says otherwise, the level has the answers ZEBRA, LEMUR and
@@ -225,10 +225,23 @@ Feature: Hints, part 2: buying them
       Then there are no handles
       And the rows stay in the order the move made
 
+    # From the designer, while building: every move is shown, then the handles go.
+    @browser
+    Scenario: On a level needing two moves, the hand shows each in turn
+      Given the first level that needs reordering is a 3-row test level, whose solution needs the top row moved to the bottom and then the new top two rows swapped
+      And the player has made the shown move
+      Then the hand shows the row being dragged down
+
+    @browser
+    Scenario: The handles go once every move is made
+      Given the first level that needs reordering is a 3-row test level, whose solution needs the top row moved to the bottom and then the new top two rows swapped
+      When the player makes the reordering tutorial's moves
+      Then there are no handles
+      And the rows are in the solution's order
+
     @browser
     Scenario: Later levels have handles as usual
       Given the first level that needs reordering is a 2-row test level, whose solution needs its top row moved down
       When the player makes the reordering tutorial's move
-      And the player wins the level and plays the next one
-      And phase two starts
+      And the player wins the level and the next level reaches phase two
       Then every row has its handle

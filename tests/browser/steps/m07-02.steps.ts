@@ -22,7 +22,7 @@ interface CoinsView {
 type Story20 = Scenario & { coinsGiven?: boolean };
 
 /** Development builds read these before the game starts (D52): the economy's settings, ads and the clock. */
-async function setEconomy(page: Page, values: Record<string, number>) {
+export async function setEconomy(page: Page, values: Record<string, number>) {
   await page.addInitScript((values) => {
     const target = window as unknown as { wordSlideEconomy?: Record<string, number> };
     target.wordSlideEconomy = { ...target.wordSlideEconomy, ...values };
@@ -89,9 +89,9 @@ async function pressAdButton(page: Page, scenario: Story20) {
   await page.waitForTimeout(150);
 }
 
-const pretendAd = (page: Page) => page.locator('#pretend-ad');
+export const pretendAd = (page: Page) => page.locator("#pretend-ad");
 
-async function finishAd(page: Page, scenario: Story20) {
+export async function finishAd(page: Page, scenario: Story20) {
   await expect(pretendAd(page)).toBeVisible();
   await startRecording(page);
   await pretendAd(page).getByRole('button', { name: 'Finish' }).click();

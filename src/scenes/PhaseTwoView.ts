@@ -47,9 +47,13 @@ export interface PhaseTwoRules {
   keys: () => boolean;
   /** Whether hints are offered: not during a tutorial's step (M07-01, R10). */
   hints: () => boolean;
+  /** A hint's price, shown on its button (M07-03, R2). */
+  price: (hint: 'ordering' | 'reveal') => number | undefined;
+  /** Buys a hint: false when the player can't afford it, and nothing is used (M07-03, R1 and R9). */
+  buy: (hint: 'ordering' | 'reveal') => boolean;
 }
 
-const FREE: PhaseTwoRules = { handle: () => true, slide: () => true, slot: () => true, keys: () => true, hints: () => true };
+const FREE: PhaseTwoRules = { handle: () => true, slide: () => true, slot: () => true, keys: () => true, hints: () => true, price: () => undefined, buy: () => true };
 
 export interface PhaseTwoCallbacks {
   /** The ceremony has finished, or a word or row has settled, and the column spells the word. */
@@ -345,7 +349,7 @@ export class PhaseTwoView {
     names.forEach((name, index) => {
       const rect = { x: width / 2 - total / 2 + index * (size + gap), y: height - size - this.tile * 0.2, width: size, height: size };
       const enabled = name === 'ordering' ? this.phase.orderingHintAvailable : this.phase.revealHintAvailable;
-      const button: HintButton = { name, rect, enabled };
+      const button: HintButton = { name, rect, enabled, price: this.rules.price(name as 'ordering' | 'reveal') };
       this.hintButtons.push(button);
       // Above the handles (depth 3).
       this.hintObjects.push(...drawHintButton(this.scene, button, 4));
@@ -353,9 +357,21 @@ export class PhaseTwoView {
   }
 
   private useHint(button: HintButton) {
-    if (!button.enabled) return;
+    if (!button.enabled || button.name === 'letter') return;
+    if (!this.rules.buy(button.name)) return;
     if (button.name === 'ordering') this.orderRows();
     else this.revealWord();
+  }
+
+  /** The reordering tutorial's moves are made: the rows stay as they are, and the handles fade away (M07-03, R13). */
+  endReordering() {
+    this.phase.fixOrder();
+    this.handlesVisible = false;
+    this.rowViews.forEach((view) => {
+      this.scene.tweens.add({ targets: view.handle, alpha: 0, duration: timings.snap * 2, onComplete: () => view.handle.setVisible(false).setAlpha(1) });
+    });
+    this.drawHints();
+    this.callbacks.onSettled();
   }
 
   /** The rows glide into the solution's order, and the handles fade away (R5). */

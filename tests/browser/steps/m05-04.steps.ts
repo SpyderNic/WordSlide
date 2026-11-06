@@ -198,10 +198,13 @@ Then('the rows have swapped', async ({ page, scenario }) => {
 });
 
 // In both test levels, the shown move takes the top row to the bottom.
+// On a level needing several moves, the tutorial then shows the next one (M07-03, R13), so this waits for the move.
 Given('the player has made the shown move', async ({ page, scenario }) => {
   await ready(page, scenario);
-  await moveTopRowDown(page, (await two(page)).rows.length - 1);
-  await expect.poll(async () => (await tutorialText(page)).length).toBe(0);
+  const rows = (await two(page)).rows;
+  await moveTopRowDown(page, rows.length - 1);
+  await expect.poll(async () => (await two(page)).rows[rows.length - 1].word).toBe(rows[0].word);
+  if (rows.length === 2) await expect.poll(async () => (await tutorialText(page)).length).toBe(0);
 });
 
 // The bottom word, so the column doesn't spell the final word and win.
@@ -215,15 +218,6 @@ Then('the word slides', async ({ page, scenario }) => {
   expect((await two(page)).rows[1].columnCell).not.toBe(scenario.twoBefore!.rows[1].columnCell);
 });
 
-Then('the player can drag either handle', async ({ page }) => {
-  for (let move = 0; move < 2; move++) {
-    const before = (await two(page)).rows.map((row) => row.word);
-    await dragHandle(page, before[before.length - 1], -1);
-    await page.mouse.up();
-    await page.waitForTimeout(400);
-    expect((await two(page)).rows.map((row) => row.word)).not.toEqual(before);
-  }
-});
 
 When('the player swaps the top two rows', async ({ page }) => {
   await dragHandle(page, (await two(page)).rows[1].word, -1);

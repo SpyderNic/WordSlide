@@ -868,7 +868,7 @@ Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected
   const story23Check = $uri.includes('m06-03') && scenario.views.length > 0;
   if (!scenario.acted && !story23Check) {
     // These stories select a row in phase one, by tapping it.
-    if (['m02-02', 'm03-01', 'm03-02', 'm03-05', 'm05-01', 'm05-02', 'm06-03', 'm07-02'].some((story) => $uri.includes(story))) {
+    if (['m02-02', 'm03-01', 'm03-02', 'm03-05', 'm05-01', 'm05-02', 'm06-03', 'm07-02', 'm07-03'].some((story) => $uri.includes(story))) {
       scenario.setup.push(async (page) => {
         const { layout } = await current(page);
         const cell = layout.rows.find((row) => row.word === word)!.cells[0];

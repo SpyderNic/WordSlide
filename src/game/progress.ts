@@ -1,10 +1,15 @@
 import type { BoardSnapshot } from './board';
 import type { PhaseTwoSnapshot } from './phaseTwo';
+import type { HintUses } from './economy';
 
 /** What a level looks like after the last change that settled (M05-01, R10). */
 export interface LevelSnapshot {
   board: BoardSnapshot;
   phaseTwo: PhaseTwoSnapshot | null;
+  /** The Letter and Reveal hints bought in this level, so their prices survive reopening (M07-03, R6). */
+  hintUses?: HintUses;
+  /** This level teaches reordering: its phase two has no hints (M07-03, R8). */
+  reorderingLesson?: boolean;
 }
 
 /** The player's progress through the levels (M05-01). */

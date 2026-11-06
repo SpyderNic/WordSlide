@@ -123,11 +123,12 @@ Feature: Reordering is taught later
       And the text and the hand disappear
 
     @browser
-    Scenario: After the move, the player plays freely
+    # Changed by M07-03 (R13): once the move is made, the handles go and only sliding is left.
+    Scenario: After the move, only sliding is left
       Given the player has made the shown move
       When the player slides a word
       Then the word slides
-      And the player can drag either handle
+      And there are no handles
 
   Rule: Reopening mid-tutorial carries on at the same step
 
@@ -166,12 +167,6 @@ Feature: Reordering is taught later
       When the ceremony has ended
       Then a hand starts on the top row's handle and shows it being dragged to the bottom
 
-    @browser
-    Scenario: After the first move, the player makes the rest freely
-      Given the player has made the shown move
-      When the player swaps the top two rows
-      Then the rows are in the solution's order
-
   Rule: If the player's rows don't need moving, the tutorial waits (Q12)
 
     @browser
@@ -183,11 +178,12 @@ Feature: Reordering is taught later
       And there's no tutorial text and no hand
 
     @browser
+    # Changed by M07-03 (R13): the handles stay gone after reopening.
     Scenario: Reopening after the move
       Given the reordering tutorial's ceremony has ended
       And the player has made the shown move
       When the game closes and opens again
-      Then every row has its handle
+      Then there are no handles
       And there's no tutorial text and no hand
 
   # The planned content (R6) is checked in M06-02.

@@ -46,6 +46,12 @@ export class PhaseTwo {
   /** Whether the Ordering hint has fixed the order. */
   ordered = false;
 
+  /** The rows stay in the order they're in: no more reordering (M07-03, R13). Saved like the Ordering hint's. */
+  fixOrder() {
+    this.canReorder = false;
+    this.ordered = true;
+  }
+
   /** Saved positions for these words, or null if they don't match. */
   static restore(snapshot: PhaseTwoSnapshot, words: string[], finalWord: string, canReorder = true): PhaseTwo | null {
     const saved = snapshot?.words;

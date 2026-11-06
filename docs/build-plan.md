@@ -10,7 +10,7 @@ Approved by the designer on 2026-10-31, and reorganised by milestone on 2026-11-
 | 4 | [**Phase two**](milestones/4-phase-two/README.md): Finding the word: the ceremony, sliding words, reordering rows, and the win | M04-01, M04-02, M04-03, M04-04 | Done |
 | 5 | [**The whole game**](milestones/5-the-whole-game/README.md): Levels one after another with saved progress, the visual style, and the tutorials (FTUE) | M05-01, M05-02, M05-03, M05-04 | Done: played and approved on 2026-11-06 |
 | 6 | [**Content**](milestones/6-content/README.md): The level generator and the prototype's 40 levels, and the changes from playing them | M06-01, M06-02, M06-03, M06-04 | Done: played and approved on 2026-11-06 |
-| 7 | [**Worth playing**](milestones/7-worth-playing/README.md): Reasons to keep playing: hints, coins and ads, buying hints, level series, bonus words, a gentle nudge, and sound | M07-01, M07-02, M07-03, M07-04, M07-05, M07-06, M07-07 | In progress: M07-01 and M07-02 built |
+| 7 | [**Worth playing**](milestones/7-worth-playing/README.md): Reasons to keep playing: hints, coins and ads, buying hints, level series, bonus words, a gentle nudge, and sound | M07-01, M07-02, M07-03, M07-04, M07-05, M07-06, M07-07 | In progress: M07-01 to M07-03 built |
 | 8 | [**Ready for CrazyGames**](milestones/8-ready-for-crazygames/README.md): What release needs, as an outline: no stories are written yet | None | Not started |
 | | [**Parked**](milestones/parked/README.md) | P-01 | Set aside by the designer |
 
@@ -33,7 +33,7 @@ Milestone 6 is built (2026-11-03): the level generator (M06-01) and the 40 level
 
 **From playing milestone 6 (2026-11-03):** the designer found level 2 really difficult and couldn't find its 5-letter words. On 2026-11-04, the designer chose to give each row its own pool (M06-03, built on 2026-11-04), with a row locking all at once. The game before it is tagged `before-story-23` in git, and scenarios it made obsolete are in `archive/before-story-23/`. The designer will decide whether shuffling (P-01) is still needed after playing it. M06-04, the designer's changes after playing it, is built too. **Next is the designer playing M06-03 and M06-04.**
 
-**Milestone 7 (2026-11-05):** hints (M07-01) and coins and ads (M07-02) are built. Next is mapping M07-03, buying hints. Milestones 5 and 6 were played and approved on 2026-11-06. The designer can play M07-01 and M07-02 now.
+**Milestone 7 (2026-11-05):** hints (M07-01) and coins and ads (M07-02) are built. Buying hints (M07-03) is built too (2026-11-06). Next is mapping M07-04, level series. Milestones 5 and 6 were played and approved on 2026-11-06. The designer can play M07-01 and M07-02 now.
 
 Mobile testing on a real device waits for milestone 8, at the designer's request.
 

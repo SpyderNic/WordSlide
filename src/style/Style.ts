@@ -52,5 +52,7 @@ export interface Style {
     coinFlightGap: number;
     /** How long the Level complete popup shows the old points before the new ones pulse in (M07-02, R11). */
     pointsPause: number;
+    /** The coin counter counting down when coins are spent (M07-03, R10). */
+    coinCount: number;
   };
 }

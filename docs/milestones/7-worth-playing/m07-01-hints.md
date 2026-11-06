@@ -2,6 +2,8 @@
 
 **Status:** 🟢 Approved by the designer on 2026-11-05. Approved along with its scenarios in [features/7-worth-playing/m07-01-hints.feature](../../../features/7-worth-playing/m07-01-hints.feature). Built on 2026-11-05.
 
+> *Changed by M07-03 on 2026-11-06.* Hints now cost coins ([M07-03](m07-03-buying-hints.md)), so "free and unlimited for now" no longer applies; its scenario is in `archive/before-m07-03/`. The tutorials, the whole reordering tutorial included, have no hints (M07-03, R8).
+
 *As a player who's stuck, I want a hint that helps without solving the level for me, so that I can keep going.*
 
 Added to the backlog on 2026-11-02, and brought into the prototype on 2026-11-04. *Split by the designer on 2026-11-04:* this part maps how hints behave, free and unlimited for now, to check they work as intended. How players get hints and what they cost comes after a discussion of the economy (coins and rewarded ads, M07-02), in part 2 (M07-03). *Rewritten on 2026-11-05 with the designer's list of hints.*

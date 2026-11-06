@@ -2,7 +2,7 @@
 
 **Status:** 🟢 Approved by the designer on 2026-11-03, and changed after playing (Q12). Built on 2026-11-03.
 
-> *Changed by M07-03 on 2026-11-06.* Once the tutorial's moves are made, the handles go and only sliding is left, and its phase two has no hint buttons at all ([M07-03](../7-worth-playing/m07-03-buying-hints.md), R8 and R13).
+> *Changed by M07-03 on 2026-11-06.* Once the tutorial's moves are made, the handles go and only sliding is left, and its phase two has no hint buttons at all ([M07-03](../7-worth-playing/m07-03-buying-hints.md), R8 and R13). On a level that needs several moves, the hand shows each one in turn, instead of only the first.
 
 > *Changed by M06-03 on 2026-11-04.* Each row now has its own pool ([M06-03](../6-content/m06-03-a-pool-for-each-row.md)). Some of this story's examples changed to use a row's own letters, and scenarios whose rule no longer applies are in `archive/before-story-23/`, with the rule that replaced each.
 
