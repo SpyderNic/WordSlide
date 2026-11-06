@@ -21,6 +21,8 @@ export interface Economy {
   priceStep: number;
   /** The most a hint can cost, as a multiple of its first price. */
   priceCap: number;
+  /** The coins a finished series gives for each of its levels (M07-04, R5). */
+  seriesRewardPerLevel: number;
 }
 
 /** The values the game ships with (D51). */
@@ -35,6 +37,7 @@ export const SHIPPED_ECONOMY: Economy = {
   orderingPrice: 40,
   priceStep: 0.5,
   priceCap: 5,
+  seriesRewardPerLevel: 4,
 };
 
 export function economyWith(overrides: Partial<Economy> | undefined): Economy {

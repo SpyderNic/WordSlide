@@ -1,6 +1,6 @@
 # M07-04: Level series (was story 28)
 
-**Status:** ✅ Approved by the designer on 2026-11-06. Scenarios: [m07-04-level-series.feature](../../../features/7-worth-playing/m07-04-level-series.feature), approved on 2026-11-06.
+**Status:** ✅ Approved by the designer on 2026-11-06. Scenarios: [m07-04-level-series.feature](../../../features/7-worth-playing/m07-04-level-series.feature), approved and built on 2026-11-06.
 
 *As a player, I want my levels grouped into named series with a bar that fills as I go, so that I always have a goal close by and finishing one feels like an achievement worth coins.*
 

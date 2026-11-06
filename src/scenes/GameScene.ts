@@ -6,7 +6,9 @@ import type { Cell, Level } from '../game/level';
 import { coinsOf, NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
 import { adButtonState, asksForMidgameAd, economyWith, NO_HINT_USES, priceOf, type Economy, type HintUses, type PricedHint } from '../game/economy';
 import { pickedLevel, resetAsked } from '../game/startingLevel';
-import { levels } from '../levels';
+import { levels, series as gameSeries } from '../levels';
+import { endsSeries, seriesOf, seriesReward, startsSeries, type Series } from '../game/series';
+import { cellsOf } from '../game/characters';
 import { createPlatform } from '../platform';
 import type { Platform } from '../platform/Platform';
 import { currentStyle } from '../style';
@@ -14,7 +16,7 @@ import { PhaseTwoView, type PhaseTwoRules } from './PhaseTwoView';
 import { loadHand, makeGuideText, makeHand, moveHand } from './guide';
 import { designedOrder, needsReordering, rowsInDesignedOrder, spellsBySliding } from '../game/reordering';
 import { firstReorderingMove, tutorialPlan, tutorialStep, type ReorderingMove, type TutorialPlan, type TutorialStep } from '../game/tutorial';
-import { buildPopup } from './popup';
+import { COMPLETE_DEPTH, LevelComplete, type CompleteSeries } from './levelComplete';
 import { drawHintButton, type HintButton } from './hintButtons';
 import { makeTile, paintTile } from './tiles';
 import { drawCoin, drawCog, drawHouse } from './topIcons';
@@ -23,8 +25,10 @@ import { drawAdButton } from './adButton';
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
 const SHAKE_DISTANCE = 6;
-/** Coins flying to the counter, above the board and the popup (M07-02, R15). */
-const FLIGHT_DEPTH = 26;
+/** Coins flying to the counter, above the board and the Level complete screen (M07-02, R15). */
+const FLIGHT_DEPTH = 32;
+/** While the Level complete screen shows, the coin counter is drawn above it (M07-04, Q14). */
+const COUNTER_DEPTH = COMPLETE_DEPTH + 1;
 /** "Not enough coins", above the board and the level's popup (M07-03, R9). */
 const NO_COINS_DEPTH = 35;
 /** Letters flying between the pool and the cells are drawn above the board, below a dragged tile. */
@@ -109,7 +113,11 @@ export class GameScene extends Phaser.Scene {
   private saving = true;
   /** After the last level, only the top of the screen and a popup show (M05-01, R11). */
   private allDone = false;
-  private allComplete: Phaser.GameObjects.Container | null = null;
+  private allComplete: LevelComplete | null = null;
+  /** The levels' series (M07-04, R1). */
+  private series: Series[] = gameSeries;
+  /** The Level complete screen shows: only the coin counter stays from the top bar (Q14). */
+  private completeShowing = false;
   /** Cells waiting for a travelling letter, by "row:cell", and when it lands (M05-02, R6). */
   private arriving = new Map<string, number>();
   /** Letters flying back to the pool, by letter: their tile's count goes up when they land (M05-02, R7). */
@@ -146,7 +154,8 @@ export class GameScene extends Phaser.Scene {
   private noCoins: { objects: Phaser.GameObjects.GameObject[]; close: Rect; ad: Rect | null; lines: string[]; shownAs: string } | null = null;
   /** The full-screen card naming a new theme. Input is ignored while it shows (M06-02, R11). */
   private interstitial: Phaser.GameObjects.Rectangle | null = null;
-  private interstitialText: Phaser.GameObjects.Text | null = null;
+  /** Its lines, and how far each sits below the screen's middle. */
+  private interstitialTexts: { text: Phaser.GameObjects.Text; offset: number }[] = [];
 
   constructor() {
     super('GameScene');
@@ -160,6 +169,10 @@ export class GameScene extends Phaser.Scene {
     const development = import.meta.env.DEV;
     const testList = (window as unknown as { wordSlideTestLevels?: Level[] }).wordSlideTestLevels;
     if (development && testList) this.levels = testList;
+    // Tests give their own series. Test levels without them make one series of them all, so no other story meets one.
+    const testSeries = (window as unknown as { wordSlideTestSeries?: Series[] }).wordSlideTestSeries;
+    if (development && testSeries) this.series = testSeries;
+    else if (development && testList) this.series = [{ name: 'Test Series', length: testList.length }];
     this.platform = createPlatform();
     if (development) this.economy = economyWith((window as unknown as { wordSlideEconomy?: Partial<Economy> }).wordSlideEconomy);
     const search = window.location.search;
@@ -172,7 +185,9 @@ export class GameScene extends Phaser.Scene {
       const picked = pickedLevel(search, this.levels.length, development);
       if (picked !== null) {
         this.saving = false;
-        progress = { level: picked, points: progress.points, inLevel: null };
+        progress = { level: picked, points: progress.points, inLevel: null, ...(progress.coins !== undefined ? { coins: progress.coins } : {}) };
+        const coins = (window as unknown as { wordSlideTestCoins?: number }).wordSlideTestCoins;
+        if (typeof coins === 'number') progress = { ...progress, coins };
       }
       this.progress = progress;
       this.startLevel();
@@ -242,6 +257,7 @@ export class GameScene extends Phaser.Scene {
       hints: this.phaseOneHints(),
       coins: this.coins(),
       adButton: this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy) : null,
+      complete: this.allComplete?.info ?? null,
       noCoins: this.noCoins ? { lines: this.noCoins.lines, close: this.noCoins.close, ad: this.noCoins.ad, adButton: this.noCoins.ad ? this.noCoinsAdState() : null } : null,
     };
   }
@@ -258,9 +274,10 @@ export class GameScene extends Phaser.Scene {
   private startLevel(level: Level | undefined = this.levels[this.progress.level - 1], fade = false) {
     this.phaseTwo?.destroy();
     this.phaseTwo = null;
-    this.allComplete?.destroy(true);
+    this.allComplete?.destroy();
     this.allComplete = null;
     this.allDone = false;
+    this.completeShowing = false;
     this.incoming.clear();
     this.arriving.clear();
     this.effects = [];
@@ -320,7 +337,7 @@ export class GameScene extends Phaser.Scene {
   private onResize() {
     const { width, height } = this.scale;
     this.interstitial?.setPosition(width / 2, height / 2).setSize(width, height);
-    this.interstitialText?.setPosition(width / 2, height / 2);
+    this.interstitialTexts.forEach(({ text, offset }) => text.setPosition(width / 2, height / 2 + offset));
     if (!this.board) return;
     this.board.cancelDrag();
     this.endDragVisuals();
@@ -359,8 +376,15 @@ export class GameScene extends Phaser.Scene {
     this.updateGuide();
     if (this.allDone) {
       this.fadePoolNow();
-      this.allComplete?.destroy(true);
-      this.allComplete = buildPopup(this, this.layoutNow.tileSize, { title: 'All levels complete!', word: [], button: null }).container;
+      this.allComplete?.destroy();
+      const last = this.levels.length;
+      this.allComplete = new LevelComplete(
+        this,
+        this.layoutNow.tileSize,
+        { level: last, word: cellsOf(this.level.finalWord), points: { from: this.points, to: this.points }, series: this.completeSeries(last), reward: null, button: null },
+        { onReward: () => {} },
+        false,
+      );
       return;
     }
     if (this.phaseTwo) return;
@@ -456,6 +480,12 @@ export class GameScene extends Phaser.Scene {
     this.topObjects.forEach((object) => object.destroy());
     this.topObjects = [];
     this.adShownAs = this.adShown() ? adButtonState(this.now(), this.lastAdEnd, this.economy).text : '';
+    if (this.completeShowing || this.allDone) {
+      const coins = this.layoutNow.topItems.find((item) => item.name === 'coins');
+      if (coins) this.drawTopItem(coins);
+      this.topObjects.forEach((object) => (object as unknown as Phaser.GameObjects.Components.Depth).setDepth(COUNTER_DEPTH));
+      return;
+    }
     this.layoutNow.topItems.forEach((item) => this.drawTopItem(item));
   }
 
@@ -1119,9 +1149,16 @@ export class GameScene extends Phaser.Scene {
       {
         onWon: () => this.won(view),
         onSettled: () => this.saveLevel(),
-        onPopup: () => {},
+        onPopup: (playing) => {
+          this.completeShowing = true;
+          // Drawn as it ends after a resize: its coins, if any, are counted already.
+          if (!playing) this.coinsShown = null;
+          this.refreshCoins();
+        },
         points: () => ({ from: this.points, to: this.progress.points }),
         onNextLevel: () => this.nextLevel(),
+        series: () => ({ level: this.levelNumber, series: this.completeSeries(this.levelNumber), reward: this.rewardShown(this.levelNumber) }),
+        onReward: (from, amount, landed) => this.flyCoins(amount, from, this.coinsShown ?? this.coins() - amount, landed),
       },
       this.layoutNow,
       this.phaseTwoRules(),
@@ -1147,7 +1184,14 @@ export class GameScene extends Phaser.Scene {
   private won(view: PhaseTwoView) {
     this.clearGuide();
     this.guideShown = 'won';
-    this.progress = winLevel(this.progress);
+    const reward = this.saving ? seriesReward(this.series, this.levelNumber, this.economy) : 0;
+    if (reward > 0) {
+      // The counter shows the old balance until the coins fly on the Level complete screen.
+      this.coinsShown = this.coinsShown ?? this.coins();
+      this.progress = winLevel({ ...this.progress, coins: this.coins() }, reward);
+    } else {
+      this.progress = winLevel(this.progress);
+    }
     this.save();
     view.celebrate();
   }
@@ -1206,6 +1250,11 @@ export class GameScene extends Phaser.Scene {
     const before = this.coinsShown ?? this.coins();
     this.progress = { ...this.progress, coins: this.coins() + amount };
     this.save();
+    this.flyCoins(amount, from, before);
+  }
+
+  /** Coins fly from a point to the counter, which counts up from `before` as they land (R15). */
+  private flyCoins(amount: number, from: Point, before: number, whenLanded?: () => void) {
     const counter = this.layoutNow.topItems.find((item) => item.name === 'coins')!;
     const to = { x: counter.x + this.layoutNow.topTileSize * 0.3, y: counter.y + counter.height / 2 };
     const count = currentStyle.coinFlights;
@@ -1228,9 +1277,25 @@ export class GameScene extends Phaser.Scene {
           landed++;
           this.coinsShown = landed === count ? null : before + Math.round((amount * landed) / count);
           this.refreshCoins();
+          if (landed === count) whenLanded?.();
         },
       });
     }
+  }
+
+  // Level series (M07-04)
+
+  /** The series of a level just won: levels won before it and now (R2, R4). */
+  private completeSeries(level: number): CompleteSeries | null {
+    const place = seriesOf(this.series, level);
+    if (!place) return null;
+    return { name: place.name, from: level - place.first, to: level - place.first + 1, length: place.length };
+  }
+
+  /** The reward a level's screen shows: a finished series' coins, but none in a peek (R5, R8). */
+  private rewardShown(level: number): number | null {
+    if (!endsSeries(this.series, level) || !this.saving) return null;
+    return seriesReward(this.series, level, this.economy);
   }
 
   // Buying hints (M07-03)
@@ -1356,26 +1421,49 @@ export class GameScene extends Phaser.Scene {
   }
 
   private goToNextLevel() {
-    const next = this.levels[this.progress.level - 1];
-    if (next && next.theme !== this.level.theme) this.showInterstitial(next.theme);
+    const number = this.progress.level;
+    const next = this.levels[number - 1];
+    const newTheme = next && next.theme !== this.level.theme;
+    const newSeries = next && number > 1 && startsSeries(this.series, number);
+    if (newSeries) this.showInterstitial([
+      { text: 'New series', size: 'small' },
+      { text: seriesOf(this.series, number)!.name, size: 'large' },
+      ...(newTheme ? [{ text: next.theme, size: 'theme' as const }] : []),
+    ]);
+    else if (newTheme) this.showInterstitial([{ text: next.theme, size: 'theme' }]);
     else this.startLevel(undefined, true);
   }
 
-  /** Fades in a card naming the new theme, opens the level behind it, then fades it away (M06-02, R11). */
-  private showInterstitial(theme: string) {
+  /**
+   * Fades in a card naming the new theme (M06-02, R11), or the new series and any new theme (M07-04, R7), opens the
+   * level behind it, then fades it away.
+   */
+  private showInterstitial(lines: { text: string; size: 'small' | 'large' | 'theme' }[]) {
     const { width, height } = this.scale;
     const quarter = timings.interstitial / 4;
     this.interstitial = this.add.rectangle(width / 2, height / 2, width, height, colours.background).setDepth(INTERSTITIAL_DEPTH).setAlpha(0);
-    this.interstitialText = this.add
-      .text(width / 2, height / 2, theme, {
-        fontFamily: currentStyle.font,
-        fontSize: `${Math.round(Math.max(Math.min(width, height) * 0.14, currentStyle.minText))}px`,
-        color: `#${colours.highlight.toString(16).padStart(6, '0')}`,
-      })
-      .setOrigin(0.5)
-      .setDepth(INTERSTITIAL_DEPTH + 1)
-      .setAlpha(0);
-    const card = [this.interstitial, this.interstitialText];
+    // A theme is drawn as M06-02's interstitial draws it; a series' name as large, under a small "New series".
+    const shorter = Math.min(width, height);
+    const sizes = { small: shorter * 0.06, large: shorter * 0.14, theme: shorter * 0.14 };
+    const gap = shorter * 0.04;
+    const heights = lines.map((line) => Math.max(sizes[line.size], currentStyle.minText));
+    const total = heights.reduce((sum, size) => sum + size, 0) + gap * (lines.length - 1);
+    let top = -total / 2;
+    this.interstitialTexts = lines.map((line, index) => {
+      const offset = top + heights[index] / 2;
+      top += heights[index] + gap;
+      const text = this.add
+        .text(width / 2, height / 2 + offset, line.text, {
+          fontFamily: currentStyle.font,
+          fontSize: `${Math.round(heights[index])}px`,
+          color: hex(colours.highlight),
+        })
+        .setOrigin(0.5)
+        .setDepth(INTERSTITIAL_DEPTH + 1)
+        .setAlpha(0);
+      return { text, offset };
+    });
+    const card = [this.interstitial, ...this.interstitialTexts.map(({ text }) => text)];
     this.tweens.add({
       targets: card,
       alpha: 1,
@@ -1390,7 +1478,7 @@ export class GameScene extends Phaser.Scene {
           onComplete: () => {
             card.forEach((object) => object.destroy());
             this.interstitial = null;
-            this.interstitialText = null;
+            this.interstitialTexts = [];
           },
         });
       },

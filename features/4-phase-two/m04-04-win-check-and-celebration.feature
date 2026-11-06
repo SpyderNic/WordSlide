@@ -97,11 +97,6 @@ Feature: Win check and celebration
       And the handles start to fade away
       And the gold word ends up alone in the column
 
-    Scenario: The gold word and column fade when the popup appears
-      When the popup appears
-      Then the gold word and the column fade away
-      And the top of the screen stays
-
   Rule: Once the level is won, nothing can be moved
 
     Scenario Outline: Input does nothing
@@ -119,14 +114,6 @@ Feature: Win check and celebration
     Scenario: The popup waits for the celebration
       When the column spells the final word
       Then the popup appears about 1.5 seconds later
-
-    Scenario: The popup's contents
-      Given the player has won level 4
-      When the popup appears
-      Then it's in the centre of the screen
-      And it shows "Level complete"
-      And it shows ELK in gold
-      And its button says "Play Level 5"
 
     Scenario: The button starts the next level
       Given the popup is showing

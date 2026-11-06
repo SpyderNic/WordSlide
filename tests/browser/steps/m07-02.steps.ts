@@ -330,7 +330,7 @@ Then('pressing it plays an ad', async ({ page }) => {
 // Coins flying
 
 /** A flying coin is an octagon drawn above the board (FLIGHT_DEPTH). */
-const FLIGHT_DEPTH = 26;
+const FLIGHT_DEPTH = 32;
 
 Then('coins fly from the centre of the screen to the coin counter', async ({ page, scenario }) => {
   const { layout } = await current(page);

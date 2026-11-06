@@ -40,9 +40,14 @@ export function coinsOf(progress: Progress, startingCoins: number): number {
   return progress.coins ?? startingCoins;
 }
 
-/** Winning unlocks the next level and gives 1 point (D23), but no coins (M07-02, R3). The next level starts fresh. */
-export function winLevel(progress: Progress): Progress {
-  return { ...kept(progress), level: progress.level + 1, points: progress.points + 1, inLevel: null };
+/**
+ * Winning unlocks the next level and gives 1 point (D23). A single level gives no coins (M07-02, R3), but the last level
+ * of a series gives its reward, saved with the win (M07-04, R5 and R6). Pass a progress whose coins are set when there
+ * is a reward, so it adds to the player's balance. The next level starts fresh.
+ */
+export function winLevel(progress: Progress, reward = 0): Progress {
+  const won: Progress = { ...kept(progress), level: progress.level + 1, points: progress.points + 1, inLevel: null };
+  return reward > 0 ? { ...won, coins: (progress.coins ?? 0) + reward } : won;
 }
 
 export function writeProgress(progress: Progress): string {

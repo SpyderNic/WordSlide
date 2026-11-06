@@ -1288,8 +1288,8 @@ When(/^the column (?:reads|spells) (.+?)(?: from top to bottom)?$/, async ({ pag
     await dragSlowlyAndRelease(page, 'FOX', 1, -1);
     return;
   }
-  // Only M04-04 uses this as an action. Everywhere else it's a check, and must never arrange anything.
-  if (!$uri.includes('m04-04')) {
+  // Only M04-04 and M07-04 use this as an action. Everywhere else it's a check, and must never arrange anything.
+  if (!$uri.includes('m04-04') && !$uri.includes('m07-04')) {
     expect((await two(page)).columnText).toBe(key);
     return;
   }
@@ -1376,8 +1376,9 @@ export async function win(page: Page, scenario: Scenario) {
   await dragSlowlyAndRelease(page, 'ZEBRA', 0, -1);
 }
 
+/** Waits for the Level complete screen to finish playing, so its button shows (M07-04, R4). */
 export async function waitForPopup(page: Page) {
-  await expect.poll(async () => (await two(page)).popup !== null, { timeout: 4000 }).toBe(true);
+  await expect.poll(async () => (await two(page)).popup?.done === true, { timeout: 10000 }).toBe(true);
 }
 
 When('the popup appears', async ({ page, scenario }) => {
@@ -1516,8 +1517,8 @@ Given("the popup hasn't appeared yet", async ({ page }) => {
   expect((await two(page)).popup).toBeNull();
 });
 
-Then('nothing happens', async ({ page }) => {
-  expect(((await current(page)) as TwoView).levelNumber).toBe(1);
+Then('nothing happens', async ({ page, scenario }) => {
+  expect(((await current(page)) as TwoView).levelNumber).toBe(scenario.levelNumber);
 });
 
 Given('the celebration is playing', async ({ page, scenario }) => {

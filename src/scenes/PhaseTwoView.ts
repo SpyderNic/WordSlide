@@ -4,7 +4,7 @@ import { layoutLevel, type LevelLayout, type Rect } from '../game/layout';
 import type { Level } from '../game/level';
 import type { PhaseTwo, PhaseTwoSnapshot } from '../game/phaseTwo';
 import { currentStyle } from '../style';
-import { buildPopup } from './popup';
+import { LevelComplete, type CompleteCallbacks, type CompleteInfo, type CompleteSeries } from './levelComplete';
 import { makeTile, paintTile, sizeTile } from './tiles';
 
 const colours = currentStyle.colours;
@@ -60,11 +60,14 @@ export interface PhaseTwoCallbacks {
   onWon: () => void;
   /** A word or row has settled without winning (M05-01, R10). */
   onSettled: () => void;
-  /** The popup has just appeared after a win (M05-01, R12). */
-  onPopup: () => void;
+  /** The Level complete screen has just appeared: playing after a win, or drawn as it ends after a resize. */
+  onPopup: (playing: boolean) => void;
   /** The player's points before and after this level's win, for the popup (M07-02, R11). */
   points: () => { from: number; to: number };
   onNextLevel: () => void;
+  /** The series on the Level complete screen, and any reward it gives (M07-04). */
+  series: () => { level: number; series: CompleteSeries | null; reward: number | null };
+  onReward: CompleteCallbacks['onReward'];
 }
 
 export interface PhaseTwoTestView {
@@ -77,7 +80,7 @@ export interface PhaseTwoTestView {
   columnText: string;
   won: boolean;
   dragging: boolean;
-  popup: { buttonRect: Rect | null } | null;
+  popup: CompleteInfo | null;
 }
 
 export class PhaseTwoView {
@@ -98,7 +101,7 @@ export class PhaseTwoView {
   private hintButtons: HintButton[] = [];
   private hintObjects: Phaser.GameObjects.GameObject[] = [];
   private ceremonyDone = false;
-  private popup: Phaser.GameObjects.Container | null = null;
+  private popup: LevelComplete | null = null;
   private popupInfo: PhaseTwoTestView['popup'] = null;
   private celebrating: Phaser.Time.TimerEvent | null = null;
 
@@ -742,30 +745,28 @@ export class PhaseTwoView {
 
   private showPopup(justWon = true) {
     this.celebrating = null;
-    this.popup?.destroy(true);
+    this.popup?.destroy();
     const targets: Phaser.GameObjects.GameObject[] = [this.column, this.columnSides, this.columnGlass];
     this.rowViews.forEach((view) => targets.push(view.container));
     this.scene.tweens.add({ targets, alpha: 0, duration: WIN_FADE });
 
-    const last = this.nextLevelNumber === null;
-    const points = this.callbacks.points();
-    const { container, buttonRect, pointsText } = buildPopup(this.scene, this.tile, {
-      title: last ? 'All levels complete!' : 'Level complete',
-      word: last ? [] : this.phase.rows.map((row) => row.cells[row.columnCell]),
-      button: last ? null : `Play Level ${this.nextLevelNumber}`,
-      points: last ? undefined : justWon ? points.from : points.to,
-    });
-    // The old points show for a moment, then the new ones pulse in, like a locking tile (M07-02, R11).
-    if (pointsText && justWon) {
-      this.scene.time.delayedCall(timings.pointsPause, () => {
-        if (!pointsText.active) return;
-        pointsText.setText(`Points: ${points.to}`);
-        this.scene.tweens.add({ targets: pointsText, scale: currentStyle.pulseScale, duration: timings.lockPulseGrow, yoyo: true });
-      });
-    }
-    this.popup = container;
-    this.popupInfo = { buttonRect };
-    if (justWon) this.callbacks.onPopup();
+    const { level, series, reward } = this.callbacks.series();
+    this.popup = new LevelComplete(
+      this.scene,
+      this.tile,
+      {
+        level,
+        word: this.phase.rows.map((row) => row.cells[row.columnCell]),
+        points: this.callbacks.points(),
+        series,
+        reward,
+        button: this.nextLevelNumber === null ? null : `Play Level ${this.nextLevelNumber}`,
+      },
+      { onReward: (from, amount, landed) => this.callbacks.onReward(from, amount, landed) },
+      justWon,
+    );
+    this.popupInfo = this.popup.info;
+    this.callbacks.onPopup(justWon);
   }
 
   destroy() {
@@ -774,7 +775,7 @@ export class PhaseTwoView {
     this.column?.destroy();
     this.columnSides?.destroy();
     this.columnGlass?.destroy();
-    this.popup?.destroy(true);
+    this.popup?.destroy();
     this.rowViews.forEach((view) => {
       view.container.destroy(true);
       view.handle.destroy(true);

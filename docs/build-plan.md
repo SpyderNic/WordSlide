@@ -33,7 +33,7 @@ Milestone 6 is built (2026-11-03): the level generator (M06-01) and the 40 level
 
 **From playing milestone 6 (2026-11-03):** the designer found level 2 really difficult and couldn't find its 5-letter words. On 2026-11-04, the designer chose to give each row its own pool (M06-03, built on 2026-11-04), with a row locking all at once. The game before it is tagged `before-story-23` in git, and scenarios it made obsolete are in `archive/before-story-23/`. The designer will decide whether shuffling (P-01) is still needed after playing it. M06-04, the designer's changes after playing it, is built too. **Next is the designer playing M06-03 and M06-04.**
 
-**Milestone 7 (2026-11-05):** hints (M07-01) and coins and ads (M07-02) are built. Buying hints (M07-03) is built too (2026-11-06). Next is mapping M07-04, level series. Milestones 5 and 6 were played and approved on 2026-11-06. The designer can play M07-01 and M07-02 now.
+**Milestone 7 (2026-11-05):** hints (M07-01) and coins and ads (M07-02) are built. Buying hints (M07-03) is built too (2026-11-06). Level series (M07-04) is built too (2026-11-06). Milestones 5 and 6 were played and approved on 2026-11-06. The designer can play M07-01 and M07-02 now.
 
 Mobile testing on a real device waits for milestone 8, at the designer's request.
 

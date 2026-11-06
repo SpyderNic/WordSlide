@@ -34,6 +34,8 @@ export interface Drawn {
   /** A text's font family, and its size on screen in pixels. */
   font: string | null;
   fontSize: number | null;
+  /** A text's colour, as CSS. */
+  colour?: string | null;
   lines: Line[];
   triangles: Triangle[];
 }
@@ -86,7 +88,7 @@ export async function installProbe(page: Page) {
       height: number;
       list: GameObject[];
       name: string;
-      style: { fontFamily: string; fontSize: string };
+      style: { fontFamily: string; fontSize: string; color: string };
       isFilled: boolean;
       fillColor: number;
       isStroked: boolean;
@@ -150,7 +152,7 @@ export async function installProbe(page: Page) {
             stroke: object.isStroked ? object.strokeColor : null,
           });
         } else if (object.type === 'Text') {
-          found.push({ ...base, kind: 'text', width: object.width, height: object.height, text: object.text, font: object.style.fontFamily, fontSize: parseFloat(object.style.fontSize) * at.scale });
+          found.push({ ...base, kind: 'text', width: object.width, height: object.height, text: object.text, font: object.style.fontFamily, fontSize: parseFloat(object.style.fontSize) * at.scale, colour: object.style.color });
         } else if (object.type === 'Graphics') {
           found.push({ ...base, kind: 'graphics', width: 0, height: 0, ...parseGraphics(object.commandBuffer, at) });
         } else if (object.type === 'Image') {

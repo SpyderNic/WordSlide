@@ -5,7 +5,7 @@ import { SAVE_KEY, writeProgress } from '../../../src/game/progress';
 import { DEFAULT_WORDS, makeLevel } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
 import { installProbe, screen, startRecording, stopRecording, type Drawn, type Frame } from './probe';
-import { columnGraphics, openLevel, pitchOf, popupParts, ready, restingX, solve, two, waitForPopup, win } from './phase-two.steps';
+import { arrange, columnGraphics, dragSlowlyAndRelease, openLevel, pitchOf, popupParts, ready, restingX, solve, two, waitForPopup, win } from './phase-two.steps';
 import { watchErrors } from './foundation.steps';
 import { current, useLevelList, useLevels } from './m02-02.steps';
 import { layoutNow } from './phase-one.steps';
@@ -100,9 +100,17 @@ Given('a level that starts phase two already solved', async ({ scenario }) => {
   scenario.finalWordGiven = true;
 });
 
-When(/^the player wins (?:the level|a level|level (\d+))$/, async ({ page, scenario }, level?: string) => {
+When(/^the player wins (?:the level|a level|level (\d+))$/, async ({ page, scenario, $uri }, level?: string) => {
   if (level) scenario.levelNumber = Number(level);
   if (scenario.views.length === 0) await openLevel(page, scenario);
+  // M07-04 wins the tutorial as M05-03 does: with OWL above FOX, FOX slides until its X is in the column.
+  if ($uri.includes('m07-04') && scenario.level.tutorial) {
+    await ready(page, scenario);
+    await arrange(page, ['OWL', 'FOX'], { OWL: 0, FOX: 1 });
+    await startRecording(page);
+    await dragSlowlyAndRelease(page, 'FOX', 1, -1);
+    return;
+  }
   await startRecording(page);
   await win(page, scenario);
 });
@@ -144,8 +152,8 @@ Then("there's no way to open level 4", async ({ page }) => {
 // The next level
 
 When(/^the player presses "Play Level (\d+)"$/, async ({ page, scenario, $uri }, _level: string) => {
-  // M06-02 watches for the theme's interstitial.
-  if ($uri.includes('m06-02')) {
+  // M06-02 and M07-04 watch for the interstitials.
+  if ($uri.includes('m06-02') || $uri.includes('m07-04')) {
     await pressPlayAndRecord(page, scenario);
     return;
   }
@@ -193,7 +201,7 @@ Then(/^level 5 appears with a fade of about 0\.3 seconds$/, async ({ page, scena
 // In M05-03, this opens the level after the tutorial, as a player who has won level 1 would.
 Then(/^level (\d+) opens$/, async ({ page, scenario, $uri }, level: string) => {
   // In M07-02, "When level 6 opens" opens it, and after "Play Level X" it may wait for an ad.
-  if ($uri.includes('m07-02')) {
+  if ($uri.includes('m07-02') || $uri.includes('m07-04')) {
     if (scenario.views.length === 0) {
       scenario.levelNumber = Number(level);
       await openLevel(page, scenario);

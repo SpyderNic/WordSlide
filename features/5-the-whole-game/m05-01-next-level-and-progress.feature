@@ -153,21 +153,6 @@ Feature: Unlock the next level and save progress
       Then level 5 opens in phase one
       And no letters are placed
 
-  Rule: After the last level, the popup has no button
-
-    @browser
-    Scenario: All levels complete
-      Given the player is on the last level
-      When the popup appears after the win
-      Then it shows "All levels complete!"
-      And it has no button
-
-    @browser
-    Scenario: Reopening shows the same popup
-      Given the player has won the last level
-      When the game closes and opens again
-      Then the popup shows "All levels complete!"
-
   Rule: Development builds have a level picker and a progress reset
 
     @browser

@@ -54,5 +54,12 @@ export interface Style {
     pointsPause: number;
     /** The coin counter counting down when coins are spent (M07-03, R10). */
     coinCount: number;
+    /** The Level complete screen fading in over the level (M07-04, Q15). */
+    completeFade: number;
+    /** After the points change, how long before the series bar starts filling, and how long it takes (M07-04, R4). */
+    seriesBarPause: number;
+    seriesBarFill: number;
+    /** A finished series' bar lighting up and going back, once (M07-04, R5). It flashes twice. */
+    seriesFlash: number;
   };
 }

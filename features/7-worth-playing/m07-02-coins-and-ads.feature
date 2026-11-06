@@ -163,18 +163,3 @@ Feature: Coins and ads
     Scenario: A pretend ad says it's pretend
       When the player presses the ad button
       Then a pretend rewarded ad shows, with Finish and Close buttons
-
-  Rule: Points move to the Level complete popup (R11)
-
-    Scenario: Points count up under the golden word
-      Given the player has 7 points
-      When the player wins the level
-      Then the Level complete popup shows "Points: 7" under the golden word
-      And it counts up to "Points: 8"
-
-    # From playing: the count was too quick to see.
-    Scenario: The points wait, then change with a pulse
-      Given the player has 7 points
-      When the player wins the level
-      Then the popup shows "Points: 7" until the points pause has passed
-      And then "Points: 8", with a small pulse
