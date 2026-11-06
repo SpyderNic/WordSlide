@@ -13,7 +13,7 @@ function shade(colour: number, amount: number): number {
 }
 
 /**
- * A wooden tile with a soft bevel: lighter top and left edges, darker bottom and right edges, so it looks raised (story 16, R8).
+ * A wooden tile with a soft bevel: lighter top and left edges, darker bottom and right edges, so it looks raised (M05-02, R8).
  * Its parts sit around its centre, so it grows and shakes as one block.
  */
 export function makeTile(scene: Phaser.Scene, x: number, y: number, size: number, fill: number, letter?: { text: string; colour: number }) {

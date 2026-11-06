@@ -3,7 +3,7 @@ import type { Level } from '../../src/game/level';
 import { approve, run, type Reveal, type Settings } from './generate';
 
 /**
- * The level generator's single command (story 14, R8).
+ * The level generator's single command (M06-01, R8).
  *   npm run levels:generate -- --theme Animals --words content/word-lists/animals.txt --rows 3 [--lengths 3-5]
  *     [--reveal none|first|random:2] [--reordering needed|not-needed] [--count 10] [--levels src/levels/levels.json] [--out content/reviews]
  *   npm run levels:approve -- content/reviews/<file>.md [--levels src/levels/levels.json]

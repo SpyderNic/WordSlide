@@ -2,10 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
 // Add each story here as it's built.
-const built = ["02-show-a-level","03-place-a-letter","04-return-a-letter","05-recall-all","06-check-and-lock-a-word","17-pool-as-a-keyboard","07-switch-to-phase-two","08-slide-a-word","09-reorder-rows","10-win-check-and-celebration","11-next-level-and-progress","16-visual-style","12-first-level-tutorial","21-reordering-taught-later","15-draft-the-first-levels","23-a-pool-for-each-row","24-after-playing-story-23","19-hints","20-coins-and-ads"];
+const built = ["m02-02-show-a-level","m03-01-place-a-letter","m03-02-return-a-letter","m03-03-recall-all","m03-04-check-and-lock-a-word","m03-05-pool-as-a-keyboard","m04-01-switch-to-phase-two","m04-02-slide-a-word","m04-03-reorder-rows","m04-04-win-check-and-celebration","m05-01-next-level-and-progress","m05-02-visual-style","m05-03-first-level-tutorial","m05-04-reordering-taught-later","m06-02-draft-the-first-levels","m06-03-a-pool-for-each-row","m06-04-after-playing-m06-03","m07-01-hints","m07-02-coins-and-ads"];
 
 const testDir = defineBddConfig({
-  features: ['tests/browser/*.feature', ...built.map((story) => `features/**/story-${story}.feature`)],
+  features: ['tests/browser/*.feature', ...built.map((story) => `features/**/${story}.feature`)],
   tags: '@browser',
   steps: 'tests/browser/steps/*.ts',
 });

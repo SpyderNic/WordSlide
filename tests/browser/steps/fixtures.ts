@@ -28,7 +28,7 @@ export interface Scenario {
   /** How many levels the game is given: copies of the scenario's level. */
   levelCount: number;
   levelsGiven?: boolean;
-  /** Different levels for the game to play in order, instead of copies of one (story 12). */
+  /** Different levels for the game to play in order, instead of copies of one (M05-03). */
   levelList?: Level[];
   wonTutorial?: boolean;
   handPath?: { t: number; x: number; y: number }[];
@@ -51,7 +51,7 @@ export interface Scenario {
   slideDistance?: number;
   stretchWord?: string;
   stretchCell?: number;
-  /** A letter's expected journey (story 16). */
+  /** A letter's expected journey (M05-02). */
   travel?: { letter: string; from: { x: number; y: number }; to: { x: number; y: number } };
   placedAtOnce?: string;
   setting?: string;
@@ -67,19 +67,19 @@ export interface Scenario {
   goldLetters?: { letter: string; t: number; pulsed: boolean }[];
 }
 
-/** Plays without the fixtures' "reordering already taught", so story 21's rule decides. */
+/** Plays without the fixtures' "reordering already taught", so M05-04's rule decides. */
 export async function reorderingNotTaught(page: Page) {
   await page.addInitScript(() => Object.assign(window, { wordSlideReorderingTaught: false }));
 }
 
 export const test = base.extend<{ scenario: Scenario }>({
-  // "npm run test:other-style" runs every scenario again with another style (story 16, R1).
+  // "npm run test:other-style" runs every scenario again with another style (M05-02, R1).
   page: async ({ page }, use) => {
     const style = process.env.WORD_SLIDE_STYLE;
     if (style) await page.addInitScript((name) => Object.assign(window, { wordSlideStyle: name }), style);
-    // Most scenarios play as if the reordering tutorial were already behind the player. Stories 12 and 21 turn this off.
+    // Most scenarios play as if the reordering tutorial were already behind the player. M05-03 and M05-04 turn this off.
     await page.addInitScript(() => Object.assign(window, { wordSlideReorderingTaught: true }));
-    // No midgame ads between levels unless a scenario asks for them (story 20, R8), so other stories' levels follow on.
+    // No midgame ads between levels unless a scenario asks for them (M07-02, R8), so other stories' levels follow on.
     await page.addInitScript(() => Object.assign(window, { wordSlideEconomy: { firstMidgameLevel: Number.MAX_SAFE_INTEGER } }));
     await use(page);
   },

@@ -1,21 +1,21 @@
 import type { BoardSnapshot } from './board';
 import type { PhaseTwoSnapshot } from './phaseTwo';
 
-/** What a level looks like after the last change that settled (story 11, R10). */
+/** What a level looks like after the last change that settled (M05-01, R10). */
 export interface LevelSnapshot {
   board: BoardSnapshot;
   phaseTwo: PhaseTwoSnapshot | null;
 }
 
-/** The player's progress through the levels (story 11). */
+/** The player's progress through the levels (M05-01). */
 export interface Progress {
   /** The level the player is on. Past the last level, every level is complete. */
   level: number;
   points: number;
   inLevel: LevelSnapshot | null;
-  /** Set once the player makes the reordering tutorial's move: from then on, every level has handles (story 21, Q12). */
+  /** Set once the player makes the reordering tutorial's move: from then on, every level has handles (M05-04, Q12). */
   reorderingTaught?: boolean;
-  /** The player's coins (story 20). A save without them, a new player's included, has the starting coins (R2, Q6). */
+  /** The player's coins (M07-02). A save without them, a new player's included, has the starting coins (R2, Q6). */
   coins?: number;
 }
 
@@ -35,7 +35,7 @@ export function coinsOf(progress: Progress, startingCoins: number): number {
   return progress.coins ?? startingCoins;
 }
 
-/** Winning unlocks the next level and gives 1 point (D23), but no coins (story 20, R3). The next level starts fresh. */
+/** Winning unlocks the next level and gives 1 point (D23), but no coins (M07-02, R3). The next level starts fresh. */
 export function winLevel(progress: Progress): Progress {
   return { ...kept(progress), level: progress.level + 1, points: progress.points + 1, inLevel: null };
 }

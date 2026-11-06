@@ -14,7 +14,7 @@ export interface HintButton {
 }
 
 /**
- * Draws a hint's button with its icon: placeholders drawn in code, which the designer can replace (story 19, Q1).
+ * Draws a hint's button with its icon: placeholders drawn in code, which the designer can replace (M07-01, Q1).
  * A lightbulb for the Letter hint, arrows up and down for the Ordering hint, and an eye for the Reveal hint.
  */
 export function drawHintButton(scene: Phaser.Scene, { name, rect, enabled }: HintButton, depth = 0): Phaser.GameObjects.GameObject[] {

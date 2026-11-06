@@ -8,7 +8,7 @@ export function spellsBySliding(words: string[], finalWord: string): boolean {
   return words.every((word, row) => cellsOf(word).includes(letters[row]));
 }
 
-/** A level needs reordering if its rows, in their starting order (D5), can't spell the final word by sliding (story 21, R1). */
+/** A level needs reordering if its rows, in their starting order (D5), can't spell the final word by sliding (M05-04, R1). */
 export function needsReordering(level: Level): boolean {
   return !spellsBySliding(rowOrder(level.answers).map((answer) => answer.word), level.finalWord);
 }
@@ -30,7 +30,7 @@ export function designedOrder(level: Level): string[] {
 }
 
 /**
- * Before the reordering tutorial, the ceremony puts the rows in the designed order (story 21, R2).
+ * Before the reordering tutorial, the ceremony puts the rows in the designed order (M05-04, R2).
  * Words lock in any row of the same length (D8), so this only ever swaps same-length rows.
  * Returns, for each new row, the row it comes from.
  */

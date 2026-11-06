@@ -14,25 +14,25 @@ export interface Style {
     highlight: number;
     column: number;
   };
-  /** A tile's soft bevel (story 16, R8): the edges' thickness as a share of the tile, and how much lighter and darker they are, in percent. */
+  /** A tile's soft bevel (M05-02, R8): the edges' thickness as a share of the tile, and how much lighter and darker they are, in percent. */
   bevel: { edge: number; light: number; dark: number };
-  /** No text is smaller than this, in pixels (story 16, R4). */
+  /** No text is smaller than this, in pixels (M05-02, R4). */
   minText: number;
   /** How much bigger a pulsing tile gets: 1.15 is 15% (D37). */
   pulseScale: number;
   /** Milliseconds. */
-  /** How strongly rows that aren't selected and aren't finished show (story 23, R3). */
+  /** How strongly rows that aren't selected and aren't finished show (M06-03, R3). */
   fadedRow: number;
-  /** How many coins fly to the counter when coins are earned (story 20, R15). */
+  /** How many coins fly to the counter when coins are earned (M07-02, R15). */
   coinFlights: number;
   timings: {
     letterTravel: number;
     /** A locking tile grows, takes its new colour at its biggest, then shrinks back (D37). */
     lockPulseGrow: number;
-    /** The tutorial's hand glides for handMove, then pauses for handPause, and repeats (story 12, R9). */
+    /** The tutorial's hand glides for handMove, then pauses for handPause, and repeats (M05-03, R9). */
     handMove: number;
     handPause: number;
-    /** One brightening and dimming of level 2's outline around the theme (story 12, R12). */
+    /** One brightening and dimming of level 2's outline around the theme (M05-03, R12). */
     themeGlow: number;
     lockPulseShrink: number;
     wrongShake: number;
@@ -43,14 +43,14 @@ export interface Style {
     popupDelay: number;
     levelFade: number;
     interstitial: number;
-    /** A row fading or coming forward as the selection moves (story 23, Q8). */
+    /** A row fading or coming forward as the selection moves (M06-03, Q8). */
     rowFade: number;
-    /** The pool changing to another row's letters (story 23, Q3). */
+    /** The pool changing to another row's letters (M06-03, Q3). */
     poolChange: number;
-    /** Earned coins flying to the counter (story 20, R15): how long each flies, and the gap between one setting off and the next. */
+    /** Earned coins flying to the counter (M07-02, R15): how long each flies, and the gap between one setting off and the next. */
     coinFlight: number;
     coinFlightGap: number;
-    /** How long the Level complete popup shows the old points before the new ones pulse in (story 20, R11). */
+    /** How long the Level complete popup shows the old points before the new ones pulse in (M07-02, R11). */
     pointsPause: number;
   };
 }

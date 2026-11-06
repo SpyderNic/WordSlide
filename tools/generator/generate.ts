@@ -6,7 +6,7 @@ import { needsReordering } from '../../src/game/reordering';
 import { MAX_LENGTH, MAX_ROWS, MIN_LENGTH, MIN_ROWS, validateLevel } from '../../src/game/validator';
 
 /**
- * The level generator (story 14, D44): an offline tool that suggests levels from a theme's word list.
+ * The level generator (M06-01, D44): an offline tool that suggests levels from a theme's word list.
  * It's plain code with no browser or game, and isn't shipped with the game.
  */
 
@@ -19,7 +19,7 @@ export interface Settings {
   longest: number;
   /** None by default (R9). */
   reveal?: Reveal;
-  /** Whether the rows, in their starting order, can't spell the final word by sliding (R10, story 21 Q10). */
+  /** Whether the rows, in their starting order, can't spell the final word by sliding (R10, M05-04 Q10). */
   reordering: 'needed' | 'not needed';
   /** How many suggestions to offer. */
   count?: number;
@@ -38,7 +38,7 @@ const SEARCH_LIMIT = 20000;
 
 function checkSettings(settings: Settings) {
   const { rows, shortest, longest, reveal } = settings;
-  const outside = (what: string) => new Error(`The setting ${what} is outside the limits of the game (story 1).`);
+  const outside = (what: string) => new Error(`The setting ${what} is outside the limits of the game (M02-01).`);
   if (!Number.isInteger(rows) || rows < MIN_ROWS || rows > MAX_ROWS) throw outside(`${rows} rows`);
   if (!Number.isInteger(shortest) || !Number.isInteger(longest) || shortest < MIN_LENGTH || longest > MAX_LENGTH || shortest > longest) {
     throw outside(`words of ${shortest} to ${longest} letters`);

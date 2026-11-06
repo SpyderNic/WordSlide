@@ -14,9 +14,9 @@ export interface PopupContent {
   title: string;
   /** The golden word, if any. */
   word: string[];
-  /** The button's text. The last level's popup has none (story 11, R11). */
+  /** The button's text. The last level's popup has none (M05-01, R11). */
   button: string | null;
-  /** The player's points, shown under the golden word (story 20, R11). */
+  /** The player's points, shown under the golden word (M07-02, R11). */
   points?: number;
 }
 

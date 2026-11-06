@@ -2,7 +2,7 @@ import { cellsOf, compareCells, isCharacter } from './characters';
 import { rowOrder, startingCells, startingPool, type Cell, type Level, type PoolTile } from './level';
 
 export interface RowState {
-  /** The answer designed for this row. An answer made of the same letters can lock here too (D8, story 23 R6). */
+  /** The answer designed for this row. An answer made of the same letters can lock here too (D8, M06-03 R6). */
   word: string;
   cells: Cell[];
   locked: boolean;
@@ -15,10 +15,10 @@ export type BoardEvent =
   | { type: 'hintsReturned'; row: number; letters: string[] }
   | { type: 'phaseOneOver' };
 
-/** The board after the last change that settled. A drag is never part of it (story 11, R10). */
+/** The board after the last change that settled. A drag is never part of it (M05-01, R10). */
 export interface BoardSnapshot {
   rows: { cells: Cell[]; locked: boolean }[];
-  /** Each row's own pool (story 23, R1). */
+  /** Each row's own pool (M06-03, R1). */
   pools: PoolTile[][];
   unlocked: string[];
   lockedIn: [string, number][];
@@ -30,7 +30,7 @@ export type DragSource = 'pool' | { row: number; cell: number };
 export interface Drag {
   character: string;
   source: DragSource;
-  /** The row whose letter it is: a letter only goes back to its own row's pool, or into its own row (story 23, R5). */
+  /** The row whose letter it is: a letter only goes back to its own row's pool, or into its own row (M06-03, R5). */
   row: number;
 }
 
@@ -44,12 +44,12 @@ function baseOf(character: string): string {
 /** The state of phase one. Pure logic: nothing here knows about the screen. */
 export class Board {
   readonly rows: RowState[];
-  /** One pool per row, with that row's answer's letters (story 23, R1). */
+  /** One pool per row, with that row's answer's letters (M06-03, R1). */
   private readonly pools: PoolTile[][];
   private readonly unlocked: string[];
   private readonly lockedIn = new Map<string, number>();
 
-  /** A row is always selected in phase one (story 23, R2). */
+  /** A row is always selected in phase one (M06-03, R2). */
   selectedRow: number | null = 0;
   drag: Drag | null = null;
   phaseOneOver = false;
@@ -57,7 +57,7 @@ export class Board {
   constructor(level: Level) {
     const answers = rowOrder(level.answers);
     this.rows = answers.map((answer) => ({ word: answer.word, cells: startingCells(answer), locked: false }));
-    // A row's pool has its answer's letters minus revealed ones, so a letter that's only revealed has no tile (story 23, R1).
+    // A row's pool has its answer's letters minus revealed ones, so a letter that's only revealed has no tile (M06-03, R1).
     this.pools = answers.map((answer) => startingPool([answer]).filter((tile) => tile.count > 0));
     this.unlocked = answers.map((answer) => answer.word);
   }
@@ -131,7 +131,7 @@ export class Board {
     return this.rows[row].cells.map(cellCharacter).join('');
   }
 
-  /** Whether the selected row has letters to recall (story 23, R13). */
+  /** Whether the selected row has letters to recall (M06-03, R13). */
   hasPlacedLetters(): boolean {
     const row = this.selectedRow === null ? null : this.rows[this.selectedRow];
     return !!row && !row.locked && row.cells.some((cell) => cell.kind === 'placed');
@@ -161,7 +161,7 @@ export class Board {
     if (!drag) return [];
     this.drag = null;
 
-    // A letter only goes into its own row (story 23, R5). Anywhere else, it goes back to the pool.
+    // A letter only goes into its own row (M06-03, R5). Anywhere else, it goes back to the pool.
     if (row !== drag.row || this.isCellFixed(row, cell)) {
       this.changeCount(drag.row, drag.character, 1);
       return [];
@@ -174,7 +174,7 @@ export class Board {
       if (drag.source === 'pool') {
         this.changeCount(row, target.character, 1);
       } else {
-        // The letters between move aside, one cell towards where the letter came from (story 24, R6).
+        // The letters between move aside, one cell towards where the letter came from (M06-04, R6).
         const cells = this.rows[row].cells;
         const before = [...cells];
         for (const [to, from] of this.shift(row, drag.source.cell, cell)) cells[to] = from === cell ? target : before[from];
@@ -185,7 +185,7 @@ export class Board {
 
   /**
    * Moving a placed letter from one cell onto another letter in its row: the cells between move one step towards the
-   * empty one, skipping fixed cells (story 24, R6). Returns pairs of [new cell, old cell] for every cell that moves.
+   * empty one, skipping fixed cells (M06-04, R6). Returns pairs of [new cell, old cell] for every cell that moves.
    */
   shift(row: number, from: number, to: number): [number, number][] {
     const cells = this.rows[row].cells;
@@ -226,7 +226,7 @@ export class Board {
     );
   }
 
-/** A row is checked once it's full, and locks all at once or not at all (story 23, R14). A wrong row stays selected (R7). */
+/** A row is checked once it's full, and locks all at once or not at all (M06-03, R14). A wrong row stays selected (R7). */
   private check(row: number): BoardEvent[] {
     if (this.rows[row].locked || !this.isFull(row)) return [];
     const word = this.wordIn(row);
@@ -267,7 +267,7 @@ export class Board {
     return events;
   }
 
-  // Hints (story 19)
+  // Hints (M07-01)
 
   /** The selected row's cells the Letter hint can pick: those that aren't fixed yet. */
   private openCells(): number[] {
@@ -281,7 +281,7 @@ export class Board {
   }
 
   /**
-   * Locks the right letter in one of the selected row's cells, picked at random (story 19, R3). A wrong letter there
+   * Locks the right letter in one of the selected row's cells, picked at random (M07-01, R3). A wrong letter there
    * goes back to the pool. The right letter comes from the pool, or from another cell where it's placed wrongly (Q2).
    */
   letterHint(random: () => number = Math.random): BoardEvent[] {
@@ -308,7 +308,7 @@ export class Board {
 
   // Recall All
 
-  /** Empties the selected row (story 23, R13). */
+  /** Empties the selected row (M06-03, R13). */
   recallAll(): boolean {
     if (this.drag || !this.hasPlacedLetters()) return false;
     const index = this.selectedRow!;
@@ -323,7 +323,7 @@ export class Board {
 
   // Selecting, tapping and typing
 
-  /** The selected row always shows (story 23, R2). */
+  /** The selected row always shows (M06-03, R2). */
   get markedRow(): number | null {
     return this.selectedRow;
   }
@@ -333,7 +333,7 @@ export class Board {
     this.selectedRow = row;
   }
 
-  /** After a lock: the next unfinished row below, wrapping to the top (story 23, R8). */
+  /** After a lock: the next unfinished row below, wrapping to the top (M06-03, R8). */
   private moveSelectionOn(from: number) {
     for (let step = 1; step <= this.rows.length; step++) {
       const row = (from + step) % this.rows.length;
@@ -356,7 +356,7 @@ export class Board {
     return this.check(row);
   }
 
-  /** Exact keys first. A plain key falls back to its accented letters (story 17, R14). */
+  /** Exact keys first. A plain key falls back to its accented letters (M03-05, R14). */
   private tileForKey(key: string): string | null {
     const character = key.toUpperCase();
     if (!isCharacter(character) || Array.from(character).length !== 1) return null;
@@ -377,7 +377,7 @@ export class Board {
     return [];
   }
 
-  /** Takes back the selected row's last placed letter (story 23, R9). */
+  /** Takes back the selected row's last placed letter (M06-03, R9). */
   private backspace() {
     const row = this.selectedRow;
     if (row === null || this.rows[row].locked) return;

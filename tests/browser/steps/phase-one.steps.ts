@@ -4,7 +4,7 @@ import type { LevelLayout, Rect } from '../../../src/game/layout';
 import { levelWithRows, makeLevel } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
 import { drawnIn, outlineOf, screen, startRecording, stopRecording, textAt, tileAt, type Drawn, type Frame } from './probe';
-import { current, open } from './story-02.steps';
+import { current, open } from './m02-02.steps';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -20,7 +20,7 @@ export async function ready(page: Page, scenario: Scenario) {
 
 /**
  * The layout once the level is open. With a letter, the row whose pool has it is selected first, by tapping it as a
- * player would: each row has its own pool (story 23).
+ * player would: each row has its own pool (M06-03).
  */
 export async function layoutNow(page: Page, scenario: Scenario, letter?: string): Promise<LevelLayout> {
   await ready(page, scenario);
@@ -109,7 +109,7 @@ async function touch(page: Page, scenario: Scenario, type: 'touchStart' | 'touch
 /** The frames recorded so far, once the feedback has had time to play. */
 async function recorded(page: Page, scenario: Scenario): Promise<Frame[]> {
   if (!scenario.frames) {
-    // Long enough for a letter to land (story 16) and its feedback to finish.
+    // Long enough for a letter to land (M05-02) and its feedback to finish.
     await page.waitForTimeout(700);
     scenario.frames = await stopRecording(page);
   }
@@ -159,7 +159,7 @@ Given(/^an? (\S+) placed in cell (\d+) of (.+)'s row$/, async ({ scenario }, cha
   });
 });
 
-/** Z is ZEBRA's letter: it goes in ZEBRA's first cell, and ZEBRA's row is selected, so its pool is the one shown (story 23). */
+/** Z is ZEBRA's letter: it goes in ZEBRA's first cell, and ZEBRA's row is selected, so its pool is the one shown (M06-03). */
 export async function placeZ(page: Page) {
   const { layout } = await current(page);
   const row = rowOf(layout, 'ZEBRA');
@@ -256,7 +256,7 @@ When("the tile's centre moves over cell 3", async ({ page, scenario }) => {
 
 When('the player drags a tile with its centre over that cell', async ({ page, scenario }) => {
   const layout = await layoutNow(page, scenario);
-  // A letter from that row's own pool: other rows never highlight (story 24, R3).
+  // A letter from that row's own pool: other rows never highlight (M06-04, R3).
   const { row, cell } = scenario.tileRef!;
   const letter = [...layout.rows[row].word].find((character) => layout.poolTiles.some((tile) => tile.character === character && tile.count > 0))!;
   await holdPoolTile(page, scenario, letter, centreOf(layout.rows[row].cells[cell]));
@@ -623,7 +623,7 @@ Then('row 2 still reads T E A M', async ({ page }) => {
 When('"Already found" appears', async ({ page, scenario }) => {
   await ready(page, scenario);
   await fillRow(1, 'TEAM')(page);
-  // The message appears once the last letter has landed (story 16).
+  // The message appears once the last letter has landed (M05-02).
   await expect.poll(async () => (await current(page)).foundText).not.toBeNull();
   scenario.before = await current(page);
 });
@@ -644,8 +644,8 @@ Then('it gently rises and fades out', async ({ page, scenario }) => {
 });
 
 When('LEMUR locks', async ({ page, scenario, $uri }) => {
-  // A check in stories 23 and 19, an action elsewhere.
-  if ($uri.includes('story-23') || $uri.includes('story-19')) {
+  // A check in M06-03 and M07-01, an action elsewhere.
+  if ($uri.includes('m06-03') || $uri.includes('m07-01')) {
     await page.waitForTimeout(400);
     const { layout } = await current(page);
     expect(layout.rows[rowOf(layout, 'LEMUR')].locked).toBe(true);
@@ -714,7 +714,7 @@ When('the player presses a pool tile and moves it', async ({ page, scenario }) =
   await holdPoolTile(page, scenario, 'A', themePoint(await layoutNow(page, scenario)));
 });
 
-Then('a drag starts, as in story 3', async ({ page }) => {
+Then('a drag starts, as in M03-01', async ({ page }) => {
   expect((await current(page)).dragging).not.toBeNull();
 });
 
@@ -821,7 +821,7 @@ Then("HOT is still locked in HOT DOG's row", async ({ page }) => {
   }
 });
 
-// The lock pulse (story 6, R14) and the split-word shake (R6)
+// The lock pulse (M03-04, R14) and the split-word shake (R6)
 
 interface PulseSample {
   t: number;
@@ -933,7 +933,7 @@ Then("only GOD's tiles shake", async ({ page, scenario }) => {
   const row = rowOf(layout, 'HOT DOG');
   const movement = (cell: number) => {
     const { x, y } = centreOf(layout.rows[row].cells[cell]);
-    // Letters still flying in (story 16) aren't the row's tiles: they're drawn at depth 8.
+    // Letters still flying in (M05-02) aren't the row's tiles: they're drawn at depth 8.
     const xs = frames.flatMap((frame) => frame.screen.filter((object) => object.kind === 'rect' && object.fill !== null && object.depth !== 8 && Math.abs(object.y - y) < 3 && Math.abs(object.x - x) < layout.tileSize / 2).map((object) => object.x));
     return Math.max(...xs) - Math.min(...xs);
   };
@@ -970,7 +970,7 @@ async function typeQuickly(page: Page, scenario: Scenario, keys: string) {
   scenario.frames = await stopRecording(page);
 }
 
-// LEMUR locks, the selection moves on to ZEBRA's row, and Z goes there straight away (story 23, R8).
+// LEMUR locks, the selection moves on to ZEBRA's row, and Z goes there straight away (M06-03, R8).
 When('the player types LEMUR and then Z straight away', async ({ page, scenario }) => {
   await typeQuickly(page, scenario, 'lemurz');
 });
@@ -986,7 +986,7 @@ Then("LEMUR's tiles grow 15% and shrink back, without being cut short", async ({
   }
 });
 
-// The selection stays on a wrong word (story 23, R7), so moving on is pressing Down.
+// The selection stays on a wrong word (M06-03, R7), so moving on is pressing Down.
 When('the player types LEMRU and then presses Down straight away', async ({ page, scenario }) => {
   await typeQuickly(page, scenario, 'lemru');
   await page.keyboard.press('ArrowDown');

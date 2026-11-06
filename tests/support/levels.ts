@@ -18,7 +18,7 @@ export function makeLevel(words: string[], finalWord?: string): Level {
   };
 }
 
-/** The designer's tutorial level (stories 12 and 23): F _ _ and O _ _, spelling OX. */
+/** The designer's tutorial level (M05-03 and M06-03): F _ _ and O _ _, spelling OX. */
 export function tutorialLevel(): Level {
   const level: Level = { ...makeLevel(['FOX', 'OWL'], 'OX'), tutorial: true };
   reveal(level, 'FOX', 'F', 1);

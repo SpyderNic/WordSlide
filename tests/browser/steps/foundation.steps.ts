@@ -5,7 +5,7 @@ const { When, Then } = createBdd();
 
 const errors = new WeakMap<object, string[]>();
 
-/** Records errors from now on. "The game opens" (in story-11.steps.ts) calls this. */
+/** Records errors from now on. "The game opens" (in m05-01.steps.ts) calls this. */
 export function watchErrors(page: Page) {
   if (errors.has(page)) return;
   const seen: string[] = [];

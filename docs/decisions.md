@@ -55,7 +55,7 @@ If the layout at the start of phase two already spells the final word, the playe
 It's accepted as an easy out for the few affected levels and may be revisited. How the instant win looks is for the win story's mapping session.
 
 ### D8. Which row a word can lock in
-*Changed by story 23 on 2026-11-04.* With a pool per row, the only other answer a row can spell is one made of the same letters (such as MEAT for TEAM).
+*Changed by M06-03 on 2026-11-04.* With a pool per row, the only other answer a row can spell is one made of the same letters (such as MEAT for TEAM).
 
 **Rule:** a filled row locks if its word is one of the level's not-yet-locked answers, has the row's length, and matches every revealed (hinted) letter in that row.
 
@@ -84,7 +84,7 @@ This needs answers that share all their letters, such as TEAM and MEAT, because 
 
 ## Game decisions (2026-10-30)
 
-From the mapping of [story 1](milestones/2-levels-and-screen/story-01-level-data-and-validator.md).
+From the mapping of [M02-01](milestones/2-levels-and-screen/m02-01-level-data-and-validator.md).
 
 ### D11. Level authoring
 Claude drafts the levels and the designer approves them. For the prototype only, the designer plays them blind, so Claude approves them instead (D46).
@@ -133,10 +133,10 @@ The final word contains letters and digits only, never special characters.
 ### D23. Points instead of stars
 There are no stars. The player gets 1 point per level completed. This replaces the design document's "no agreed scoring".
 
-From here on, decisions come from the mapping of [story 2](milestones/2-levels-and-screen/story-02-show-a-level.md).
+From here on, decisions come from the mapping of [M02-02](milestones/2-levels-and-screen/m02-02-show-a-level.md).
 
 ### D24. Letters with no copies left
-*Changed by story 23 on 2026-11-04.* A row's pool has no tile for a letter that's only revealed in that row.
+*Changed by M06-03 on 2026-11-04.* A row's pool has no tile for a letter that's only revealed in that row.
 
 A letter with no copies left to place stays in the pool as a grey x0 tile, including from the start of a level.
 
@@ -144,7 +144,7 @@ A letter with no copies left to place stays in the pool as a grey x0 tile, inclu
 Revealed letters use a different tile colour from letters the player places.
 
 ### D26. Tile size
-*Changed by story 24 on 2026-11-04.* The pool's tiles fill each line before the next one starts, so a small pool sits on one line.
+*Changed by M06-04 on 2026-11-04.* The pool's tiles fill each line before the next one starts, so a small pool sits on one line.
 
 *Changed 2026-10-31.* On a given screen, tiles are the same size in every level. They're sized for 9 cells across, and only a level with a longer row that wouldn't fit shrinks them. The pool uses more rows on narrow screens. On a portrait screen, the top of the screen has two lines, with the theme on the second.
 
@@ -158,7 +158,7 @@ Landscape stays the orientation for the CrazyGames launch (D2), but layouts must
 When a device rotates during a level, the layout adapts live. The level redraws for the new orientation and keeps the player's progress. A drag in progress is cancelled and its letter goes back to where it came from.
 
 ### D30. Top of the screen
-*Replaced on 2026-11-05 by D53 (story 20, R14).* Along the top, left to right: home, level number, theme, points, shop, settings. The home, shop and settings buttons are visible but do nothing for now. The shop button is provisional.
+*Replaced on 2026-11-05 by D53 (M07-02, R14).* Along the top, left to right: home, level number, theme, points, shop, settings. The home, shop and settings buttons are visible but do nothing for now. The shop button is provisional.
 
 ### D31. Working towards a prototype
 The current goal is a working prototype, not a release. If the layout works and the game is fun, stories for a path to release get added then.
@@ -167,7 +167,7 @@ The current goal is a working prototype, not a release. If the layout works and 
 The game might later release on web (CrazyGames, Poki, YouTube Playables), Android (Google Play) and PC (Steam). The architecture is Claude's responsibility: game code must never call a platform's SDK directly. Saving, ads, purchases, player identity and similar services go through one interface, with one implementation per platform, chosen at build time. The prototype only has a simple local implementation, and no platform SDK is added until a story asks for it.
 
 ### D33. Placed letters can move
-*Changed by story 24 on 2026-11-04.* A placed letter dropped on another letter in its row makes the letters between move aside, skipping fixed cells, and they slide aside during the drag. A letter from the pool still replaces a placed letter. Other rows never highlight.
+*Changed by M06-04 on 2026-11-04.* A placed letter dropped on another letter in its row makes the letters between move aside, skipping fixed cells, and they slide aside during the drag. A letter from the pool still replaces a placed letter. Other rows never highlight.
 
 A placed letter can be dragged directly to another empty cell, and the pool doesn't change. During a drag, the tile's centre stays on the pointer or finger. The cell under the tile's centre is highlighted and is where the letter lands. If that's a fixed cell, nothing highlights and the letter goes to the pool.
 
@@ -177,17 +177,17 @@ A letter that doesn't land on an empty cell or a placed letter goes to the pool,
 *Changed 2026-10-31.* Sound is parked for the prototype, which has no sound.
 
 ### D35. Pool as a keyboard
-*Changed by story 23 on 2026-11-04.* Each row has its own pool, and a row is always selected, from the moment a level opens. A letter goes to the selected row only. A wrong word keeps the selection, and a lock moves it to the next unfinished row below, wrapping. Backspace works on the selected row only. See [story 23](milestones/6-content/story-23-a-pool-for-each-row.md).
+*Changed by M06-03 on 2026-11-04.* Each row has its own pool, and a row is always selected, from the moment a level opens. A letter goes to the selected row only. A wrong word keeps the selection, and a lock moves it to the next unfinished row below, wrapping. Backspace works on the selected row only. See [M06-03](milestones/6-content/m06-03-a-pool-for-each-row.md).
 
-A second way to place letters, alongside dragging. Tapping a row selects it, then tapping a pool letter or pressing its key sends the letter to that row's first empty cell. No row is selected when a level opens, and the first input selects the top row. When an input fills a row, the selection moves to the next row with an empty cell, wrapping to the top. Backspace and the Up and Down arrows also work. The full rules are in [story 17](milestones/3-phase-one/story-17-pool-as-a-keyboard.md).
+A second way to place letters, alongside dragging. Tapping a row selects it, then tapping a pool letter or pressing its key sends the letter to that row's first empty cell. No row is selected when a level opens, and the first input selects the top row. When an input fills a row, the selection moves to the next row with an empty cell, wrapping to the top. Backspace and the Up and Down arrows also work. The full rules are in [M03-05](milestones/3-phase-one/m03-05-pool-as-a-keyboard.md).
 
 ### D36. Recall All
-*Changed by story 23 on 2026-11-04.* Recall All empties the selected row only, and is grey when that row has nothing to recall.
+*Changed by M06-03 on 2026-11-04.* Recall All empties the selected row only, and is grey when that row has nothing to recall.
 
 Recall All sends every placed letter back to the pool at once, with no confirmation. It's an icon of two arrows pointing down, beside the pool on its right. It's grey with nothing to recall. It has no keyboard shortcut in the prototype.
 
 ### D37. Checking a word
-A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour: each tile grows 15% from its centre in 0.15 seconds, takes the new colour at its biggest, and shrinks back in 0.2 seconds. Special characters stay still (story 23, R14: a row shakes as a whole). Moving on, say by typing the next letter, never cuts a pulse or a shake short.
+A row is checked as soon as it's full, with no button. A wrong word's row shakes a little, its letters stay in place, and there's no limit on tries. A word that locks pulses, then all its tiles take a new colour: each tile grows 15% from its centre in 0.15 seconds, takes the new colour at its biggest, and shrinks back in 0.2 seconds. Special characters stay still (M06-03, R14: a row shakes as a whole). Moving on, say by typing the next letter, never cuts a pulse or a shake short.
 
 ### D38. The phase-two ceremony
 Details of D6. The ceremony starts after the last word's lock feedback, takes about 1 second and ignores input. The words slide, the rows move to the vertical centre of the space, and the pool and column fade together. The handles appear last. The column is a strip one cell wide and as tall as the rows, with a down-arrow notch at the top and an up-arrow notch at the bottom. The handles sit in a fixed line at the left edge of the screen. An instant win (D7) comes after the ceremony.
@@ -207,11 +207,11 @@ The column is checked each time a word or row settles, and reads top to bottom. 
 Levels come in a fixed order, and winning one unlocks the next. The player's level, points and progress within a level are saved on their device after every change that settles, behind the D32 interface. The game always opens where the player left off. The new point shows at the top of the screen when the popup appears. After the last level, the prototype's popup shows "All levels complete!" with no button. Development builds have a level picker and a progress reset, in the address: `?level=N` opens level N as a peek that saves nothing, and `?reset` clears progress. The next level fades in over about 0.3 seconds.
 
 ### D43. Level 1 is a strict tutorial
-*Changed by story 24 on 2026-11-04.* Step 1 shows each letter in turn, the O to FOX's second cell and then the X to its third, and only that move works, dragged, tapped or typed. OWL's step lets the player make mistakes and fix them, by dragging letters along the row or with Backspace (story 24, R7).
+*Changed by M06-04 on 2026-11-04.* Step 1 shows each letter in turn, the O to FOX's second cell and then the X to its third, and only that move works, dragged, tapped or typed. OWL's step lets the player make mistakes and fix them, by dragging letters along the row or with Backspace (M06-04, R7).
 
-*Changed by story 23 on 2026-11-04.* Level 1 starts as F _ _ and O _ _. Step 1 says "Drag letters to complete a word", and when FOX locks, the pool changes to OWL's letters and the text says "Each word has its own letters. Finish the grid!".
+*Changed by M06-03 on 2026-11-04.* Level 1 starts as F _ _ and O _ _. Step 1 says "Drag letters to complete a word", and when FOX locks, the pool changes to OWL's letters and the text says "Each word has its own letters. Finish the grid!".
 
-Level 1 walks the player through placing letters and sliding a word, with fixed text and an animated hand. Reordering has its own tutorial, on the first level that needs it (story 21). The player can only do the current step, and Recall All doesn't appear. In steps 1 and 2, typing or tapping the step's letter works too (tapping in step 1 added 2026-11-03). The text sits above the rows and below the theme. Level 2 highlights the theme once, with a short tip. The tutorial is a level marked as such, themed Animals, and its steps come from its solution. A pointing hand, drawn in code, shows each step, and the theme gets a gently pulsing outline in level 2. The full rules are in [story 12](milestones/5-the-whole-game/story-12-first-level-onboarding.md).
+Level 1 walks the player through placing letters and sliding a word, with fixed text and an animated hand. Reordering has its own tutorial, on the first level that needs it (M05-04). The player can only do the current step, and Recall All doesn't appear. In steps 1 and 2, typing or tapping the step's letter works too (tapping in step 1 added 2026-11-03). The text sits above the rows and below the theme. Level 2 highlights the theme once, with a short tip. The tutorial is a level marked as such, themed Animals, and its steps come from its solution. A pointing hand, drawn in code, shows each step, and the theme gets a gently pulsing outline in level 2. The full rules are in [M05-03](milestones/5-the-whole-game/m05-03-first-level-onboarding.md).
 
 ### D44. Level generator
 An offline tool suggests levels from a theme's word list, written by Claude and reviewed by the designer. It starts from a final word in the same theme, and every suggestion passes the validator and is reviewed in a Markdown file. Rows, word lengths, revealed letters and whether reordering is needed are settings. No letters are revealed by default for now, and any random letters are fixed when a level is generated. Within a theme, every word is unique across the curated levels, so a word can appear in different themes.
@@ -219,37 +219,37 @@ An offline tool suggests levels from a theme's word list, written by Claude and 
 The game keeps full support for revealed letters (D8, D9), so they can come back.
 
 ### D45. Handles depend on the reordering tutorial
-*Changed by story 21 on 2026-11-03.* Reordering is taught on the first level that needs it: one whose rows, in their starting order (D5), can't spell the final word by sliding. It's worked out from the levels, so it moves when the content changes, and level 1 never counts. *From playing (Q12):* if the player locked that level's same-length words so that the rows already spell the final word, there's no tutorial and no handles, and it waits for a later level whose rows need moving. Reordering is taught once the player makes the tutorial's move, and that's saved with their progress. Until then, phase two has no handles, rows can't be moved by any input, and the ceremony puts rows that can't spell the word in the designed order. From then on, every level has handles. Its tutorial is strict: after the ceremony, a hand shows the first move (the top-most row that isn't in its slot goes to it), only that move works, and then the player plays freely. The full rules are in [story 21](milestones/5-the-whole-game/story-21-reordering-taught-later.md).
+*Changed by M05-04 on 2026-11-03.* Reordering is taught on the first level that needs it: one whose rows, in their starting order (D5), can't spell the final word by sliding. It's worked out from the levels, so it moves when the content changes, and level 1 never counts. *From playing (Q12):* if the player locked that level's same-length words so that the rows already spell the final word, there's no tutorial and no handles, and it waits for a later level whose rows need moving. Reordering is taught once the player makes the tutorial's move, and that's saved with their progress. Until then, phase two has no handles, rows can't be moved by any input, and the ceremony puts rows that can't spell the word in the designed order. From then on, every level has handles. Its tutorial is strict: after the ceremony, a hand shows the first move (the top-most row that isn't in its slot goes to it), only that move works, and then the player plays freely. The full rules are in [M05-04](milestones/5-the-whole-game/m05-04-reordering-taught-later.md).
 
 ### D46. Blind prototype levels
 The designer wants to play the prototype as a new player, to judge difficulty. Claude writes the word lists and picks the levels, and never shows them. Only the tutorial level and the row counts are shared. After playing, the designer decides whether players need easing in more, and by the end curates the levels.
 
 ### D47. Prototype content
-40 levels: Animals, Food, Space and Sports, with 10 each, and the tutorial (FOX, OWL, OX) as the first Animals level. Each theme follows the rows 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, as far as its words allow: with no 2-letter final word, those levels use 3 rows, and with no 3-letter words either, Claude flags it and they use 4. From level 2, no letters are revealed. Levels 2 to 20 don't need reordering, so level 21 teaches it, and after that each theme's first level at each row count doesn't need it and the rest do (story 21, R6). A full-screen interstitial naming the new theme fades in and out when the theme changes.
+40 levels: Animals, Food, Space and Sports, with 10 each, and the tutorial (FOX, OWL, OX) as the first Animals level. Each theme follows the rows 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, as far as its words allow: with no 2-letter final word, those levels use 3 rows, and with no 3-letter words either, Claude flags it and they use 4. From level 2, no letters are revealed. Levels 2 to 20 don't need reordering, so level 21 teaches it, and after that each theme's first level at each row count doesn't need it and the rest do (M05-04, R6). A full-screen interstitial naming the new theme fades in and out when the theme changes.
 
 ### D48. A split word's parts lock on their own
-*Replaced on 2026-11-04 by story 23, R14: with a pool per row, a row locks all at once or not at all.* *From playing milestone 5, on 2026-11-02.* A *part* is a run of letters between special characters, or between a special character and the end of the word: HOT DOG has the parts HOT and DOG, and T-REX has T and REX. Once all of a part's cells are filled, it locks if it matches the same part of any not-yet-locked answer that fits the row (D8), even a part of one letter. Only its tiles pulse and take the locked colour, and its letters become fixed, like a locked word's. When the last part completes the word, the parts that had already locked don't pulse again. A full row is still checked as a whole: it locks, or the wrong-word feedback plays, and any locked parts stay. If a row with locked parts can no longer fit any remaining answer, its locked letters go back to the pool, like hints (D9). A word with no special character inside it has one part, so it's unchanged.
+*Replaced on 2026-11-04 by M06-03, R14: with a pool per row, a row locks all at once or not at all.* *From playing milestone 5, on 2026-11-02.* A *part* is a run of letters between special characters, or between a special character and the end of the word: HOT DOG has the parts HOT and DOG, and T-REX has T and REX. Once all of a part's cells are filled, it locks if it matches the same part of any not-yet-locked answer that fits the row (D8), even a part of one letter. Only its tiles pulse and take the locked colour, and its letters become fixed, like a locked word's. When the last part completes the word, the parts that had already locked don't pulse again. A full row is still checked as a whole: it locks, or the wrong-word feedback plays, and any locked parts stay. If a row with locked parts can no longer fit any remaining answer, its locked letters go back to the pool, like hints (D9). A word with no special character inside it has one part, so it's unchanged.
 
 ### D49. The tutorial's hand is the designer's image
-*2026-11-03.* The tutorial's pointing hand is `assets/Pointer.png`, the designer's pixel-art hand, in place of the one drawn in code (story 12, Q9). It's about a tile tall, drawn without smoothing, and its fingertip is where the hand points.
+*2026-11-03.* The tutorial's pointing hand is `assets/Pointer.png`, the designer's pixel-art hand, in place of the one drawn in code (M05-03, Q9). It's about a tile tall, drawn without smoothing, and its fingertip is where the hand points.
 
 ### D50. Hints, part 1
-*2026-11-05.* Each hint has its own button with an icon: stacked above Recall All in phase one, along the bottom in phase two. The Letter hint locks the right letter in a random cell of the selected word, as a revealed letter. The Ordering hint puts the rows in the order with the fewest moves and removes the handles, and is offered whenever the level has handles. The Reveal hint, offered only when the rows can't be reordered, slides a random word that isn't right yet to its column letter, in gold, fixed there. Hints are free and unlimited until part 2 (story 27), never change a level's point, and the tutorials have none. The icons are placeholders drawn in code. The full rules are in [story 19](milestones/7-worth-playing/story-19-hints.md).
+*2026-11-05.* Each hint has its own button with an icon: stacked above Recall All in phase one, along the bottom in phase two. The Letter hint locks the right letter in a random cell of the selected word, as a revealed letter. The Ordering hint puts the rows in the order with the fewest moves and removes the handles, and is offered whenever the level has handles. The Reveal hint, offered only when the rows can't be reordered, slides a random word that isn't right yet to its column letter, in gold, fixed there. Hints are free and unlimited until part 2 (M07-03), never change a level's point, and the tutorials have none. The icons are placeholders drawn in code. The full rules are in [M07-01](milestones/7-worth-playing/m07-01-hints.md).
 
 ### D51. The economy
 *2026-11-05, from the economy discussion.* The game is on CrazyGames only for now, and earns through ads.
 
 - **One currency, coins, buys hints.** No hint charges or tokens for now: every hint is paid for in coins.
 - **Prices.** Letter 30, Reveal 40, Ordering 40 (Ordering is only usable once per level). Within a level, each Letter or Reveal bought costs more: each use adds about 50% of the base, rounded to 10, capped at 5× the base. Prices go back to base on the next level. To tune after playing; all numbers live in one place.
-- **Earning.** A new player starts with 100 coins. A rewarded ad gives 50, a bonus word (story 25) 10. Winning a single level gives no coins: finishing a series does (story 28).
-- **Series.** Levels are grouped into named series, separate from themes: at first a series is one theme, later it can be a group of themes. Series lengths start at 10 levels, then 15, then 20, and can vary with the grouping later. Its reward is coins only. When a level is completed, the series' name and a progress bar show; the bar fills from where it was at the start of the level to where it is now, and when it reaches 100% it flashes (with a sound, once story 18 exists) and gives the reward. The prototype's 40 levels make series of 10, 15 and 15, named by Claude after their themes.
+- **Earning.** A new player starts with 100 coins. A rewarded ad gives 50, a bonus word (M07-05) 10. Winning a single level gives no coins: finishing a series does (M07-04).
+- **Series.** Levels are grouped into named series, separate from themes: at first a series is one theme, later it can be a group of themes. Series lengths start at 10 levels, then 15, then 20, and can vary with the grouping later. Its reward is coins only. When a level is completed, the series' name and a progress bar show; the bar fills from where it was at the start of the level to where it is now, and when it reaches 100% it flashes (with a sound, once M07-07 exists) and gives the reward. The prototype's 40 levels make series of 10, 15 and 15, named by Claude after their themes.
 - **Ads.** Rewarded ads, only ever the player's choice, give coins. Midgame ads (CrazyGames' ads at a natural break) also play: after Level complete, when the player moves on, if the platform allows one then. None before a first level that's kept as one setting (level 5 for now), so it can change without changing the tests. All ads go through the platform interface (D32), and are faked in development until the CrazyGames SDK is added.
 - **Later.** Daily rewards or daily tasks, much later (later ideas).
 
-**Settings shipped today (D52):** *starting coins* 100, *ad reward* 50, *bonus word reward* 10, *first midgame level* 5, *rewarded ad wait* 3 minutes. Hint prices: Letter 30, Reveal 40, Ordering 40, with the escalation above. Series lengths 10, 15, then 15 for the prototype's levels. Series rewards are still to decide (story 28). The coins' flight (how many fly and how fast) is a feel value, in `src/style`.
+**Settings shipped today (D52):** *starting coins* 100, *ad reward* 50, *bonus word reward* 10, *first midgame level* 5, *rewarded ad wait* 3 minutes. Hint prices: Letter 30, Reveal 40, Ordering 40, with the escalation above. Series lengths 10, 15, then 15 for the prototype's levels. Series rewards are still to decide (M07-04). The coins' flight (how many fly and how fast) is a feel value, in `src/style`.
 
 ### D52. Tuning values are named settings
 *2026-11-05, from the designer.* From now on, any value that's about the economy, balance or feel (coin amounts, prices, waits, which level something starts at, fade and travel timings…) is a named setting. Rules name the setting, never its value: "a rewarded ad gives the *ad reward*". Examples and scenarios set the value they use themselves ("Given a rewarded ad gives 50 coins"), so they stay true whatever the game ships with. The shipped values live in one tuning place in the code (timings and looks stay in `src/style`, D27), and the decision that owns them (D51 for the economy) lists them. Changing a value then changes that place and its decision only, not a rule, scenario or test. Whether the game ships the right value is checked by playing, not by tests. Rules written before this aren't rewritten unless they change for another reason.
 
 ### D53. Coins and ads
-*2026-11-05, from [story 20](milestones/7-worth-playing/story-20-currency-and-ads.md).* The top bar is, left to right: home (a square house button), the level number, the ad button (centred), the coins, and settings (a square cog button); home and settings still do nothing. The theme sits just below it, centred above the rows. There's no shop button, and points move to the Level complete popup ("Points: N", counting up). The ad button shows "+", the *ad reward*, a coin and a video icon, and plays a rewarded ad straight away; it's hidden in the tutorials and when no ad can play, and waits greyed out with a countdown for the *rewarded ad wait* after each ad. It's one reusable piece, for a shop later. Earned coins fly to the counter (from the centre of the screen for an ad). A midgame ad is asked for when the player presses "Play Level X", once the *first midgame level* is completed; the platform decides whether it plays. All ads go through the platform interface, pause and mute the game, and are faked in development.
+*2026-11-05, from [M07-02](milestones/7-worth-playing/m07-02-currency-and-ads.md).* The top bar is, left to right: home (a square house button), the level number, the ad button (centred), the coins, and settings (a square cog button); home and settings still do nothing. The theme sits just below it, centred above the rows. There's no shop button, and points move to the Level complete popup ("Points: N", counting up). The ad button shows "+", the *ad reward*, a coin and a video icon, and plays a rewarded ad straight away; it's hidden in the tutorials and when no ad can play, and waits greyed out with a countdown for the *rewarded ad wait* after each ad. It's one reusable piece, for a shop later. Earned coins fly to the counter (from the centre of the screen for an ad). A midgame ad is asked for when the player presses "Play Level X", once the *first midgame level* is completed; the platform decides whether it plays. All ads go through the platform interface, pause and mute the game, and are faked in development.

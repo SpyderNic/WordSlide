@@ -15,7 +15,7 @@ export interface Level {
   theme: string;
   answers: Answer[];
   finalWord: string;
-  /** Level 1 is a strict tutorial (story 12, D43). */
+  /** Level 1 is a strict tutorial (M05-03, D43). */
   tutorial?: boolean;
 }
 
@@ -29,7 +29,7 @@ export type Cell =
   | { kind: 'placed'; character: string }
   | { kind: 'revealed'; character: string }
   | { kind: 'special'; character: string }
-  /** A letter in a locked part of a split word (D48). Since story 23, R14, parts don't lock, but older saves may hold one. */
+  /** A letter in a locked part of a split word (D48). Since M06-03, R14, parts don't lock, but older saves may hold one. */
   | { kind: 'locked'; character: string };
 
 /** Ascending length, then alphabetical (D5). */

@@ -3,7 +3,7 @@ import { createBdd } from 'playwright-bdd';
 import type { LevelLayout, Rect } from '../../../src/game/layout';
 import { test, type GameView } from './fixtures';
 import { screen, textAt, tileAt } from './probe';
-import { current, open } from './story-02.steps';
+import { current, open } from './m02-02.steps';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -22,7 +22,7 @@ async function fillAt(page: Parameters<typeof screen>[0], rect: Rect) {
 
 Given('the player is holding the Z from the pool', async ({ page, scenario }) => {
   scenario.views.push(await open(page, scenario.level, 1, 0));
-  // Z is in ZEBRA's pool (story 23): its row is selected first.
+  // Z is in ZEBRA's pool (M06-03): its row is selected first.
   const row = (await current(page)).layout.rows[1].cells[1];
   await page.mouse.click(row.x + row.width / 2, row.y + row.height / 2);
   await page.waitForTimeout(350);
@@ -59,7 +59,7 @@ Then('the Z tile is drawn grey', async ({ page }) => {
 
 Then('the Z tile is drawn in its ordinary colour', async ({ page }) => {
   const { layout, colours }: GameView = await current(page);
-  // A letter going back counts once it lands on its tile (story 16, R7).
+  // A letter going back counts once it lands on its tile (M05-02, R7).
   await expect.poll(async () => fillAt(page, zTile(layout))).toBe(colours.tile);
 });
 

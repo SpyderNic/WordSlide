@@ -6,7 +6,7 @@ import { validateLevel } from '../../src/game/validator';
 import { generate, type Settings } from '../generator/generate';
 
 /**
- * Drafts the prototype's 40 levels (story 15) with the level generator (story 14), and Claude's picks in place of
+ * Drafts the prototype's 40 levels (M06-02) with the level generator (M06-01), and Claude's picks in place of
  * the designer's (R7). Run with `npm run levels:draft`. It prints numbers only: the designer plays blind (D46).
  */
 
@@ -14,7 +14,7 @@ const LEVELS = 'src/levels/levels.json';
 const THEMES = ['Animals', 'Food', 'Space', 'Sports'];
 /** Each theme's rows, as far as its words allow (R12). */
 const PATTERN = [2, 2, 3, 3, 3, 3, 4, 4, 4, 5];
-/** Levels 2 to 20 don't need reordering, and level 21 teaches it (story 21, R6). */
+/** Levels 2 to 20 don't need reordering, and level 21 teaches it (M05-04, R6). */
 const REORDERING_TUTORIAL = 21;
 
 function wordList(theme: string): string[] {

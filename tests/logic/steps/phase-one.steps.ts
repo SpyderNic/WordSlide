@@ -75,12 +75,12 @@ function rowIndex(world: World, reference: string): number {
   return index;
 }
 
-/** Sets up the board. Placing a letter leaves its row selected, as it would for the player (story 23). */
+/** Sets up the board. Placing a letter leaves its row selected, as it would for the player (M06-03). */
 function quietly(world: World, setup: (board: Board) => void) {
   setup(boardOf(world));
 }
 
-/** Each row has its own pool (story 23). With no row named, a letter comes from a row whose pool has it. */
+/** Each row has its own pool (M06-03). With no row named, a letter comes from a row whose pool has it. */
 function rowWith(board: Board, character: string): number | null {
   if (board.countOf(character) > 0) return board.selectedRow;
   const selected = board.selectedRow;
@@ -565,7 +565,7 @@ When('the player swaps the R and the U', function (this: World) {
   swap(this, { row: 0, cell: 3 }, { row: 0, cell: 4 });
 });
 
-// Row 2 reads T E A M. Dropping the M on the T moves T, E and A aside: M T E A. Then the T onto the A: M E A T (story 24, R6).
+// Row 2 reads T E A M. Dropping the M on the T moves T, E and A aside: M T E A. Then the T onto the A: M E A T (M06-04, R6).
 When('the player drags the M onto the T, then the T onto the A', function (this: World) {
   swap(this, { row: 1, cell: 3 }, { row: 1, cell: 0 });
   swap(this, { row: 1, cell: 1 }, { row: 1, cell: 3 });
@@ -790,7 +790,7 @@ Then('no row is marked as selected', function (this: World) {
   assert.equal(boardOf(this).markedRow, null);
 });
 
-Then('the selection moves on, as in story 17', function (this: World) {
+Then('the selection moves on, as in M03-05', function (this: World) {
   assert.equal(boardOf(this).selectedRow, 1);
 });
 

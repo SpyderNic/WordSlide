@@ -10,7 +10,7 @@ interface AuditWorld {
   rowsBefore: string[];
 }
 
-// Both in ZEBRA's row, the second row: its pool has both letters (story 23).
+// Both in ZEBRA's row, the second row: its pool has both letters (M06-03).
 Given('a Z held from the pool and an A placed', function (this: AuditWorld) {
   this.board = new Board(makeLevel(DEFAULT_WORDS));
   this.board.selectRow(1);

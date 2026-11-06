@@ -2,7 +2,7 @@ import type { Style } from './Style';
 
 export const woodAndBrass: Style = {
   name: 'Wood and brass',
-  // Nunito, bundled under the SIL Open Font License (story 16, R9).
+  // Nunito, bundled under the SIL Open Font License (M05-02, R9).
   font: 'Nunito',
   colours: {
     background: 0x3b2a1e,

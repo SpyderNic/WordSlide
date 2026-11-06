@@ -45,7 +45,7 @@ export interface LevelLayout {
   poolArea: Rect;
   poolTiles: PoolTileView[];
   recall: Rect;
-  /** The Letter hint's button, just above Recall All (story 19, R2). */
+  /** The Letter hint's button, just above Recall All (M07-01, R2). */
   letterHint: Rect;
 }
 
@@ -65,7 +65,7 @@ export type Hit =
 
 const GAP = 0.08;
 const CELLS_ACROSS = 9;
-/** The width the top bar needs, in tiles (story 20, R14). */
+/** The width the top bar needs, in tiles (M07-02, R14). */
 const TOP_TILES_ACROSS = 16;
 const TOP_TILES_ACROSS_PORTRAIT = 9.4;
 /** The theme's line below the top bar, in top tiles. */
@@ -79,7 +79,7 @@ function widthFor(cells: number, tile: number): number {
   return cells * tile * (1 + GAP) - tile * GAP;
 }
 
-/** The same for every level on a given screen, unless a long row won't fit (story 2, R12). */
+/** The same for every level on a given screen, unless a long row won't fit (M02-02, R12). */
 function tileSizeFor(width: number, height: number, longestRow: number): number {
   const usual = Math.min(width / (CELLS_ACROSS * (1 + GAP)), height / TILES_DOWN);
   const fits = width / (longestRow * (1 + GAP));
@@ -96,7 +96,7 @@ function poolRowsFor(tiles: number, across: number): number {
 
 /**
  * The top bar, left to right: home, level number, the ad button (centred), coins, settings. The theme has its own
- * line just below it (story 20, R14).
+ * line just below it (M07-02, R14).
  */
 function layoutTopItems(width: number, tile: number, levelNumber: number, coins: number, adText: string, theme: string) {
   const height = tile;
@@ -136,7 +136,7 @@ function layoutRow(word: string, cells: Cell[], locked: boolean, top: number, wi
 
 function layoutPool(pool: PoolTile[], area: Rect, tile: number, across: number): PoolTileView[] {
   const pitch = tile * (1 + GAP);
-  // Each line takes as many tiles as fit before the next one starts, so a small pool sits on one line (story 24, R4).
+  // Each line takes as many tiles as fit before the next one starts, so a small pool sits on one line (M06-04, R4).
   const usedRows = Math.max(1, Math.ceil(pool.length / across));
   const perRow = across;
   const rows = Array.from({ length: usedRows }, (_, row) => pool.slice(row * perRow, (row + 1) * perRow));
@@ -222,7 +222,7 @@ function isInside(rect: Rect, x: number, y: number): boolean {
   return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
 }
 
-/** What's under a point. A dragged tile's centre is the pointer, so this is also its target (story 3, R15). */
+/** What's under a point. A dragged tile's centre is the pointer, so this is also its target (M03-01, R15). */
 export function hitTest(layout: LevelLayout, x: number, y: number): Hit {
   for (let row = 0; row < layout.rows.length; row++) {
     const cell = layout.rows[row].cells.findIndex((candidate) => isInside(candidate, x, y));

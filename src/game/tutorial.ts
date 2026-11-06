@@ -5,9 +5,9 @@ import type { PhaseTwo } from './phaseTwo';
 import { validateLevel } from './validator';
 
 /**
- * Level 1 walks the player through the game, one step at a time (D43, story 12).
+ * Level 1 walks the player through the game, one step at a time (D43, M05-03).
  * The steps come from the level's solution, so a new tutorial level needs no new code.
- * Reordering has its own tutorial, on the first level that needs it (story 21): its one step is "reorder".
+ * Reordering has its own tutorial, on the first level that needs it (M05-04): its one step is "reorder".
  */
 export type TutorialStep = 1 | 2 | 3 | 'reorder';
 
@@ -49,7 +49,7 @@ export interface ReorderingMove {
   to: number;
 }
 
-/** The first move towards the designed order: the top-most row that isn't in its slot goes to it (story 21, Q11). */
+/** The first move towards the designed order: the top-most row that isn't in its slot goes to it (M05-04, Q11). */
 export function firstReorderingMove(rows: string[], order: string[]): ReorderingMove | null {
   const from = rows.findIndex((word, row) => order[row] !== word);
   if (from === -1) return null;

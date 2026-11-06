@@ -2,12 +2,12 @@
 
 Levels one after another with saved progress, the visual style, and the tutorials (FTUE).
 
-**Status:** Built: waiting for the designer to play it. The whole plan is in [the build plan](../../build-plan.md).
+**Status:** Done: played and approved by the designer on 2026-11-06. The whole plan is in [the build plan](../../build-plan.md).
 
-| # | Story | Map | Scenarios | Status |
+| ID | Story | Map | Scenarios | Status |
 |---|---|---|---|---|
-| 11 | Unlock the next level and save progress | [map](story-11-next-level-and-progress.md) | [scenarios](../../../features/5-the-whole-game/story-11-next-level-and-progress.feature) | Built |
-| 16 | Visual style | [map](story-16-visual-style.md) | [scenarios](../../../features/5-the-whole-game/story-16-visual-style.feature) | Built |
-| 12 | First-level tutorial | [map](story-12-first-level-onboarding.md) | [scenarios](../../../features/5-the-whole-game/story-12-first-level-tutorial.feature) | Built |
-| 21 | Reordering is taught later | [map](story-21-reordering-taught-later.md) | [scenarios](../../../features/5-the-whole-game/story-21-reordering-taught-later.feature) | Built |
+| M05-01 | Unlock the next level and save progress | [map](m05-01-next-level-and-progress.md) | [scenarios](../../../features/5-the-whole-game/m05-01-next-level-and-progress.feature) | Built |
+| M05-02 | Visual style | [map](m05-02-visual-style.md) | [scenarios](../../../features/5-the-whole-game/m05-02-visual-style.feature) | Built |
+| M05-03 | First-level tutorial | [map](m05-03-first-level-onboarding.md) | [scenarios](../../../features/5-the-whole-game/m05-03-first-level-tutorial.feature) | Built |
+| M05-04 | Reordering is taught later | [map](m05-04-reordering-taught-later.md) | [scenarios](../../../features/5-the-whole-game/m05-04-reordering-taught-later.feature) | Built |
 

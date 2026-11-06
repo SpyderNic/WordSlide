@@ -4,7 +4,7 @@ import type { PhaseTwoTestView } from '../../../src/scenes/PhaseTwoView';
 import { parseWords } from '../../support/levels';
 import { test, type GameView, type Scenario } from './fixtures';
 import { drawnIn, lastMove, pointing, screen, startRecording, stopRecording, textAt, tileAt, tweens, type Drawn, type Frame } from './probe';
-import { current, open } from './story-02.steps';
+import { current, open } from './m02-02.steps';
 
 const { Given, When, Then } = createBdd(test);
 
@@ -217,7 +217,7 @@ async function expectRowMarked(page: Page, row: GameView['layout']['rows'][numbe
   expect(outline).toBeDefined();
 }
 
-// Story 7
+// M04-01
 
 Given('LEMUR and ZEBRA are locked', async ({ scenario }) => {
   scenario.setup.push(fillRow(0, 'LEMUR'), fillRow(1, 'ZEBRA'));
@@ -383,7 +383,7 @@ Then('each handle is level with its row', async ({ page }) => {
 
 Then('the pool is gone', async ({ page }) => {
   const { poolArea } = (await current(page)).layout;
-  // Phase two's hint buttons sit along the bottom, where the pool was (story 19): they aren't the pool.
+  // Phase two's hint buttons sit along the bottom, where the pool was (M07-01): they aren't the pool.
   const hints = (await two(page)).hints.map((hint) => hint.rect);
   const isHint = (x: number, y: number) => hints.some((rect) => x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height);
   await expect.poll(async () => drawnIn(await screen(page), poolArea).filter((object) => !isHint(object.x, object.y)).length).toBe(0);
@@ -478,7 +478,7 @@ Then('the finished phase-two layout appears for the new orientation', async ({ p
   view.rows.forEach((row) => expect(row.x).toBeCloseTo(restingX(view, row.columnCell, pitch)));
 });
 
-// Story 8
+// M04-02
 
 Given(/^(LEMUR|KANGAROO) with its (\S+)(?: (?:last )?(\S+))? in the column$/, async ({ page, scenario }, word: string, letter: string, last: string) => {
   await ready(page, scenario);
@@ -849,7 +849,7 @@ When('the player quickly presses Up, then Down', async ({ page, scenario }) => {
 });
 
 When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({ page, scenario, $uri }, key: string) => {
-  if ($uri.includes('story-12') || $uri.includes('story-23')) {
+  if ($uri.includes('m05-03') || $uri.includes('m06-03')) {
     scenario.acted = true;
     await openLevel(page, scenario);
     scenario.before = await current(page);
@@ -865,10 +865,10 @@ When(/^the player presses (Up|Down|Left|Right|Shift\+Up|Shift\+Down)$/, async ({
 });
 
 Then(/^(LEMUR|ZEBRA|KANGAROO)'s row is (?:still )?(?:selected|marked as selected)$/, async ({ page, scenario, $uri }, word: string) => {
-  const story23Check = $uri.includes('story-23') && scenario.views.length > 0;
+  const story23Check = $uri.includes('m06-03') && scenario.views.length > 0;
   if (!scenario.acted && !story23Check) {
     // These stories select a row in phase one, by tapping it.
-    if (['story-02', 'story-03', 'story-04', 'story-17', 'story-11', 'story-16', 'story-23', 'story-20'].some((story) => $uri.includes(story))) {
+    if (['m02-02', 'm03-01', 'm03-02', 'm03-05', 'm05-01', 'm05-02', 'm06-03', 'm07-02'].some((story) => $uri.includes(story))) {
       scenario.setup.push(async (page) => {
         const { layout } = await current(page);
         const cell = layout.rows.find((row) => row.word === word)!.cells[0];
@@ -916,7 +916,7 @@ Then('the selection is marked again, and the arrow takes effect from ZEBRA\'s ro
   expect(moved).toBe(scenario.lastKey === 'Left' ? 1 : 0);
 });
 
-// Story 9
+// M04-03
 
 When("the player drags KANGAROO's handle up", async ({ page, scenario }) => {
   await ready(page, scenario);
@@ -1208,7 +1208,7 @@ Then(/^(ZEBRA)'s row is in slot (\d+)$/, async ({ page }, word: string, slot: st
   expect((await order(page)).indexOf(word)).toBe(Number(slot) - 1);
 });
 
-// Story 10
+// M04-04
 
 Given('the rows are ZEBRA, LEMUR, KANGAROO with Z, L, K in the column', async ({ page, scenario }) => {
   await ready(page, scenario);
@@ -1282,14 +1282,14 @@ function plan(scenario: Scenario, text: string, rows: string[], cells: Record<st
 When(/^the column (?:reads|spells) (.+?)(?: from top to bottom)?$/, async ({ page, scenario, $uri }, text: string) => {
   await ready(page, scenario);
   const key = text === 'the final word' ? 'ELK' : text.split(', ').join('');
-  if ($uri.includes('story-12') && key === 'OX') {
+  if ($uri.includes('m05-03') && key === 'OX') {
     await arrange(page, ['OWL', 'FOX'], { OWL: 0, FOX: 1 });
     await startRecording(page);
     await dragSlowlyAndRelease(page, 'FOX', 1, -1);
     return;
   }
-  // Only story 10 uses this as an action. Everywhere else it's a check, and must never arrange anything.
-  if (!$uri.includes('story-10')) {
+  // Only M04-04 uses this as an action. Everywhere else it's a check, and must never arrange anything.
+  if (!$uri.includes('m04-04')) {
     expect((await two(page)).columnText).toBe(key);
     return;
   }
@@ -1531,7 +1531,7 @@ Then('the popup appears for the new orientation', async ({ page }) => {
   expect(panel.x).toBe(225);
 });
 
-// The gold wave pulses like a lock (story 10, R6)
+// The gold wave pulses like a lock (M04-04, R6)
 
 /** Each column tile, frame by frame, grouped by row. */
 function columnPulses(frames: Frame[]) {

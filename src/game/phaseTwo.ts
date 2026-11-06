@@ -4,17 +4,17 @@ export interface SlidingRow {
   /** The word in this row, which may not be the row's designed answer (D8). */
   word: string;
   cells: string[];
-  /** Which of the word's cells is in the column. Always a letter (story 8, R5). */
+  /** Which of the word's cells is in the column. Always a letter (M04-02, R5). */
   columnCell: number;
-  /** Put in place by the Reveal hint: gold, and it can't slide again (story 19, R6). */
+  /** Put in place by the Reveal hint: gold, and it can't slide again (M07-01, R6). */
   fixed?: boolean;
 }
 
-/** Each word in row order, and which of its cells is in the column (story 11, R10). */
+/** Each word in row order, and which of its cells is in the column (M05-01, R10). */
 export interface PhaseTwoSnapshot {
   words: string[];
   cells: number[];
-  /** Rows the Reveal hint fixed (story 19, R9). */
+  /** Rows the Reveal hint fixed (M07-01, R9). */
   fixed?: boolean[];
   /** The Ordering hint was used: the order is fixed, and the handles are gone. */
   ordered?: boolean;
@@ -30,7 +30,7 @@ export class PhaseTwo {
   constructor(
     words: string[],
     private readonly finalWord: string,
-    /** Handles only appear once reordering has been taught (D45), and go after the Ordering hint (story 19, R5). */
+    /** Handles only appear once reordering has been taught (D45), and go after the Ordering hint (M07-01, R5). */
     public canReorder = true,
   ) {
     this.rows = words.map((word) => {
@@ -99,7 +99,7 @@ export class PhaseTwo {
     return this.rows.map((row) => row.cells[row.columnCell]).join('');
   }
 
-  // Hints (story 19)
+  // Hints (M07-01)
 
   private spells(order: SlidingRow[]): boolean {
     const letters = cellsOf(this.finalWord);
@@ -125,7 +125,7 @@ export class PhaseTwo {
   }
 
   /**
-   * Puts the rows in the order that needs the fewest moves, and fixes it: no more handles (story 19, R5, Q3). Rows
+   * Puts the rows in the order that needs the fewest moves, and fixes it: no more handles (M07-01, R5, Q3). Rows
    * already in order just lose their handles.
    */
   orderingHint(): boolean {
@@ -146,7 +146,7 @@ export class PhaseTwo {
     return this.rows.flatMap((row, index) => (!row.fixed && row.cells[row.columnCell] !== letters[index] && row.cells.includes(letters[index]) ? [index] : []));
   }
 
-  /** Only when the rows can't be reordered (story 19, R7). */
+  /** Only when the rows can't be reordered (M07-01, R7). */
   get revealHintAvailable(): boolean {
     return !this.canReorder && !this.won && this.revealable().length > 0;
   }
@@ -167,7 +167,7 @@ export class PhaseTwo {
     return index;
   }
 
-  /** Called once a word or row has settled, never during a drag (story 10, R1). */
+  /** Called once a word or row has settled, never during a drag (M04-04, R1). */
   checkWin(): boolean {
     if (this.columnText() === this.finalWord) this.won = true;
     return this.won;

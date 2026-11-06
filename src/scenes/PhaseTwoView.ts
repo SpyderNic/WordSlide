@@ -38,14 +38,14 @@ type Press =
   | { kind: 'slide'; pointerId: number; row: number; startX: number; startPosition: number; position: number; moved: boolean; lastX: number; lastTime: number; speed: number; before: number }
   | { kind: 'reorder'; pointerId: number; row: number; startY: number; startRowY: number; moved: boolean; startOrder: number };
 
-/** What the player may do in phase two. Outside the tutorial, everything (story 12, R2). */
+/** What the player may do in phase two. Outside the tutorial, everything (M05-03, R2). */
 export interface PhaseTwoRules {
   handle: (word: string) => boolean;
   slide: (word: string) => boolean;
   /** Whether a row lifted by its handle may go to this slot. */
   slot: (word: string, slot: number) => boolean;
   keys: () => boolean;
-  /** Whether hints are offered: not during a tutorial's step (story 19, R10). */
+  /** Whether hints are offered: not during a tutorial's step (M07-01, R10). */
   hints: () => boolean;
 }
 
@@ -54,11 +54,11 @@ const FREE: PhaseTwoRules = { handle: () => true, slide: () => true, slot: () =>
 export interface PhaseTwoCallbacks {
   /** The ceremony has finished, or a word or row has settled, and the column spells the word. */
   onWon: () => void;
-  /** A word or row has settled without winning (story 11, R10). */
+  /** A word or row has settled without winning (M05-01, R10). */
   onSettled: () => void;
-  /** The popup has just appeared after a win (story 11, R12). */
+  /** The popup has just appeared after a win (M05-01, R12). */
   onPopup: () => void;
-  /** The player's points before and after this level's win, for the popup (story 20, R11). */
+  /** The player's points before and after this level's win, for the popup (M07-02, R11). */
   points: () => { from: number; to: number };
   onNextLevel: () => void;
 }
@@ -80,9 +80,9 @@ export class PhaseTwoView {
   private readonly rowViews: RowView[] = [];
   /** The tinted strip, behind the words. */
   private column!: Phaser.GameObjects.Graphics;
-  /** The brass sides and notches, above the words, so letters slide under them (story 16, R8). */
+  /** The brass sides and notches, above the words, so letters slide under them (M05-02, R8). */
   private columnSides!: Phaser.GameObjects.Graphics;
-  /** The grey glass line, above every word, even one lifted by its handle (story 16, R8). */
+  /** The grey glass line, above every word, even one lifted by its handle (M05-02, R8). */
   private columnGlass!: Phaser.GameObjects.Graphics;
   private press: Press | null = null;
   private tile = 0;
@@ -90,7 +90,7 @@ export class PhaseTwoView {
   private columnX = 0;
   private rowsTop = 0;
   private handlesVisible = false;
-  /** The hint buttons along the bottom (story 19, R2), and what's drawn for them. */
+  /** The hint buttons along the bottom (M07-01, R2), and what's drawn for them. */
   private hintButtons: HintButton[] = [];
   private hintObjects: Phaser.GameObjects.GameObject[] = [];
   private ceremonyDone = false;
@@ -102,14 +102,14 @@ export class PhaseTwoView {
     private readonly scene: Phaser.Scene,
     private readonly phase: PhaseTwo,
     private readonly level: Level,
-    /** Null after the last level (story 11, R11). */
+    /** Null after the last level (M05-01, R11). */
     private readonly nextLevelNumber: number | null,
     private readonly callbacks: PhaseTwoCallbacks,
     private layout: LevelLayout,
     private readonly rules: PhaseTwoRules = FREE,
   ) {}
 
-  // Where the tutorial's hand goes (story 12)
+  // Where the tutorial's hand goes (M05-03)
 
   get ready(): boolean {
     return this.ceremonyDone;
@@ -170,7 +170,7 @@ export class PhaseTwoView {
 
   // Building
 
-  /** Starts from where the rows were in phase one, then plays the ceremony (story 7). */
+  /** Starts from where the rows were in phase one, then plays the ceremony (M04-01). */
   playCeremony(from: { x: number; y: number }[], onFinished: () => void) {
     this.measure();
     this.column = this.scene.add.graphics().setAlpha(0).setDepth(0);
@@ -209,7 +209,7 @@ export class PhaseTwoView {
     onFinished();
   }
 
-  /** Rotating during the ceremony jumps to its end (story 7, R14). */
+  /** Rotating during the ceremony jumps to its end (M04-01, R14). */
   skipCeremony() {
     if (this.ceremonyDone) return;
     this.rowViews.forEach((view) => this.scene.tweens.killTweensOf(view.container));
@@ -246,7 +246,7 @@ export class PhaseTwoView {
       .fillStyle(colours.column)
       .fillTriangle(this.columnX - notch, top - notch, this.columnX + notch, top - notch, this.columnX, top)
       .fillTriangle(this.columnX - notch, bottom + notch, this.columnX + notch, bottom + notch, this.columnX, bottom);
-    // A grey sheen down the column, like glass (story 16, R8).
+    // A grey sheen down the column, like glass (M05-02, R8).
     this.columnGlass
       .clear()
       .lineStyle(Math.max(2, this.tile * 0.06), 0xffffff, 0.25)
@@ -317,7 +317,7 @@ export class PhaseTwoView {
     if (this.ceremonyDone) this.drawHints();
   }
 
-  // Hints (story 19)
+  // Hints (M07-01)
 
   /** A word the Reveal hint put in place shows its column letter in gold (R6), and its other letters faded (R12). */
   private paintFixed() {
@@ -477,7 +477,7 @@ export class PhaseTwoView {
       return;
     }
     const row = this.hitRow(pointer.x, pointer.y);
-    // A word the Reveal hint put in place can't slide again (story 19, R6).
+    // A word the Reveal hint put in place can't slide again (M07-01, R6).
     if (row === null || !this.rules.slide(this.phase.rows[row].word) || this.phase.rows[row].fixed) return;
     const position = this.phase.rows[row].columnCell;
     this.press = {
@@ -620,7 +620,7 @@ export class PhaseTwoView {
     if (!this.ceremonyDone || this.press || this.phase.won || !this.rules.keys()) return;
     if (!event.key.startsWith('Arrow')) return;
     event.preventDefault();
-    // A move the rules don't allow only selects the row: a slide by Left or Right (story 24, R8), or a row move by
+    // A move the rules don't allow only selects the row: a slide by Left or Right (M06-04, R8), or a row move by
     // Shift with Up or Down (R9).
     const sliding = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
     const target = this.phase.selectedRow ?? 0;
@@ -739,7 +739,7 @@ export class PhaseTwoView {
       button: last ? null : `Play Level ${this.nextLevelNumber}`,
       points: last ? undefined : justWon ? points.from : points.to,
     });
-    // The old points show for a moment, then the new ones pulse in, like a locking tile (story 20, R11).
+    // The old points show for a moment, then the new ones pulse in, like a locking tile (M07-02, R11).
     if (pointsText && justWon) {
       this.scene.time.delayedCall(timings.pointsPause, () => {
         if (!pointsText.active) return;

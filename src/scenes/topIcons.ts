@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 /**
- * The top bar's icons (story 20, R12 and R14), drawn from lines like the hint icons, as placeholders.
+ * The top bar's icons (M07-02, R12 and R14), drawn from lines like the hint icons, as placeholders.
  * Each is drawn around (x, y), about `size` across.
  */
 

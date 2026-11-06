@@ -4,7 +4,7 @@
 @browser
 Feature: What the screen shows
 
-  # Z is ZEBRA's letter: its row is selected first (story 23).
+  # Z is ZEBRA's letter: its row is selected first (M06-03).
   Scenario: A tile is grey exactly while it has no copies left
     When the player selects ZEBRA's row
     Then the Z tile is drawn in its ordinary colour

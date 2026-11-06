@@ -1,8 +1,8 @@
 // Add each story here as it's built.
-const built = ["01-level-validator","03-place-a-letter","04-return-a-letter","05-recall-all","06-check-and-lock-a-word","17-pool-as-a-keyboard","11-next-level-and-progress","16-visual-style","21-reordering-taught-later","14-level-generator","15-draft-the-first-levels"];
+const built = ["m02-01-level-validator","m03-01-place-a-letter","m03-02-return-a-letter","m03-03-recall-all","m03-04-check-and-lock-a-word","m03-05-pool-as-a-keyboard","m05-01-next-level-and-progress","m05-02-visual-style","m05-04-reordering-taught-later","m06-01-level-generator","m06-02-draft-the-first-levels"];
 
 export default {
-  paths: ['tests/logic/*.feature', ...built.map((story) => `features/**/story-${story}.feature`)],
+  paths: ['tests/logic/*.feature', ...built.map((story) => `features/**/${story}.feature`)],
   import: ['tests/logic/steps/*.ts'],
   tags: 'not @browser and not @manual',
   format: ['progress', 'html:reports/logic.html'],

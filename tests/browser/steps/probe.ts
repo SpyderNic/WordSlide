@@ -17,7 +17,7 @@ export interface Line {
 export type Triangle = [number, number, number, number, number, number];
 
 export interface Drawn {
-  /** A tile's bevel edges are 'bevel', so tests that look for tiles don't mistake them for tiles (story 16, R8). */
+  /** A tile's bevel edges are 'bevel', so tests that look for tiles don't mistake them for tiles (M05-02, R8). */
   kind: 'rect' | 'text' | 'graphics' | 'bevel' | 'image';
   /** The object's centre on screen. Graphics draw from their own origin. */
   x: number;

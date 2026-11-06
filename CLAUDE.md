@@ -8,6 +8,7 @@ A themed word puzzle, built with Phaser 3, Vite and TypeScript, aiming at CrazyG
 - `docs/decisions.md`: every decision. It overrides `docs/design-context.md`.
 - `docs/stories.md`: the story backlog and its status.
 - `docs/milestones/<n>-<name>/`: one folder per milestone, with its README and one example map per story (`docs/milestones/parked/` for parked stories). `features/<n>-<name>/`: the approved scenarios, in the same milestone folders. A new story goes in the folder of the milestone it belongs to.
+- Stories are named by milestone: M07-01 is milestone 7's first story, and parked stories are P-01, P-02… A new story takes the next ID in its milestone, and a parked story coming back takes its new milestone's next ID. Files are named the same way (`m07-01-hints.md`, `m07-01-hints.feature`, `m07-01.steps.ts`). Their old numbers are in `docs/stories.md`.
 - `docs/later-ideas.md`: not planned, but the code shouldn't rule these out.
 
 ## How we work
@@ -35,23 +36,23 @@ A themed word puzzle, built with Phaser 3, Vite and TypeScript, aiming at CrazyG
 Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find it.
 
 - `npm run dev` serves the game at http://localhost:5173. In development builds only, `?level=N` opens level N as a peek that saves nothing, and `?reset` clears saved progress.
-- Browser tests give the game its levels through `window.wordSlideTestLevels` (see `useLevels` in `tests/browser/steps/story-02.steps.ts`), so they never depend on the prototype's levels.
-- Browser tests play as if the reordering tutorial were already behind the player (`window.wordSlideReorderingTaught`, set in `tests/browser/steps/fixtures.ts`), so handles show in every test level. Stories 12 and 21 turn it off with `reorderingNotTaught`, so that story 21's rule decides.
-- Economy settings (D52) live in `src/game/economy.ts`. Development builds take overrides from `window.wordSlideEconomy`; the fixtures turn midgame ads off (`firstMidgameLevel` out of reach) so levels follow on, and story 20's steps set the values each scenario names.
-- Development builds play pretend ads (story 20, R10): a page element `#pretend-ad` with Finish and Close buttons. `window.wordSlideAds` can make no ad available, the next fail, or midgame ads not play; `window.wordSlideAdLog` lists the ads asked for; `window.wordSlideTime` replaces the clock for the ad button's countdown; `window.wordSlideTestCoins` sets the balance when a test opens a level.
-- `npm run levels:generate -- --theme Animals --words <list> --rows 3 --lengths 3-5 --reordering needed` runs the level generator (story 14) and writes a review file to `content/reviews/`, which git ignores. Tick the boxes, then `npm run levels:approve -- <review file>` adds those levels to `src/levels/levels.json`. The generator lives in `tools/`, so the game never bundles it. Its output only prints counts (D46).
-- The game's levels are `src/levels/levels.json`. `npm run levels:draft` redrafts the prototype's 40 levels (story 15) from `content/word-lists/`, with the generator and Claude's picks, and prints only numbers. Never print, quote or summarise those lists or levels (D46).
+- Browser tests give the game its levels through `window.wordSlideTestLevels` (see `useLevels` in `tests/browser/steps/m02-02.steps.ts`), so they never depend on the prototype's levels.
+- Browser tests play as if the reordering tutorial were already behind the player (`window.wordSlideReorderingTaught`, set in `tests/browser/steps/fixtures.ts`), so handles show in every test level. M05-03 and M05-04 turn it off with `reorderingNotTaught`, so that M05-04's rule decides.
+- Economy settings (D52) live in `src/game/economy.ts`. Development builds take overrides from `window.wordSlideEconomy`; the fixtures turn midgame ads off (`firstMidgameLevel` out of reach) so levels follow on, and M07-02's steps set the values each scenario names.
+- Development builds play pretend ads (M07-02, R10): a page element `#pretend-ad` with Finish and Close buttons. `window.wordSlideAds` can make no ad available, the next fail, or midgame ads not play; `window.wordSlideAdLog` lists the ads asked for; `window.wordSlideTime` replaces the clock for the ad button's countdown; `window.wordSlideTestCoins` sets the balance when a test opens a level.
+- `npm run levels:generate -- --theme Animals --words <list> --rows 3 --lengths 3-5 --reordering needed` runs the level generator (M06-01) and writes a review file to `content/reviews/`, which git ignores. Tick the boxes, then `npm run levels:approve -- <review file>` adds those levels to `src/levels/levels.json`. The generator lives in `tools/`, so the game never bundles it. Its output only prints counts (D46).
+- The game's levels are `src/levels/levels.json`. `npm run levels:draft` redrafts the prototype's 40 levels (M06-02) from `content/word-lists/`, with the generator and Claude's picks, and prints only numbers. Never print, quote or summarise those lists or levels (D46).
 - `npm run build` type-checks and builds.
 - `npm run test:logic` runs scenarios without a browser, using Cucumber. Steps are in `tests/logic/steps`.
 - `npm run test:browser` runs scenarios tagged `@browser` in a real browser. Steps are in `tests/browser/steps`.
 - `npm test` runs both. Reports go to `reports/`.
-- `npm run test:other-style` runs every browser scenario again with a recoloured style, to show a style never changes the rules (story 16, R1). Development builds pick a style with `window.wordSlideStyle`.
+- `npm run test:other-style` runs every browser scenario again with a recoloured style, to show a style never changes the rules (M05-02, R1). Development builds pick a style with `window.wordSlideStyle`.
 - When a story is built, add it to the `built` list in `cucumber.mjs` and/or `playwright.config.ts`.
 - Tag a scenario `@browser` if it needs the screen, and `@touch` if it needs fingers.
 - In the browser tests, Given and Then share one step registry, so one step can't be defined twice for both uses.
-- `archive/before-story-23/` holds scenarios that story 23 (a pool for each row) made obsolete, with a copy of the test steps from then. They don't run. The game as it was is tagged `before-story-23`.
-- `archive/before-story-20/` holds the scenarios story 20 (coins and ads) made obsolete, and the game before it is tagged `before-story-20`. `tools/archive-scenarios.mjs` archives for any story.
-- Each row has its own pool (story 23): a test that takes a letter "from the pool" must have that letter's row selected. Browser steps use `layoutNow(page, scenario, letter)`, which taps the row first.
+- `archive/before-story-23/` holds scenarios that M06-03 (a pool for each row) made obsolete, with a copy of the test steps from then. They don't run. The game as it was is tagged `before-story-23`.
+- `archive/before-story-20/` holds the scenarios M07-02 (coins and ads) made obsolete, and the game before it is tagged `before-story-20`. `tools/archive-scenarios.mjs` archives for any story.
+- Each row has its own pool (M06-03): a test that takes a letter "from the pool" must have that letter's row selected. Browser steps use `layoutNow(page, scenario, letter)`, which taps the row first.
 
 ## Things that have caught us out
 

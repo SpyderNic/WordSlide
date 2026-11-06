@@ -22,17 +22,17 @@ import { drawCoin, drawCog, drawHouse, drawVideo } from './topIcons';
 const colours = currentStyle.colours;
 const timings = currentStyle.timings;
 const SHAKE_DISTANCE = 6;
-/** Coins flying to the counter, above the board and the popup (story 20, R15). */
+/** Coins flying to the counter, above the board and the popup (M07-02, R15). */
 const FLIGHT_DEPTH = 26;
-/** The ad button while it waits (story 20, R13). */
+/** The ad button while it waits (M07-02, R13). */
 const AD_WAITING_ALPHA = 0.5;
 /** Letters flying between the pool and the cells are drawn above the board, below a dragged tile. */
 const TRAVEL_DEPTH = 8;
-/** Several letters going back to the pool leave this far apart, in milliseconds (story 16, R7). */
+/** Several letters going back to the pool leave this far apart, in milliseconds (M05-02, R7). */
 const TRAVEL_STAGGER = 30;
-/** Level 2's outline around the theme sits just above the top of the screen's items (story 12, R12). */
+/** Level 2's outline around the theme sits just above the top of the screen's items (M05-03, R12). */
 const TOP_GLOW_DEPTH = 21;
-/** Above everything, the popup included (story 15, R11). */
+/** Above everything, the popup included (M06-02, R11). */
 const INTERSTITIAL_DEPTH = 40;
 
 interface Point {
@@ -88,34 +88,34 @@ export class GameScene extends Phaser.Scene {
   private feedback: BoardEvent[] = [];
   private foundText: Phaser.GameObjects.Container | null = null;
   private poolObjects: Phaser.GameObjects.GameObject[] = [];
-  /** Which pool tile each object belongs to, and where each tile was drawn, so a change of pool can animate (story 23, Q3). */
+  /** Which pool tile each object belongs to, and where each tile was drawn, so a change of pool can animate (M06-03, Q3). */
   private poolOwner = new Map<Phaser.GameObjects.GameObject, string>();
   private poolPlaces = new Map<string, { x: number; y: number }>();
   /** The row whose pool is drawn. */
   private poolRow: number | null | undefined = undefined;
   /** Letters fading out of the old pool. */
   private leavingPool: Phaser.GameObjects.GameObject[] = [];
-  /** Parts slid aside during a drag, and where they started (story 24, R6). */
+  /** Parts slid aside during a drag, and where they started (M06-04, R6). */
   private shiftedParts = new Map<Phaser.GameObjects.GameObject, number>();
   private shiftShown: string | null = null;
-  /** How strongly each row was last drawn (story 23, R3). */
+  /** How strongly each row was last drawn (M06-03, R3). */
   private rowStrengths = new Map<number, number>();
   private phaseTwo: PhaseTwoView | null = null;
   private levels: Level[] = levels;
   private progress: Progress = NEW_PLAYER;
   private platform!: Platform;
-  /** False while the designer peeks at a level picked in the address (story 11, R13). */
+  /** False while the designer peeks at a level picked in the address (M05-01, R13). */
   private saving = true;
-  /** After the last level, only the top of the screen and a popup show (story 11, R11). */
+  /** After the last level, only the top of the screen and a popup show (M05-01, R11). */
   private allDone = false;
   private allComplete: Phaser.GameObjects.Container | null = null;
-  /** Cells waiting for a travelling letter, by "row:cell", and when it lands (story 16, R6). */
+  /** Cells waiting for a travelling letter, by "row:cell", and when it lands (M05-02, R6). */
   private arriving = new Map<string, number>();
-  /** Letters flying back to the pool, by letter: their tile's count goes up when they land (story 16, R7). */
+  /** Letters flying back to the pool, by letter: their tile's count goes up when they land (M05-02, R7). */
   private incoming = new Map<string, number>();
-  /** The tutorial, on a level marked as one (story 12). */
+  /** The tutorial, on a level marked as one (M05-03). */
   private tutorial: TutorialPlan | null = null;
-  /** The reordering tutorial's move, on the first level that needs reordering (story 21). */
+  /** The reordering tutorial's move, on the first level that needs reordering (M05-04). */
   private reordering: ReorderingMove | null = null;
   /** Set once the move is made: after it, the player plays freely. */
   private reorderingDone = false;
@@ -130,14 +130,14 @@ export class GameScene extends Phaser.Scene {
   private economy: Economy = economyWith(undefined);
   /** The top bar's objects, redrawn on their own so a countdown doesn't redraw the board. */
   private topObjects: Phaser.GameObjects.GameObject[] = [];
-  /** When the last rewarded ad ended, for the ad button's wait (story 20, R13). */
+  /** When the last rewarded ad ended, for the ad button's wait (M07-02, R13). */
   private lastAdEnd: number | null = null;
-  /** An ad is playing: the game is paused and ignores input (story 20, R9). */
+  /** An ad is playing: the game is paused and ignores input (M07-02, R9). */
   private adPlaying = false;
-  /** While coins fly, the counter shows the balance before them, counting up as they land (story 20, R15). */
+  /** While coins fly, the counter shows the balance before them, counting up as they land (M07-02, R15). */
   private coinsShown: number | null = null;
   private adShownAs = '';
-  /** The full-screen card naming a new theme. Input is ignored while it shows (story 15, R11). */
+  /** The full-screen card naming a new theme. Input is ignored while it shows (M06-02, R11). */
   private interstitial: Phaser.GameObjects.Rectangle | null = null;
   private interstitialText: Phaser.GameObjects.Text | null = null;
 
@@ -183,7 +183,7 @@ export class GameScene extends Phaser.Scene {
     this.input.addPointer(1);
     // Straight from the browser: the engine's keyboard queue mishandles keys that land in one frame.
     window.addEventListener('keydown', (event) => this.onKey(event));
-    // The ad button's countdown (story 20, R13).
+    // The ad button's countdown (M07-02, R13).
     this.time.addEvent({ delay: 250, loop: true, callback: () => this.refreshAdButton() });
 
     if (import.meta.env.DEV) {
@@ -241,7 +241,7 @@ export class GameScene extends Phaser.Scene {
     this.startLevel(level);
   }
 
-  /** Opens the player's current level, as they left it (story 11, R6 and R10). */
+  /** Opens the player's current level, as they left it (M05-01, R6 and R10). */
   private startLevel(level: Level | undefined = this.levels[this.progress.level - 1], fade = false) {
     this.phaseTwo?.destroy();
     this.phaseTwo = null;
@@ -275,7 +275,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  /** Reopening after the last level shows its popup again (story 11, R11). */
+  /** Reopening after the last level shows its popup again (M05-01, R11). */
   private showAllComplete() {
     this.level = this.levels[this.levels.length - 1];
     this.levelNumber = this.levels.length;
@@ -290,7 +290,7 @@ export class GameScene extends Phaser.Scene {
     if (this.saving) void this.platform.save(SAVE_KEY, writeProgress(progress));
   }
 
-  /** After every change that settles (story 11, R10). */
+  /** After every change that settles (M05-01, R10). */
   private saveLevel() {
     if (this.allDone || this.board.drag) return;
     this.progress = { ...this.progress, inLevel: { board: this.board.snapshot(), phaseTwo: this.phaseTwo?.snapshot() ?? null } };
@@ -352,7 +352,7 @@ export class GameScene extends Phaser.Scene {
     this.replayEffects();
   }
 
-  /** Rows that aren't selected and aren't finished show faded, easing in and out as the selection moves (story 23, R3). */
+  /** Rows that aren't selected and aren't finished show faded, easing in and out as the selection moves (M06-03, R3). */
   private fadeRows() {
     const strengths = new Map<number, number>();
     this.layoutNow.rows.forEach((row, index) => {
@@ -368,7 +368,7 @@ export class GameScene extends Phaser.Scene {
 
   /**
    * The selected row's pool. When the selection moves to another row, letters both pools have glide to their new
-   * places, letters the new pool doesn't have fade out, and its new letters fade in (story 23, Q3).
+   * places, letters the new pool doesn't have fade out, and its new letters fade in (M06-03, Q3).
    */
   private drawPool() {
     const before = this.poolPlaces;
@@ -431,7 +431,7 @@ export class GameScene extends Phaser.Scene {
     return layoutLevel(this.level, this.levelNumber, this.coinsShown ?? this.coins(), this.scale.width, this.scale.height, this.board, ad);
   }
 
-  /** The top bar, and the theme's line below it (story 20, R14). */
+  /** The top bar, and the theme's line below it (M07-02, R14). */
   private drawTopBar() {
     this.topObjects.forEach((object) => object.destroy());
     this.topObjects = [];
@@ -530,7 +530,7 @@ export class GameScene extends Phaser.Scene {
     const objects = [
       makeTile(this, x + width / 2, y + height / 2, width, colour),
       this.drawPoolText(character, x + width / 2, y + height * 0.45, height * 0.55),
-      // Never smaller than the style's minimum, so counts stay readable on small screens (story 16, R4).
+      // Never smaller than the style's minimum, so counts stay readable on small screens (M05-02, R4).
       this.drawPoolText(`x${count}`, x + width * 0.78, y + height * 0.8, Math.max(height * 0.26, currentStyle.minText)),
     ];
     objects.forEach((object) => this.poolOwner.set(object, character));
@@ -550,14 +550,14 @@ export class GameScene extends Phaser.Scene {
     return import.meta.env.DEV && typeof fixed === 'number' ? fixed : Math.random();
   }
 
-  /** Phase one's hint buttons: the Letter hint, stacked above Recall All. The tutorials have none (story 19, R2, R10). */
+  /** Phase one's hint buttons: the Letter hint, stacked above Recall All. The tutorials have none (M07-01, R2, R10). */
   private phaseOneHints(): HintButton[] {
     if (this.tutorial || this.phaseTwo || this.allDone || !this.board) return [];
     return [{ name: 'letter', rect: this.layoutNow.letterHint, enabled: this.board.letterHintAvailable }];
   }
 
   private drawRecall() {
-    // Each tutorial step is dragging only, so there's no Recall All in it (story 12, R10).
+    // Each tutorial step is dragging only, so there's no Recall All in it (M05-03, R10).
     if (this.tutorial) return;
     for (const button of this.phaseOneHints()) this.poolObjects.push(...drawHintButton(this, button));
     const { recall } = this.layoutNow;
@@ -583,7 +583,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (this.allDone || this.interstitial) return;
-    // The hand stops while the player is dragging (story 12, R9).
+    // The hand stops while the player is dragging (M05-03, R9).
     this.hand?.setVisible(false);
     if (this.phaseTwo) {
       this.phaseTwo.onPointerDown(pointer);
@@ -616,7 +616,7 @@ export class GameScene extends Phaser.Scene {
   private startDrag(press: Press): boolean {
     const { hit } = press;
     let started = false;
-    // In the tutorial, only the step's letters can be picked up, and only from the pool (story 12, R2).
+    // In the tutorial, only the step's letters can be picked up, and only from the pool (M05-03, R2).
     const allowed = this.tutorialLetters();
     if (hit.kind === 'pool' && hit.character && (!allowed || allowed.includes(hit.character))) started = this.board.pickUpFromPool(hit.character);
     if (hit.kind === 'cell' && !allowed) started = this.board.pickUpFromCell(hit.row, hit.cell);
@@ -643,7 +643,7 @@ export class GameScene extends Phaser.Scene {
     this.highlight = null;
     this.highlighted = null;
 
-    // A letter only lands in its own row, so other rows never highlight (story 24, R3).
+    // A letter only lands in its own row, so other rows never highlight (M06-04, R3).
     const ownRow = hit.kind === 'cell' && (!board.drag || hit.row === board.drag.row);
     this.previewShift(hit.kind === 'cell' && ownRow ? hit : null);
     if (hit.kind === 'cell' && ownRow && !board.isCellFixed(hit.row, hit.cell)) {
@@ -661,7 +661,7 @@ export class GameScene extends Phaser.Scene {
 
   /**
    * While a placed letter is held over another in its row, the letters between slide aside, as rows make way in phase
-   * two (story 24, R6). Moving elsewhere slides them back.
+   * two (M06-04, R6). Moving elsewhere slides them back.
    */
   private previewShift(over: { row: number; cell: number } | null) {
     const drag = this.board.drag;
@@ -685,7 +685,7 @@ export class GameScene extends Phaser.Scene {
       const home = this.shiftedParts.get(part) ?? (part as unknown as { x: number }).x;
       this.shiftedParts.set(part, home);
       this.tweens.killTweensOf(part);
-      // Above the cells it slides over while it's away from its own (story 24, R6), and back down once home.
+      // Above the cells it slides over while it's away from its own (M06-04, R6), and back down once home.
       const depth = part as unknown as Phaser.GameObjects.Components.Depth;
       const away = moves.has(part);
       depth.setDepth(1);
@@ -720,10 +720,10 @@ export class GameScene extends Phaser.Scene {
 
     if (press.dragging) {
       const hit = hitTest(this.layoutNow, pointer.x, pointer.y);
-      // Letters that slid aside during the drag are already in their new cells: they don't travel again (story 24, R6).
+      // Letters that slid aside during the drag are already in their new cells: they don't travel again (M06-04, R6).
       const settled = this.shiftShown !== null && hit.kind === 'cell' ? hit.row : undefined;
       this.endDragVisuals();
-      // A dropped letter travels on from where it was released (story 16, R6).
+      // A dropped letter travels on from where it was released (M05-02, R6).
       const origin = { character: this.board.drag!.character, x: pointer.x, y: pointer.y };
       const target = hit.kind === 'cell' && this.tutorialAllowsCell(hit.row, hit.cell) ? hit : null;
       if (target) this.act(() => this.board.dropOnCell(target.row, target.cell), origin, settled);
@@ -739,12 +739,12 @@ export class GameScene extends Phaser.Scene {
     } else if (hit.kind === 'cell') {
       this.board.selectRow(hit.row);
       this.redraw();
-      // The selected row is saved, so reopening shows the same pool (story 23, R10).
+      // The selected row is saved, so reopening shows the same pool (M06-03, R10).
       this.saveLevel();
     } else if (hit.kind === 'recall') {
       this.act(() => void this.board.recallAll());
     } else if (hit.kind === 'letterHint' && !this.tutorial) {
-      // The hint never shakes a row (story 19, R13).
+      // The hint never shakes a row (M07-01, R13).
       this.act(() => this.board.letterHint(() => this.hintRandom()).filter((event) => event.type !== 'wrong'));
     }
   }
@@ -753,7 +753,7 @@ export class GameScene extends Phaser.Scene {
     if (this.allDone || this.interstitial || this.adPlaying) return;
     if (this.phaseTwo) {
       this.phaseTwo.onKey(event);
-      // A tutorial step done with the keyboard ends its text and hand, as a drag does (story 24, R9).
+      // A tutorial step done with the keyboard ends its text and hand, as a drag does (M06-04, R9).
       this.updateGuide();
       return;
     }
@@ -762,7 +762,7 @@ export class GameScene extends Phaser.Scene {
     this.act(() => this.board.key(event.key));
   }
 
-  // The tutorial (story 12)
+  // The tutorial (M05-03)
 
   private tutorialStepNow(): TutorialStep | null {
     if (this.tutorial) return tutorialStep(this.tutorial, this.board, this.phaseTwo?.phaseState ?? null);
@@ -787,7 +787,7 @@ export class GameScene extends Phaser.Scene {
   /** The empty cells the current step fills. */
   private tutorialCells(): { row: number; cell: number }[] | null {
     const step = this.tutorialStepNow();
-    // Step 1 shows each letter in turn, and only that move works (story 24, R2).
+    // Step 1 shows each letter in turn, and only that move works (M06-04, R2).
     if (step === 1) {
       const next = this.nextFirstCell();
       return next === null ? [] : [{ row: this.tutorial!.first.row, cell: next }];
@@ -807,19 +807,19 @@ export class GameScene extends Phaser.Scene {
 
   /**
    * Whether the current step limits what the player can do. FOX's step is guided and allows no mistakes. OWL's step
-   * lets the player make mistakes and fix them (story 24, R7). Phase two's steps limit moves through phaseTwoRules.
+   * lets the player make mistakes and fix them (M06-04, R7). Phase two's steps limit moves through phaseTwoRules.
    */
   private guidedStep(): boolean {
     return this.tutorialStepNow() === 1;
   }
 
-  /** In FOX's step, typing the step's letter works like dragging it (story 12, R10). */
+  /** In FOX's step, typing the step's letter works like dragging it (M05-03, R10). */
   private tutorialAllowsKey(key: string): boolean {
     if (!this.guidedStep()) return true;
     return key.length === 1 && this.tutorialLetters()!.includes(key.toUpperCase());
   }
 
-  /** In FOX's step, tapping the step's letter in the pool works too (story 12, R10). */
+  /** In FOX's step, tapping the step's letter in the pool works too (M05-03, R10). */
   private tutorialAllowsTap(hit: Hit): boolean {
     if (!this.guidedStep()) return true;
     return hit.kind === 'pool' && !!hit.character && this.tutorialLetters()!.includes(hit.character);
@@ -830,7 +830,7 @@ export class GameScene extends Phaser.Scene {
     return (this.tutorialCells() ?? []).some((target) => target.row === row && target.cell === cell);
   }
 
-  /** Saved once the player makes the reordering tutorial's move (story 21, R1). Tests can play as if it were already behind the player. */
+  /** Saved once the player makes the reordering tutorial's move (M05-04, R1). Tests can play as if it were already behind the player. */
   private reorderingTaught(): boolean {
     const taught = (window as unknown as { wordSlideReorderingTaught?: boolean }).wordSlideReorderingTaught;
     if (import.meta.env.DEV && taught) return true;
@@ -844,9 +844,9 @@ export class GameScene extends Phaser.Scene {
       handle: (word) => !step() || (step() === 'reorder' && word === move().word),
       slide: (word) => !step() || (step() === 3 && word === this.tutorial!.slide.word),
       slot: (word, slot) => !step() || (step() === 'reorder' && word === move().word && Math.sign(slot - move().from) === Math.sign(move().to - move().from)),
-      // Both phase-two steps can be played with the keyboard (story 24, R8 and R9), within the step's rules.
+      // Both phase-two steps can be played with the keyboard (M06-04, R8 and R9), within the step's rules.
       keys: () => true,
-      // No hints during a tutorial's step (story 19, R10).
+      // No hints during a tutorial's step (M07-01, R10).
       hints: () => !step(),
     };
   }
@@ -924,7 +924,7 @@ export class GameScene extends Phaser.Scene {
     moveHand(this, this.hand, from, to);
   }
 
-  // Letters travelling (story 16, R6 and R7)
+  // Letters travelling (M05-02, R6 and R7)
 
   /** Runs a change to the board, then flies each letter that moved from where it was to where it went. */
   private act(change: () => BoardEvent[] | void, origin?: { character: string } & Point, settled?: number) {
@@ -946,13 +946,13 @@ export class GameScene extends Phaser.Scene {
    */
   private flightsSince(before: BoardSnapshot, origin?: { character: string } & Point, settled?: number) {
     const cellAt = (row: number, cell: number) => centre(this.layoutNow.rows[row].cells[cell]);
-    // A letter going back flies to the pool as it is after the change, which may be another row's (story 23).
+    // A letter going back flies to the pool as it is after the change, which may be another row's (M06-03).
     const poolAfter = this.layoutFor().poolTiles;
     const poolAt = (character: string, tiles = poolAfter) => {
       const tile = tiles.find((candidate) => candidate.character === character);
       return tile ? centre(tile) : null;
     };
-    // A letter coming from the pool leaves the pool that was on screen, even if the selection then moves on (story 19, R14).
+    // A letter coming from the pool leaves the pool that was on screen, even if the selection then moves on (M07-01, R14).
     const poolBefore = this.layoutNow.poolTiles;
     const left: { character: string; from: Point; row: number }[] = [];
     const arrived: { character: string; to: Point; cell: string }[] = [];
@@ -1055,7 +1055,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  /** Reopening goes straight to the finished layout, with any saved positions (story 11, R10). */
+  /** Reopening goes straight to the finished layout, with any saved positions (M05-01, R10). */
   private startCeremony(saved: PhaseTwoSnapshot | null = null, reopening = false) {
     if (this.phaseTwo) return;
     let from = this.layoutNow.rows.map((row) => ({ x: row.cells[0].x + row.cells[0].width / 2, y: row.cells[0].y + row.cells[0].height / 2 }));
@@ -1107,7 +1107,7 @@ export class GameScene extends Phaser.Scene {
     if (reopening) view.skipCeremony();
   }
 
-  /** Saved before the celebration, so closing during it loses nothing (story 11, R5). */
+  /** Saved before the celebration, so closing during it loses nothing (M05-01, R5). */
   private won(view: PhaseTwoView) {
     this.clearGuide();
     this.guideShown = 'won';
@@ -1116,7 +1116,7 @@ export class GameScene extends Phaser.Scene {
     view.celebrate();
   }
 
-  // Coins and ads (story 20)
+  // Coins and ads (M07-02)
 
   /** The clock the ad button's wait runs on. Tests can move it by hand in development builds. */
   private now(): number {
@@ -1216,7 +1216,7 @@ export class GameScene extends Phaser.Scene {
     else this.startLevel(undefined, true);
   }
 
-  /** Fades in a card naming the new theme, opens the level behind it, then fades it away (story 15, R11). */
+  /** Fades in a card naming the new theme, opens the level behind it, then fades it away (M06-02, R11). */
   private showInterstitial(theme: string) {
     const { width, height } = this.scale;
     const quarter = timings.interstitial / 4;

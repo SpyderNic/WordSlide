@@ -10,7 +10,7 @@ Feature: Rules the screen can't reach yet
     And the Z is still held
 
   # D45: handles only appear once the reordering tutorial has been shown. Nothing turns
-  # this off until story 12, so only the rule can be checked, not the screen.
+  # this off until M05-03, so only the rule can be checked, not the screen.
   Scenario: Shift and an arrow don't move rows before the reordering tutorial
     Given phase two before the reordering tutorial, with the top row selected
     When the player presses Shift and Down

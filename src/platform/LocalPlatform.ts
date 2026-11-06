@@ -1,6 +1,6 @@
 import type { AdKind, AdResult, Platform } from './Platform';
 
-/** What development builds and tests can ask of the pretend ads (story 20, R10). */
+/** What development builds and tests can ask of the pretend ads (M07-02, R10). */
 interface PretendAdControls {
   /** False pretends no ad can play, as with an ad blocker or during CrazyGames' Basic Launch. */
   available?: boolean;
@@ -11,7 +11,7 @@ interface PretendAdControls {
 }
 
 /**
- * Saves in the browser. If saving is blocked, the game still plays (story 11, R8).
+ * Saves in the browser. If saving is blocked, the game still plays (M05-01, R8).
  * Development builds pretend to play ads, so the flows can be tested before a platform's SDK is added. Release builds
  * on this platform have no ads.
  */

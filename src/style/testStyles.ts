@@ -1,7 +1,7 @@
 import type { Style } from './Style';
 import { woodAndBrass } from './woodAndBrass';
 
-/** Only the colours differ: every scenario runs again with it, to show a style never changes the rules (story 16, R1). */
+/** Only the colours differ: every scenario runs again with it, to show a style never changes the rules (M05-02, R1). */
 export const recoloured: Style = {
   ...woodAndBrass,
   name: 'Recoloured (tests only)',
@@ -19,7 +19,7 @@ export const recoloured: Style = {
   },
 };
 
-/** A second style that changes a colour, the font and a timing, to show each change applies everywhere (story 16, R2). */
+/** A second style that changes a colour, the font and a timing, to show each change applies everywhere (M05-02, R2). */
 export const test: Style = {
   ...recoloured,
   name: 'Test (tests only)',
