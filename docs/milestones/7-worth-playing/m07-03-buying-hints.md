@@ -1,6 +1,6 @@
 # M07-03: Hints, part 2: buying them (was story 27)
 
-**Status:** 🟨 Drafted on 2026-11-06. The designer answered Q1 to Q6 on 2026-11-06; their answers raise Q7 to Q10.
+**Status:** ✅ Approved by the designer on 2026-11-06. Scenarios: [m07-03-buying-hints.feature](../../../features/7-worth-playing/m07-03-buying-hints.feature), waiting for approval.
 
 *As a player who's stuck, I want to buy a hint with coins I've earned, so that getting help is my choice and has a cost I can see.*
 
@@ -26,7 +26,7 @@ Using a hint takes its price from the player's coins (M07-02). Tapping the butto
 
 - 🟩 With a *Letter price* of 30 and 100 coins, tapping the Letter hint leaves 70 coins and locks a letter
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R2. Each hint's button shows its current price
 
@@ -34,7 +34,7 @@ Under its icon, inside the button: a small coin and the number, like the ad butt
 
 - 🟩 With a *Letter price* of 30, at the start of a level the Letter hint's button shows a coin and "30" under its icon
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R3. Within a level, the Letter and Reveal hints cost more each time
 
@@ -44,7 +44,7 @@ Under its icon, inside the button: a small coin and the number, like the ad butt
 - 🟩 With a *Reveal price* of 40 and the same step and cap: 40, 60, 90, 140 (135 rounded), then 200 (210, capped)
 - 🟩 After two Letter hints in a level, the Reveal hint still costs its *Reveal price*
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R4. The Ordering hint has one price
 
@@ -52,13 +52,13 @@ It can only be used once per level (it removes the handles, M07-01 R5), so it ne
 
 - 🟩 With an *Ordering price* of 40, the Ordering hint costs 40 in every level
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R5. Prices go back to their first price on the next level
 
 - 🟩 After three Letter hints in level 6, level 7's Letter hint costs the *Letter price* again
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R6. Prices are saved with the level
 
@@ -66,7 +66,7 @@ Like the rest of the level (M05-01, R10), so closing and reopening mid-level doe
 
 - 🟩 With a *Letter price* of 30, after two Letter hints (30, then 50), closing and reopening the level shows the Letter hint at 80
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R7. Buying a hint is saved as one change: the coins and what the hint did
 
@@ -75,26 +75,27 @@ Like the rest of the level (M05-01, R10), so closing and reopening mid-level doe
 - 🟩 With 100 coins, buying a 30-coin Letter hint and closing straight away reopens with 70 coins and the letter locked
 - 🟩 Reopening never shows 70 coins without the letter, or 100 coins with it
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R8. No hints in the tutorials, including the whole reordering tutorial
 
-*From the designer's note.* Level 1's tutorial has no hint buttons (M07-01, R10). In the level that teaches reordering (M05-04), phase two has no hint buttons at all: not during the tutorial's move, and not after it either. (Until now they appeared once the move was made.) So nothing in a tutorial costs coins. See Q10 for the note's second part.
+*From the designer's note.* Level 1's tutorial has no hint buttons (M07-01, R10). In the level that teaches reordering (M05-04), phase two has no hint buttons at all: not during the tutorial's move, and not after it either. (Until now they appeared once the move was made.) So nothing in a tutorial costs coins. The note's second part is R13.
 
 - 🟩 Level 1's tutorial shows no hint buttons
 - 🟩 In the reordering tutorial, after the player makes the shown move, there are still no hint buttons
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R9. A hint the player can't afford opens "Not enough coins"
 
-*From Q4.* Its button looks as usual, with its price. Tapping it buys nothing, and opens a small popup: "Not enough coins", with "Watch an ad for +[*ad reward*]" and Close. That ad button behaves like the one in the top bar (M07-02, R12 and R13): it plays a rewarded ad, and while the *rewarded ad wait* runs it shows the countdown, greyed out. See Q7 for when no ad can play at all.
+*From Q4.* Its button looks as usual, with its price. Tapping it buys nothing, and opens a small popup: "Not enough coins", with "Watch an ad for +[*ad reward*]" and Close. That ad button behaves like the one in the top bar (M07-02, R12 and R13): it plays a rewarded ad, and while the *rewarded ad wait* runs it shows the countdown, greyed out. *From Q7:* when no ad can play at all, the popup has no ad button: it says how to earn coins instead, and that an ad may be available later: "Finish a series or find bonus words to earn coins, or try watching an ad later."
 
 - 🟩 With 20 coins and a *Letter price* of 30, tapping the Letter hint opens "Not enough coins", and the coins stay at 20
 - 🟩 With an *ad reward* of 50, the popup's button reads "Watch an ad for +50"; watching it to the end gives 50 coins, so the player has 70
 - 🟩 With a *rewarded ad wait* of 3 minutes, 30 seconds after an ad, the popup's ad button shows "2:30", greyed out
+- 🟩 With no ad able to play, the popup says how to earn coins and to try an ad later, with Close and no ad button
 
-**Confirmed:** ☐
+**Confirmed:** ☑
 
 ### 🟦 R10. Spending counts the coins down, with a sound
 
@@ -102,54 +103,58 @@ Like the rest of the level (M05-01, R10), so closing and reopening mid-level doe
 
 - 🟩 With 100 coins, buying a 30-coin hint counts the counter down from 100 to 70, as the hint plays
 
-**Confirmed:** ☐
+**Confirmed:** ☑
+
+### 🟦 R11. The Letter hint can confirm a letter that's already right
+
+*From Q8.* It picks any cell of the selected row that isn't revealed or locked, as now (M07-01, R3), including one where the player already placed the right letter. That's still worth something: it confirms the letter is right.
+
+- 🟩 With L E M U _ in LEMUR's row and a *Letter price* of 30, a Letter hint on the first cell locks the L there, and costs 30
+
+**Confirmed:** ☑
+
+### 🟦 R12. The Ordering hint stays available when the rows are already in order
+
+*From Q9.* Disabling it would tell the player for free that the order is right. Buying it then fixes the order and removes the handles, as usual (M07-01, R5), which confirms the player is on the right track.
+
+- 🟩 With the rows already in a solving order, the Ordering hint can still be bought, and buying it removes the handles and leaves the rows where they are
+
+**Confirmed:** ☑
+
+### 🟦 R13. In the reordering tutorial, the handles go once the tutorial's moves are made
+
+*From Q10, and the designer's note on R8.* Once the player has made the move (or moves) the tutorial shows (M05-04), the rows are in a solving order: the handles fade away, as after the Ordering hint, and only sliding is left. So the player can't move the rows out of a solvable order with no hints to help. Later levels have handles as usual.
+
+- 🟩 In the reordering tutorial, after the shown move, there are no handles, and the rows stay in that order
+- 🟩 In the next level that has handles, they're there as usual
+
+**Confirmed:** ☑
 
 ---
 
 ## Questions
 
-Raised by the answers to Q1 to Q6.
-
-### 🟥 Q7. What does "Not enough coins" show when no ad can play at all?
-
-When an ad is only waiting (the countdown), the popup shows the timer (R9). With no ads at all (an ad blocker, CrazyGames' Basic Launch, M07-02 R7), there's no ad to offer.
-
-- **A (recommended):** The popup shows "Not enough coins" and a line on how to earn them ("Finish a series or find bonus words to earn coins"), with Close. No ad button.
-- **B:** The popup shows "Not enough coins" and Close only.
-
-**Answer:**
-
-### 🟥 Q8. When the Letter hint picks a cell, can it pick one that's already right?
-
-*Your Q6 asked when a hint does nothing.* Today the Letter hint picks any cell of the selected row that isn't revealed or locked, including one where the player has already placed the right letter. Then it only locks that letter in place: the player pays for nothing new.
-
-- **A (recommended):** It only picks cells that don't hold their right letter yet. When every open cell is already right, the row is complete and locks anyway, so this never leaves the hint with nothing to pick.
-- **B:** Keep it as it is: any open cell.
-
-**Answer:**
-
-### 🟥 Q9. What about the Ordering hint when the rows are already in a solving order?
-
-*Also from Q6.* Today the Ordering hint is offered whenever the level has handles. If the rows are already in an order that solves the level, using it only removes the handles: the player pays for nothing new.
-
-- **A (recommended):** It shows disabled then, and can't be bought, until the rows are moved out of a solving order again.
-- **B:** It stays available, and buying it fixes the order (no more handles), which helps a player who isn't sure the order is right.
-
-**Answer:**
-
-### 🟥 Q10. In the reordering tutorial, what does "only rearrange the rows in a way that the puzzle can be solved" mean?
-
-From your note on R8. Today the tutorial allows only its one shown move, which leads to a solving order. Afterwards the handles stay free, so a player can move the rows anywhere, and always move them back.
-
-- **A (recommended):** After the tutorial's move, the rows can still be moved freely: any order can be put right again, so the puzzle stays solvable. Nothing changes.
-- **B:** After the tutorial's move, a row can only go where the level can still be solved (a move that leaves no solving order is refused, and the row goes back).
-- **C:** After the tutorial's move, the handles go: the rows stay in the solving order, and only sliding is left.
-
-**Answer:**
+None left.
 
 ---
 
 ## Answered questions
+
+### Q7. What does "Not enough coins" show when no ad can play at all?
+
+**Answer:** A, but also say they can wait to watch an ad. → R9.
+
+### Q8. When the Letter hint picks a cell, can it pick one that's already right?
+
+**Answer:** B, because it does something: it confirms that letter as being correct. → R11.
+
+### Q9. What about the Ordering hint when the rows are already in a solving order?
+
+**Answer:** B, otherwise the player would know for free the order of the rows by seeing if the hint is available or not. Again, the hint does confirm the rows ordering, so the player knows they're on the right track. → R12.
+
+### Q10. In the reordering tutorial, what does "only rearrange the rows in a way that the puzzle can be solved" mean?
+
+**Answer:** C. → R13.
 
 ### Q1. How is the price step rounded?
 
