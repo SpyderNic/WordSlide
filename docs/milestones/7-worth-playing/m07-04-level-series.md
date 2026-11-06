@@ -147,7 +147,7 @@ None left.
 
 Choices the scenarios didn't cover, accepted by the designer on 2026-11-06:
 
-- A peek () fills and flashes the bar, but shows no "Complete! +X" line and flies no coins, since it gives nothing (R8).
+- A peek (`?level=N`) fills and flashes the bar, but shows no "Complete! +X" line and flies no coins, since it gives nothing (R8).
 - Reopening after the last level shows the bar full and "All levels complete!", without the "Complete! +X" line (R12).
 - On the series interstitial, "New series" is small, and the series' name and any theme are both drawn at the theme interstitial's size (R7).
 - The last level's screen shows its golden word, like every other level's (R12).
