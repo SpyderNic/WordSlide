@@ -5,7 +5,7 @@ import { defineBddConfig } from 'playwright-bdd';
 const built = ["02-show-a-level","03-place-a-letter","04-return-a-letter","05-recall-all","06-check-and-lock-a-word","17-pool-as-a-keyboard","07-switch-to-phase-two","08-slide-a-word","09-reorder-rows","10-win-check-and-celebration","11-next-level-and-progress","16-visual-style","12-first-level-tutorial","21-reordering-taught-later","15-draft-the-first-levels","23-a-pool-for-each-row","24-after-playing-story-23","19-hints","20-coins-and-ads"];
 
 const testDir = defineBddConfig({
-  features: ['tests/browser/*.feature', ...built.map((story) => `features/story-${story}.feature`)],
+  features: ['tests/browser/*.feature', ...built.map((story) => `features/**/story-${story}.feature`)],
   tags: '@browser',
   steps: 'tests/browser/steps/*.ts',
 });

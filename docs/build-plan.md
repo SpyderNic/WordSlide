@@ -1,16 +1,20 @@
 # Word Slide — Build Plan
 
-Approved by the designer on 2026-10-31. Each milestone ends with the designer playing it, and the next doesn't start until they say so.
+Approved by the designer on 2026-10-31, and reorganised by milestone on 2026-11-06: stories 21, 23 and 24 joined the milestones they came from, stories 26 and 28 joined milestone 7, story 22 is parked, and milestone 8 outlines what release needs. Each milestone ends with the designer playing it, and the next doesn't start until they say so.
 
 | # | Milestone | Stories | Status |
 |---|---|---|---|
-| 1 | **Foundation**: project, tests, style file, save interface | None | Done |
-| 2 | **Levels and screen** | 1, 2 | Done |
-| 3 | **Phase one** | 3, 4, 5, 6, 17 | Done |
-| 4 | **Phase two** | 7, 8, 9, 10 | Done |
-| 5 | **The whole game**, including the tutorial (FTUE) | 11, 16, 12 | Built: waiting for the designer to play it |
-| 6 | **Content**: generator and the 40 levels | 14, 15 | Built: waiting for the designer to play it |
-| 7 | **Worth playing**: hints, the economy (coins and rewarded ads), getting hints, bonus words, sound | 19, 20, 27, 25, 18 | Hints part 1 built (2026-11-05). Next: the economy discussion |
+| 1 | [**Foundation**](milestones/1-foundation/README.md): The project, the tests, the style file and the save interface | None | Done |
+| 2 | [**Levels and screen**](milestones/2-levels-and-screen/README.md): The level format and its validator, and a level shown on screen | 1, 2 | Done |
+| 3 | [**Phase one**](milestones/3-phase-one/README.md): Building the words: placing and returning letters, Recall All, locking a word, and the pool as a keyboard | 3, 4, 5, 6, 17 | Done |
+| 4 | [**Phase two**](milestones/4-phase-two/README.md): Finding the word: the ceremony, sliding words, reordering rows, and the win | 7, 8, 9, 10 | Done |
+| 5 | [**The whole game**](milestones/5-the-whole-game/README.md): Levels one after another with saved progress, the visual style, and the tutorials (FTUE) | 11, 16, 12, 21 | Built: waiting for the designer to play it |
+| 6 | [**Content**](milestones/6-content/README.md): The level generator and the prototype's 40 levels, and the changes from playing them | 14, 15, 23, 24 | Built: waiting for the designer to play it |
+| 7 | [**Worth playing**](milestones/7-worth-playing/README.md): Reasons to keep playing: hints, coins and ads, buying hints, level series, bonus words, a gentle nudge, and sound | 19, 20, 27, 28, 25, 26, 18 | In progress: 19 and 20 built |
+| 8 | [**Ready for CrazyGames**](milestones/8-ready-for-crazygames/README.md): What release needs, as an outline: no stories are written yet | None | Not started |
+| | [**Parked**](milestones/parked/README.md) | 22 | Set aside by the designer |
+
+Each milestone has a folder in `docs/milestones/`, with its README and its stories' example maps, and a folder of the same name in `features/` for their scenarios.
 
 ## How we work
 
@@ -29,7 +33,9 @@ Milestone 6 is built (2026-11-03): the level generator (story 14) and the 40 lev
 
 **From playing milestone 6 (2026-11-03):** the designer found level 2 really difficult and couldn't find its 5-letter words. On 2026-11-04, the designer chose to give each row its own pool (story 23, built on 2026-11-04), with a row locking all at once. The game before it is tagged `before-story-23` in git, and scenarios it made obsolete are in `archive/before-story-23/`. The designer will decide whether shuffling (story 22) is still needed after playing it. Story 24, the designer's changes after playing it, is built too. **Next is the designer playing stories 23 and 24.**
 
-Mobile testing on a real device is parked until all milestones are done, at the designer's request.
+**Milestone 7 (2026-11-05):** hints (story 19) and coins and ads (story 20) are built. Next is mapping story 27, buying hints. The designer still has milestones 5 and 6 to play, with stories 23 and 24, and can now play 19 and 20 too.
+
+Mobile testing on a real device waits for milestone 8, at the designer's request.
 
 ## Test-first from now on
 

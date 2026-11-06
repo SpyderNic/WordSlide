@@ -7,7 +7,7 @@ A themed word puzzle, built with Phaser 3, Vite and TypeScript, aiming at CrazyG
 - `docs/build-plan.md`: milestones and where we are.
 - `docs/decisions.md`: every decision. It overrides `docs/design-context.md`.
 - `docs/stories.md`: the story backlog and its status.
-- `docs/example-maps/`: one map per story. `features/`: the approved scenarios.
+- `docs/milestones/<n>-<name>/`: one folder per milestone, with its README and one example map per story (`docs/milestones/parked/` for parked stories). `features/<n>-<name>/`: the approved scenarios, in the same milestone folders. A new story goes in the folder of the milestone it belongs to.
 - `docs/later-ideas.md`: not planned, but the code shouldn't rule these out.
 
 ## How we work
