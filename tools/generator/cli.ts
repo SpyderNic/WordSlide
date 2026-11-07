@@ -49,7 +49,8 @@ function main(args: string[]) {
     const approved = existsSync(levelsFile) ? (JSON.parse(readFileSync(levelsFile, 'utf8')) as Level[]) : [];
     const result = run(option(rest, 'theme'), words(option(rest, 'words')), settings, approved, option(rest, 'out', 'content/reviews'));
     // Only counts: the suggestions' words stay in the review file (D46).
-    console.log(`${result.suggestions.length} suggestions written to ${result.reviewFile}`);
+    const bonus = result.suggestions.reduce((count, level) => count + (level.bonusWords?.length ?? 0), 0);
+    console.log(`${result.suggestions.length} suggestions written to ${result.reviewFile}, with ${bonus} bonus words in all`);
     for (const warning of result.warnings) console.log(warning);
   } else if (command === 'approve') {
     const [file] = rest;

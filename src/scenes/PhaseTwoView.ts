@@ -60,6 +60,8 @@ export interface PhaseTwoCallbacks {
   onWon: () => void;
   /** A word or row has settled without winning (M05-01, R10). */
   onSettled: () => void;
+  /** The column has just read a bonus word, found for the first time: where it is, and the top of the rows (M07-05). */
+  onBonus: (from: { x: number; y: number }, top: number) => void;
   /** The Level complete screen has just appeared: playing after a win, or drawn as it ends after a resize. */
   onPopup: (playing: boolean) => void;
   /** The player's points before and after this level's win, for the popup (M07-02, R11). */
@@ -680,9 +682,29 @@ export class PhaseTwoView {
       this.drawHints();
       this.callbacks.onWon();
     } else {
+      if (this.phase.checkBonus()) {
+        this.pulseColumn();
+        const rows = this.phase.rows.length;
+        this.callbacks.onBonus({ x: this.columnX, y: this.rowsTop + ((rows - 1) * this.pitch) / 2 }, this.rowsTop - this.tile / 2);
+      }
       this.drawHints();
       this.callbacks.onSettled();
     }
+  }
+
+  /** A bonus word's letters pulse once, like a locking word, and keep their colour (M07-05, R4). */
+  private pulseColumn() {
+    this.rowViews.forEach((view, index) => {
+      const row = this.phase.rows[index];
+      const targets = [this.tileAtCell(view, row.cells, row.columnCell), view.letters[row.columnCell]];
+      this.scene.tweens.add({
+        targets,
+        scale: currentStyle.pulseScale,
+        duration: timings.lockPulseGrow,
+        ease: 'Sine.easeOut',
+        onComplete: () => this.scene.tweens.add({ targets, scale: 1, duration: timings.lockPulseShrink, ease: 'Sine.easeIn' }),
+      });
+    });
   }
 
   snapshot(): PhaseTwoSnapshot {

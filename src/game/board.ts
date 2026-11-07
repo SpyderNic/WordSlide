@@ -1,3 +1,4 @@
+import type { BonusWords } from './bonus';
 import { cellsOf, compareCells, isCharacter } from './characters';
 import { rowOrder, startingCells, startingPool, type Cell, type Level, type PoolTile } from './level';
 
@@ -11,6 +12,8 @@ export interface RowState {
 export type BoardEvent =
   | { type: 'locked'; row: number; word: string }
   | { type: 'wrong'; row: number }
+  /** A full row spelling a bonus word for the first time in the level: no shake (M07-05, R2). */
+  | { type: 'bonus'; row: number; word: string }
   | { type: 'alreadyFound'; row: number; lockedRow: number }
   | { type: 'hintsReturned'; row: number; letters: string[] }
   | { type: 'phaseOneOver' };
@@ -53,6 +56,8 @@ export class Board {
   selectedRow: number | null = 0;
   drag: Drag | null = null;
   phaseOneOver = false;
+  /** The level's bonus words, shared with phase two so each is found once (M07-05, R6). */
+  bonus: BonusWords | null = null;
 
   constructor(level: Level) {
     const answers = rowOrder(level.answers);
@@ -232,6 +237,7 @@ export class Board {
     const word = this.wordIn(row);
     const lockedRow = this.lockedIn.get(word);
     if (this.unlocked.includes(word)) return this.lock(row, word);
+    if (lockedRow === undefined && this.bonus?.find(word)) return [{ type: 'bonus', row, word }];
     return [lockedRow !== undefined ? { type: 'alreadyFound', row, lockedRow } : { type: 'wrong', row }];
   }
 

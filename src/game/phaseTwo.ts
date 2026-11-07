@@ -1,3 +1,4 @@
+import type { BonusWords } from './bonus';
 import { cellsOf, isCharacter } from './characters';
 
 export interface SlidingRow {
@@ -177,6 +178,16 @@ export class PhaseTwo {
   checkWin(): boolean {
     if (this.columnText() === this.finalWord) this.won = true;
     return this.won;
+  }
+
+  /** The level's bonus words, shared with phase one (M07-05, R6). */
+  bonus: BonusWords | null = null;
+
+  /** At the same moment as the win check: the column's word, if it's a bonus word found for the first time (M07-05, R3). */
+  checkBonus(): string | null {
+    if (this.won) return null;
+    const word = this.columnText();
+    return this.bonus?.find(word) ? word : null;
   }
 
   private slideOneLetter(direction: 1 | -1) {

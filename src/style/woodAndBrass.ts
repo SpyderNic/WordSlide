@@ -30,6 +30,7 @@ export const woodAndBrass: Style = {
     lockPulseShrink: 200,
     wrongShake: 300,
     alreadyFound: 1400,
+    bonusWord: 1600,
     snap: 100,
     rowMakeWay: 100,
     ceremony: 1000,

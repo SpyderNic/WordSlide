@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { cellsOf, compareWords, isCharacter, lengthOf } from '../../src/game/characters';
 import type { Answer, Level, RevealedLetter } from '../../src/game/level';
 import { needsReordering } from '../../src/game/reordering';
+import { bonusWordsOf, narrowedBonusWords, reorderingFrom } from './bonus';
 import { MAX_LENGTH, MAX_ROWS, MIN_LENGTH, MIN_ROWS, validateLevel } from '../../src/game/validator';
 
 /**
@@ -131,7 +132,9 @@ export function generate(theme: string, words: string[], settings: Settings, app
       // Every suggestion passes, and none start already solved (R5).
       if (result.errors.length > 0 || result.warnings.length > 0) continue;
       if (needsReordering(level) !== (settings.reordering === 'needed')) continue;
-      suggestions.push({ ...level, answers: revealLetters(level.answers, settings.reveal, finalWord) });
+      const revealed: Level = { ...level, answers: revealLetters(level.answers, settings.reveal, finalWord) };
+      // Approved levels come after the reordering tutorial, so rows can be in any order. Approving narrows this if not (M07-05, R10).
+      suggestions.push({ ...revealed, bonusWords: bonusWordsOf(revealed, words, true) });
       if (++fromThisWord >= PER_FINAL_WORD || suggestions.length >= count) break;
     }
   }
@@ -200,6 +203,8 @@ export function approve(reviewFile: string, levelsFile: string): Level[] {
     if (errors.length > 0) throw new Error(`A ticked level fails the validator: ${errors.join(', ')}.`);
   }
   const levels = JSON.parse(readFileSync(levelsFile, 'utf8')) as Level[];
-  writeFileSync(levelsFile, `${JSON.stringify([...levels, ...ticked], null, 2)}\n`);
-  return ticked;
+  const anyOrder = reorderingFrom([...levels, ...ticked]);
+  const added = ticked.map((level, index) => ({ ...level, bonusWords: narrowedBonusWords(level, anyOrder(levels.length + index)) }));
+  writeFileSync(levelsFile, `${JSON.stringify([...levels, ...added], null, 2)}\n`);
+  return added;
 }

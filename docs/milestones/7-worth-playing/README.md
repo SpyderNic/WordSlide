@@ -10,7 +10,7 @@ Reasons to keep playing: hints, coins and ads, buying hints, level series, bonus
 | M07-02 | Coins and ads | [map](m07-02-currency-and-ads.md) | [scenarios](../../../features/7-worth-playing/m07-02-coins-and-ads.feature) | Built |
 | M07-03 | Hints, part 2: buying them | [map](m07-03-buying-hints.md) | [scenarios](../../../features/7-worth-playing/m07-03-buying-hints.feature) | Built |
 | M07-04 | Level series | [map](m07-04-level-series.md) | [scenarios](../../../features/7-worth-playing/m07-04-level-series.feature) | Built |
-| M07-05 | Bonus words | [map](m07-05-bonus-words.md) | [scenarios](../../../features/7-worth-playing/m07-05-bonus-words.feature) | Approved, being built |
+| M07-05 | Bonus words | [map](m07-05-bonus-words.md) | [scenarios](../../../features/7-worth-playing/m07-05-bonus-words.feature) | Built |
 | M07-06 | A gentle nudge | none yet | none yet | Not mapped yet |
 | M07-07 | Sound | none yet | none yet | Not mapped yet |
 

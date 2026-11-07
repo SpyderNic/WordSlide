@@ -17,6 +17,8 @@ export interface Level {
   finalWord: string;
   /** Level 1 is a strict tutorial (M05-03, D43). */
   tutorial?: boolean;
+  /** Words from the theme's list, other than the answers and final word, that the level can spell (M07-05, R10). */
+  bonusWords?: string[];
 }
 
 export interface PoolTile {

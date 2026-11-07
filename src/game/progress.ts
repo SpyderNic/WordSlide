@@ -10,6 +10,8 @@ export interface LevelSnapshot {
   hintUses?: HintUses;
   /** This level teaches reordering: its phase two has no hints (M07-03, R8). */
   reorderingLesson?: boolean;
+  /** The bonus words found in this level, so none gives its coins twice (M07-05, R11). */
+  bonusFound?: string[];
 }
 
 /** The player's progress through the levels (M05-01). */
@@ -22,15 +24,18 @@ export interface Progress {
   reorderingTaught?: boolean;
   /** The player's coins (M07-02). A save without them, a new player's included, has the starting coins (R2, Q6). */
   coins?: number;
+  /** Set once the first bonus word's extra line has shown: it never shows again (M07-05, R5). */
+  bonusExplained?: boolean;
 }
 
 export const NEW_PLAYER: Progress = { level: 1, points: 0, inLevel: null };
 
 export const SAVE_KEY = 'wordSlide.progress';
 
-function kept(progress: Partial<Progress>): Pick<Progress, 'reorderingTaught' | 'coins'> {
+function kept(progress: Partial<Progress>): Pick<Progress, 'reorderingTaught' | 'coins' | 'bonusExplained'> {
   return {
     ...(progress.reorderingTaught === true ? { reorderingTaught: true } : {}),
+    ...(progress.bonusExplained === true ? { bonusExplained: true } : {}),
     ...(Number.isInteger(progress.coins) && progress.coins! >= 0 ? { coins: progress.coins } : {}),
   };
 }

@@ -111,6 +111,14 @@ When(/^the player wins (?:the level|a level|level (\d+))$/, async ({ page, scena
     await dragSlowlyAndRelease(page, 'FOX', 1, -1);
     return;
   }
+  // M07-05's usual level: NEWT, WOLF and CAMEL, with E, W and E in the column.
+  if ($uri.includes('m07-05')) {
+    await ready(page, scenario);
+    await arrange(page, ['NEWT', 'WOLF', 'CAMEL'], { NEWT: 0, WOLF: 0, CAMEL: 3 });
+    await startRecording(page);
+    await dragSlowlyAndRelease(page, 'NEWT', 0, -1);
+    return;
+  }
   await startRecording(page);
   await win(page, scenario);
 });

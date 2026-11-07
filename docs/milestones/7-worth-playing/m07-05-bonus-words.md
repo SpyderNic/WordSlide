@@ -141,6 +141,19 @@ Like the levels, the bonus lists are never quoted in chat, commits, test output 
 
 ---
 
+## Decided while building
+
+Choices the scenarios didn't cover, waiting for the designer to accept them:
+
+- The game's 40 levels got their bonus lists from a new command, `npm run levels:bonus`, instead of being drafted again: it works the lists out from the word lists and leaves the levels exactly as they were. `levels:draft` does the same when it drafts. 19 of the 40 levels have bonus words, 32 in all.
+- A level approved from the generator keeps only the column words its place allows: before the reordering tutorial, the rows' starting order (R10).
+- "Bonus word!" shows on a highlighted background like "Already found", just above the top row, and rises from there. The first-time line is smaller, under it on the same background. In phase one, on a short landscape screen, it covers the theme while it shows; in phase two it sits above the column.
+- A row's bonus pulse uses the lock pulse's timings (D37), and the column's pulse does too.
+- If the Letter hint's letter is the one that completes a bonus word in a row, it counts like any other, with its feedback and coins (the hint never shakes a row, M07-01, R13).
+- The starting feel setting, to tune by playing: "Bonus word!" rises and fades over 1.6 seconds (`bonusWord` in the style).
+
+---
+
 ## Answered questions
 
 Answered by the designer on 2026-11-06. Questions left blank took the recommendation.

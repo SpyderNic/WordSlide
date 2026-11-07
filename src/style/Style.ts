@@ -37,6 +37,8 @@ export interface Style {
     lockPulseShrink: number;
     wrongShake: number;
     alreadyFound: number;
+    /** "Bonus word!" rising and fading above the rows (M07-05, R4). */
+    bonusWord: number;
     snap: number;
     rowMakeWay: number;
     ceremony: number;

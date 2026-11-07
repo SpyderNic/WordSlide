@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Board, type BoardEvent, type BoardSnapshot } from '../game/board';
 import { PhaseTwo, type PhaseTwoSnapshot } from '../game/phaseTwo';
+import { BonusWords } from '../game/bonus';
 import { hitTest, layoutLevel, type CellView, type Hit, type LevelLayout, type PoolTileView, type Rect, type TopItem } from '../game/layout';
 import type { Cell, Level } from '../game/level';
 import { coinsOf, NEW_PLAYER, readProgress, SAVE_KEY, winLevel, writeProgress, type Progress } from '../game/progress';
@@ -92,6 +93,10 @@ export class GameScene extends Phaser.Scene {
   private highlighted: { kind: 'cell'; row: number; cell: number } | { kind: 'pool'; character: string } | null = null;
   private feedback: BoardEvent[] = [];
   private foundText: Phaser.GameObjects.Container | null = null;
+  /** "Bonus word!", while it rises and fades (M07-05, R4). */
+  private bonusText: Phaser.GameObjects.Container | null = null;
+  /** The level's bonus words, shared by both phases (M07-05). */
+  private bonus = new BonusWords([]);
   private poolObjects: Phaser.GameObjects.GameObject[] = [];
   /** Which pool tile each object belongs to, and where each tile was drawn, so a change of pool can animate (M06-03, Q3). */
   private poolOwner = new Map<Phaser.GameObjects.GameObject, string>();
@@ -300,6 +305,8 @@ export class GameScene extends Phaser.Scene {
     this.hintUses = saved?.hintUses ?? NO_HINT_USES;
     this.reorderingLesson = saved?.reorderingLesson === true;
     this.board = (saved && Board.restore(level, saved.board)) || new Board(level);
+    this.bonus = new BonusWords(level.bonusWords ?? [], saved?.bonusFound ?? []);
+    this.board.bonus = this.bonus;
     this.redraw();
     if (this.board.phaseOneOver) this.startCeremony(saved?.phaseTwo ?? null, true);
     if (fade) {
@@ -329,7 +336,8 @@ export class GameScene extends Phaser.Scene {
     // The coins spent on a hint are saved with what it did, never one without the other (M07-03, R7).
     this.progress = {
       ...this.progress,
-      inLevel: { board: this.board.snapshot(), phaseTwo: this.phaseTwo?.snapshot() ?? null, hintUses: this.hintUses, reorderingLesson: this.reorderingLesson },
+      // A bonus word's coins are saved with the word found, never one without the other (M07-05, R11).
+      inLevel: { board: this.board.snapshot(), phaseTwo: this.phaseTwo?.snapshot() ?? null, hintUses: this.hintUses, reorderingLesson: this.reorderingLesson, bonusFound: this.bonus.snapshot() },
     };
     this.save();
   }
@@ -1084,6 +1092,7 @@ export class GameScene extends Phaser.Scene {
   /** Feedback waits until a travelling letter has landed, so it plays where the player is looking. */
   private applied(events: BoardEvent[], travelled = false) {
     this.redraw();
+    const bonus = events.some((event) => event.type === 'bonus') ? this.creditBonus() : null;
     this.saveLevel();
     this.feedback.push(...events);
     const wait = travelled ? timings.letterTravel : 0;
@@ -1093,6 +1102,15 @@ export class GameScene extends Phaser.Scene {
         this.pulse(event.row, cells.map((_, index) => index), cells.map((cell) => cell.kind), wait);
       }
       if (event.type === 'wrong') this.shake(event.row, wait);
+      if (event.type === 'bonus' && bonus) {
+        // The row's letters pulse without changing colour (R4).
+        const cells = this.board.rows[event.row].cells;
+        this.pulse(event.row, cells.map((_, index) => index), cells.map((cell) => (cell.kind === 'revealed' ? 'revealed' : 'placed')), wait);
+        const row = this.layoutNow.rows[event.row].cells;
+        const first = centre(row[0]);
+        const from = { x: (first.x + centre(row[row.length - 1]).x) / 2, y: first.y };
+        this.time.delayedCall(wait, () => this.showBonus(bonus, from, this.layoutNow.rows[0].cells[0].y));
+      }
       if (event.type === 'alreadyFound') this.time.delayedCall(wait, () => this.showAlreadyFound(event.lockedRow));
       if (event.type === 'phaseOneOver') {
         const board = this.board;
@@ -1106,6 +1124,12 @@ export class GameScene extends Phaser.Scene {
   // Phase two
 
   private solveForTests() {
+    // A row holding another word, such as a bonus word (M07-05), is emptied first.
+    this.board.rows.forEach((row, index) => {
+      if (row.locked) return;
+      this.board.selectRow(index);
+      this.board.recallAll();
+    });
     const answers = [...this.board.rows];
     answers.forEach((row, index) => {
       Array.from(row.word).forEach((character, cell) => {
@@ -1140,6 +1164,7 @@ export class GameScene extends Phaser.Scene {
       words = rows.map((row) => words[row]);
     }
     const phase = (saved && PhaseTwo.restore(saved, words, this.level.finalWord, canReorder)) || new PhaseTwo(words, this.level.finalWord, canReorder);
+    phase.bonus = this.bonus;
     const next = this.levelNumber < this.levels.length ? this.levelNumber + 1 : null;
     const view = new PhaseTwoView(
       this,
@@ -1149,6 +1174,11 @@ export class GameScene extends Phaser.Scene {
       {
         onWon: () => this.won(view),
         onSettled: () => this.saveLevel(),
+        // Called just before onSettled, which saves the coins with the word (R11).
+        onBonus: (from, top) => {
+          const bonus = this.creditBonus();
+          this.showBonus(bonus, from, top);
+        },
         onPopup: (playing) => {
           this.completeShowing = true;
           // Drawn as it ends after a resize: its coins, if any, are counted already.
@@ -1565,6 +1595,50 @@ export class GameScene extends Phaser.Scene {
       duration: (timings.wrongShake - Math.max(elapsed, 0)) / 4,
       yoyo: true,
       repeat: 1,
+    });
+  }
+
+// Bonus words (M07-05)
+
+  /** Adds the bonus word's coins, before the level is saved (R7, R11). Whether this is the player's first bonus word (R5). */
+  private creditBonus(): { before: number; first: boolean } {
+    const before = this.coinsShown ?? this.coins();
+    const first = this.progress.bonusExplained !== true;
+    this.progress = { ...this.progress, coins: this.coins() + this.economy.bonusWordReward, bonusExplained: true };
+    return { before, first };
+  }
+
+  /** "Bonus word!" rises and fades above the rows, with a line under it the first time (R4, R5), and coins fly (R7). */
+  private showBonus({ before, first }: { before: number; first: boolean }, from: Point, top: number) {
+    this.flyCoins(this.economy.bonusWordReward, from, before);
+    const size = this.layoutNow.tileSize;
+    const font = currentStyle.font;
+    const title = this.add.text(0, 0, 'Bonus word!', { fontFamily: font, fontSize: `${Math.round(size * 0.55)}px`, color: hex(colours.text) }).setOrigin(0.5);
+    const parts: Phaser.GameObjects.GameObject[] = [title];
+    let height = title.height;
+    let width = title.width;
+    if (first) {
+      const line = this.add
+        .text(0, title.height * 0.9, 'Not the answer, but well spotted!', { fontFamily: font, fontSize: `${Math.round(size * 0.35)}px`, color: hex(colours.text) })
+        .setOrigin(0.5);
+      parts.push(line);
+      height += line.height * 1.2;
+      width = Math.max(width, line.width);
+    }
+    const background = this.add.rectangle(0, (height - title.height) / 2, width + size, height + size * 0.4, colours.highlight);
+    this.bonusText?.destroy(true);
+    const message = this.add.container(this.scale.width / 2, top - size * 0.5 - (height + size * 0.4) / 2, [background, ...parts]).setDepth(20);
+    this.bonusText = message;
+    this.tweens.add({
+      targets: message,
+      y: message.y - size * 1.5,
+      alpha: 0,
+      duration: timings.bonusWord,
+      ease: 'Sine.easeIn',
+      onComplete: () => {
+        message.destroy(true);
+        if (this.bonusText === message) this.bonusText = null;
+      },
     });
   }
 

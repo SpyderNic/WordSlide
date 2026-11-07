@@ -44,6 +44,7 @@ Node is at `C:\Program Files\nodejs`. Add it to the PATH if a shell can't find i
 - The Level complete screen (M07-04) is `src/scenes/levelComplete.ts`. Browser steps' `waitForPopup` waits until it has finished playing and its button shows.
 - `npm run levels:generate -- --theme Animals --words <list> --rows 3 --lengths 3-5 --reordering needed` runs the level generator (M06-01) and writes a review file to `content/reviews/`, which git ignores. Tick the boxes, then `npm run levels:approve -- <review file>` adds those levels to `src/levels/levels.json`. The generator lives in `tools/`, so the game never bundles it. Its output only prints counts (D46).
 - The game's levels are `src/levels/levels.json`. `npm run levels:draft` redrafts the prototype's 40 levels (M06-02) from `content/word-lists/`, with the generator and Claude's picks, and prints only numbers. Never print, quote or summarise those lists or levels (D46).
+- Each level stores its bonus words (M07-05) in `bonusWords`. The generator and `levels:draft` work them out, and `npm run levels:bonus` works them out again for the game's levels from `content/word-lists/` without changing the levels, printing only counts (D46). Run it after editing a word list. Browser tests give their levels' `bonusWords` themselves.
 - `npm run build` type-checks and builds.
 - `npm run test:logic` runs scenarios without a browser, using Cucumber. Steps are in `tests/logic/steps`.
 - `npm run test:browser` runs scenarios tagged `@browser` in a real browser. Steps are in `tests/browser/steps`.

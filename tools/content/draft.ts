@@ -3,7 +3,9 @@ import { lengthOf } from '../../src/game/characters';
 import type { Level } from '../../src/game/level';
 import { designedOrder, needsReordering } from '../../src/game/reordering';
 import { validateLevel } from '../../src/game/validator';
+import { withBonusWords } from '../generator/bonus';
 import { generate, type Settings } from '../generator/generate';
+import { countsOf } from './bonus';
 
 /**
  * Drafts the prototype's 40 levels (M06-02) with the level generator (M06-01), and Claude's picks in place of
@@ -78,8 +80,10 @@ function draft(): Level[] {
   return levels;
 }
 
-const levels = draft();
+// Each level stores its bonus words (M07-05, R10).
+const levels = withBonusWords(draft(), wordList);
 writeFileSync(LEVELS, `${JSON.stringify(levels, null, 2)}\n`);
+console.log(countsOf(levels));
 for (const [index, level] of levels.entries()) {
   console.log(`${index + 1}\t${level.theme}\t${level.answers.length} rows\t${needsReordering(level) ? 'needs reordering' : 'slides only'}`);
 }

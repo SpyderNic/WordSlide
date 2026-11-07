@@ -22,7 +22,8 @@
         ]
       }
     ],
-    "finalWord": "OX"
+    "finalWord": "OX",
+    "bonusWords": []
   },
   {
     "theme": "Animals",
@@ -37,7 +38,8 @@
         "word": "OTTER"
       }
     ],
-    "finalWord": "CAT"
+    "finalWord": "CAT",
+    "bonusWords": []
   },
   {
     "theme": "Animals",
@@ -52,7 +54,10 @@
         "word": "MOTH"
       }
     ],
-    "finalWord": "BAT"
+    "finalWord": "BAT",
+    "bonusWords": [
+      "RAT"
+    ]
   },
   {
     "theme": "Animals",
@@ -67,7 +72,10 @@
         "word": "TIGER"
       }
     ],
-    "finalWord": "ANT"
+    "finalWord": "ANT",
+    "bonusWords": [
+      "PIG"
+    ]
   },
   {
     "theme": "Animals",
@@ -82,7 +90,8 @@
         "word": "KOALA"
       }
     ],
-    "finalWord": "EEL"
+    "finalWord": "EEL",
+    "bonusWords": []
   },
   {
     "theme": "Animals",
@@ -97,7 +106,10 @@
         "word": "GOAT"
       }
     ],
-    "finalWord": "RAT"
+    "finalWord": "RAT",
+    "bonusWords": [
+      "BAT"
+    ]
   },
   {
     "theme": "Animals",
@@ -115,7 +127,10 @@
         "word": "TOUCAN"
       }
     ],
-    "finalWord": "LION"
+    "finalWord": "LION",
+    "bonusWords": [
+      "PUMA"
+    ]
   },
   {
     "theme": "Animals",
@@ -133,7 +148,10 @@
         "word": "GECKO"
       }
     ],
-    "finalWord": "DOVE"
+    "finalWord": "DOVE",
+    "bonusWords": [
+      "DEER"
+    ]
   },
   {
     "theme": "Animals",
@@ -151,7 +169,8 @@
         "word": "DONKEY"
       }
     ],
-    "finalWord": "MOLE"
+    "finalWord": "MOLE",
+    "bonusWords": []
   },
   {
     "theme": "Animals",
@@ -172,7 +191,11 @@
         "word": "LEOPARD"
       }
     ],
-    "finalWord": "SNAIL"
+    "finalWord": "SNAIL",
+    "bonusWords": [
+      "SHEEP",
+      "SNAKE"
+    ]
   },
   {
     "theme": "Food",
@@ -187,7 +210,8 @@
         "word": "STEAK"
       }
     ],
-    "finalWord": "NUT"
+    "finalWord": "NUT",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -202,7 +226,8 @@
         "word": "DONUT"
       }
     ],
-    "finalWord": "OAT"
+    "finalWord": "OAT",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -217,7 +242,11 @@
         "word": "MELON"
       }
     ],
-    "finalWord": "JAM"
+    "finalWord": "JAM",
+    "bonusWords": [
+      "LEMON",
+      "YAM"
+    ]
   },
   {
     "theme": "Food",
@@ -232,7 +261,8 @@
         "word": "MANGO"
       }
     ],
-    "finalWord": "HAM"
+    "finalWord": "HAM",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -247,7 +277,11 @@
         "word": "LEMON"
       }
     ],
-    "finalWord": "GUM"
+    "finalWord": "GUM",
+    "bonusWords": [
+      "BUN",
+      "MELON"
+    ]
   },
   {
     "theme": "Food",
@@ -262,7 +296,8 @@
         "word": "PEACH"
       }
     ],
-    "finalWord": "DIP"
+    "finalWord": "DIP",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -280,7 +315,8 @@
         "word": "PEPPER"
       }
     ],
-    "finalWord": "SOUP"
+    "finalWord": "SOUP",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -298,7 +334,8 @@
         "word": "PEANUT"
       }
     ],
-    "finalWord": "SALT"
+    "finalWord": "SALT",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -316,7 +353,8 @@
         "word": "RAISIN"
       }
     ],
-    "finalWord": "CORN"
+    "finalWord": "CORN",
+    "bonusWords": []
   },
   {
     "theme": "Food",
@@ -337,7 +375,8 @@
         "word": "PRETZEL"
       }
     ],
-    "finalWord": "WAFER"
+    "finalWord": "WAFER",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -352,7 +391,8 @@
         "word": "SKY"
       }
     ],
-    "finalWord": "RAY"
+    "finalWord": "RAY",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -367,7 +407,8 @@
         "word": "LASER"
       }
     ],
-    "finalWord": "GAS"
+    "finalWord": "GAS",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -382,7 +423,8 @@
         "word": "NOVA"
       }
     ],
-    "finalWord": "UFO"
+    "finalWord": "UFO",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -397,7 +439,8 @@
         "word": "CREW"
       }
     ],
-    "finalWord": "ICE"
+    "finalWord": "ICE",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -412,7 +455,8 @@
         "word": "NIGHT"
       }
     ],
-    "finalWord": "SUN"
+    "finalWord": "SUN",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -427,7 +471,8 @@
         "word": "PROBE"
       }
     ],
-    "finalWord": "ORB"
+    "finalWord": "ORB",
+    "bonusWords": []
   },
   {
     "theme": "Space",
@@ -445,7 +490,10 @@
         "word": "OXYGEN"
       }
     ],
-    "finalWord": "RING"
+    "finalWord": "RING",
+    "bonusWords": [
+      "CORE"
+    ]
   },
   {
     "theme": "Space",
@@ -463,7 +511,10 @@
         "word": "ORBIT"
       }
     ],
-    "finalWord": "STAR"
+    "finalWord": "STAR",
+    "bonusWords": [
+      "BEAM"
+    ]
   },
   {
     "theme": "Space",
@@ -481,7 +532,10 @@
         "word": "RADAR"
       }
     ],
-    "finalWord": "VOID"
+    "finalWord": "VOID",
+    "bonusWords": [
+      "NOVA"
+    ]
   },
   {
     "theme": "Space",
@@ -502,7 +556,16 @@
         "word": "SATURN"
       }
     ],
-    "finalWord": "LUNAR"
+    "finalWord": "LUNAR",
+    "bonusWords": [
+      "ALIEN",
+      "BLAST",
+      "EARTH",
+      "GIANT",
+      "LASER",
+      "LIGHT",
+      "SPACE"
+    ]
   },
   {
     "theme": "Sports",
@@ -517,7 +580,11 @@
         "word": "COURT"
       }
     ],
-    "finalWord": "SET"
+    "finalWord": "SET",
+    "bonusWords": [
+      "ACE",
+      "BAT"
+    ]
   },
   {
     "theme": "Sports",
@@ -532,7 +599,8 @@
         "word": "DUNK"
       }
     ],
-    "finalWord": "RUN"
+    "finalWord": "RUN",
+    "bonusWords": []
   },
   {
     "theme": "Sports",
@@ -547,7 +615,10 @@
         "word": "KART"
       }
     ],
-    "finalWord": "NET"
+    "finalWord": "NET",
+    "bonusWords": [
+      "TEE"
+    ]
   },
   {
     "theme": "Sports",
@@ -562,7 +633,11 @@
         "word": "RACE"
       }
     ],
-    "finalWord": "PAR"
+    "finalWord": "PAR",
+    "bonusWords": [
+      "ACE",
+      "LAP"
+    ]
   },
   {
     "theme": "Sports",
@@ -577,7 +652,8 @@
         "word": "FIELD"
       }
     ],
-    "finalWord": "CUE"
+    "finalWord": "CUE",
+    "bonusWords": []
   },
   {
     "theme": "Sports",
@@ -592,7 +668,8 @@
         "word": "SWIM"
       }
     ],
-    "finalWord": "GYM"
+    "finalWord": "GYM",
+    "bonusWords": []
   },
   {
     "theme": "Sports",
@@ -610,7 +687,10 @@
         "word": "KEEPER"
       }
     ],
-    "finalWord": "PUCK"
+    "finalWord": "PUCK",
+    "bonusWords": [
+      "KICK"
+    ]
   },
   {
     "theme": "Sports",
@@ -628,7 +708,11 @@
         "word": "GOALIE"
       }
     ],
-    "finalWord": "HIKE"
+    "finalWord": "HIKE",
+    "bonusWords": [
+      "KICK",
+      "RACE"
+    ]
   },
   {
     "theme": "Sports",
@@ -646,7 +730,11 @@
         "word": "HURDLE"
       }
     ],
-    "finalWord": "GOAL"
+    "finalWord": "GOAL",
+    "bonusWords": [
+      "BALL",
+      "BOUT"
+    ]
   },
   {
     "theme": "Sports",
@@ -667,6 +755,9 @@
         "word": "WHISTLE"
       }
     ],
-    "finalWord": "MATCH"
+    "finalWord": "MATCH",
+    "bonusWords": [
+      "PITCH"
+    ]
   }
 ]
