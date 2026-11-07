@@ -143,7 +143,7 @@ Like the levels, the bonus lists are never quoted in chat, commits, test output 
 
 ## Decided while building
 
-Choices the scenarios didn't cover, waiting for the designer to accept them:
+Choices the scenarios didn't cover, accepted by the designer on 2026-11-07:
 
 - The game's 40 levels got their bonus lists from a new command, `npm run levels:bonus`, instead of being drafted again: it works the lists out from the word lists and leaves the levels exactly as they were. `levels:draft` does the same when it drafts. 19 of the 40 levels have bonus words, 32 in all.
 - A level approved from the generator keeps only the column words its place allows: before the reordering tutorial, the rows' starting order (R10).
